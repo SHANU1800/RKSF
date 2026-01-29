@@ -1553,153 +1553,194 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-950 text-slate-50">
+    <div className="min-h-screen relative overflow-hidden bg-slate-950 text-slate-50 pb-24 sm:pb-0">
       <div className="floating-blob blue" aria-hidden="true" />
       <div className="floating-blob pink" aria-hidden="true" />
       <div className="noisy-layer" aria-hidden="true" />
 
+      {/* Header - Responsive */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">RKserve</p>
-            <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-200">Marketplace</h1>
-          </div>
-          <div className="flex items-center gap-5">
-            <div className="text-right">
-              <p className="text-white font-semibold leading-5">{currentUser.username}</p>
-              <p className="text-xs text-gray-400 capitalize">{currentUser.role}</p>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex justify-between items-center gap-3">
+            {/* Logo */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-slate-400 truncate">RKserve</p>
+              <h1 className="text-lg sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-200 truncate">Marketplace</h1>
             </div>
-            <div className="flex items-center gap-2">
+            
+            {/* User Info - Hidden on very small screens */}
+            <div className="hidden sm:flex items-center gap-5">
+              <div className="text-right">
+                <p className="text-white font-semibold leading-5 text-sm">{currentUser.username}</p>
+                <p className="text-xs text-gray-400 capitalize">{currentUser.role}</p>
+              </div>
+              <div className="flex items-center gap-2">
                 <span className="pill text-xs text-emerald-200 border-emerald-500/30 bg-emerald-500/10">
                   {serverStatus}
                 </span>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition"
-              >
-                Logout
-              </button>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
+
+            {/* Mobile logout button */}
+            <button
+              onClick={handleLogout}
+              className="sm:hidden px-3 py-2 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
+            >
+              Out
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-10 flex gap-6 relative">
-        {/* Sidebar Tabs */}
-        <aside className="w-48 glass-panel rounded-2xl p-4 h-fit sticky top-24 border border-white/5 shadow-xl">
-          <nav className="space-y-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition font-semibold border ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40 shadow-lg'
-                    : 'text-gray-300 border-white/5 hover:bg-white/5'
-                }`}
-              >
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
+      {/* Main Content Area */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-10">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          {/* Sidebar - Hidden on mobile, shown on tablet+ */}
+          <aside className="hidden sm:block sm:w-48 glass-panel rounded-2xl p-4 h-fit sticky top-24 border border-white/5 shadow-xl">
+            <nav className="space-y-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition font-semibold border text-sm ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40 shadow-lg'
+                      : 'text-gray-300 border-white/5 hover:bg-white/5'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
+          </aside>
 
-        {/* Main Content */}
-        <main className="flex-1">
-          <div className="mb-10">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="badge-soft">{activeTab}</span>
-              <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-200">
-                {activeTab === 'market' ? 'Market' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-              </h2>
+          {/* Main Content */}
+          <main className="flex-1 min-w-0">
+            <div className="mb-6 sm:mb-10">
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                <span className="badge-soft text-xs">{activeTab}</span>
+                <h2 className="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-200">
+                  {activeTab === 'market' ? 'Market' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                </h2>
+              </div>
+              <p className="text-gray-300 text-xs sm:text-sm max-w-2xl">
+                {activeTab === 'market'
+                  ? 'Explore curated services from trusted providers, search, filter, and transact in a few clicks.'
+                  : activeTab === 'goods'
+                    ? 'Browse items, chat live with sellers, and make offers on goods.'
+                    : activeTab === 'myOrders'
+                      ? 'Track your purchases, manage orders, and handle returns.'
+                      : activeTab === 'transactions'
+                        ? 'View your financial records, invoices, and billing history.'
+                        : activeTab === 'notifications'
+                          ? 'Receive and manage important alerts about your orders and activity.'
+                          : activeTab === 'reviews'
+                            ? 'Leave reviews for services you purchased and see your ratings.'
+                            : activeTab === 'chat'
+                              ? 'Keep all your conversations in one place and reach providers or sellers instantly.'
+                            : activeTab === 'providers'
+                              ? `Discover ${providers.length} providers and review their offerings.`
+                              : activeTab === 'settings'
+                                ? 'Configure your experience and keep your workspace tidy.'
+                                : activeTab === 'customerCare'
+                                  ? 'Get kind, empathetic support from our AI assistant — here to help without hurting feelings.'
+                                  : 'A quick snapshot of your profile and activity.'}
+              </p>
             </div>
-            <p className="text-gray-300 text-sm max-w-2xl">
-              {activeTab === 'market'
-                ? 'Explore curated services from trusted providers, search, filter, and transact in a few clicks.'
-                : activeTab === 'goods'
-                  ? 'Browse items, chat live with sellers, and make offers on goods.'
-                  : activeTab === 'myOrders'
-                    ? 'Track your purchases, manage orders, and handle returns.'
-                  : activeTab === 'transactions'
-                    ? 'View your financial records, invoices, and billing history.'
-                  : activeTab === 'notifications'
-                    ? 'Receive and manage important alerts about your orders and activity.'
-                  : activeTab === 'reviews'
-                    ? 'Leave reviews for services you purchased and see your ratings.'
-                  : activeTab === 'chat'
-                    ? 'Keep all your conversations in one place and reach providers or sellers instantly.'
-                : activeTab === 'providers'
-                  ? `Discover ${providers.length} providers and review their offerings.`
-                  : activeTab === 'settings'
-                    ? 'Configure your experience and keep your workspace tidy.'
-                  : activeTab === 'customerCare'
-                    ? 'Get kind, empathetic support from our AI assistant — here to help without hurting feelings.'
-                    : 'A quick snapshot of your profile and activity.'}
-            </p>
-          </div>
 
-          {renderContent()}
-        </main>
+            {renderContent()}
+          </main>
+        </div>
       </div>
 
+      {/* Mobile Bottom Navigation - Only on small screens */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-white/10">
+        <div className="flex overflow-x-auto gap-1 px-2 py-2 h-20">
+          {tabs.slice(0, 6).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 min-w-max flex flex-col items-center justify-center px-2 py-2 rounded-lg text-xs transition font-semibold border ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40'
+                  : 'text-gray-400 border-white/5 hover:bg-white/5'
+              }`}
+            >
+              <span className="leading-tight text-center">{tab.label}</span>
+            </button>
+          ))}
+          {tabs.length > 6 && (
+            <div className="flex-1 min-w-max border border-white/10 rounded-lg bg-white/5 px-2 py-2 flex items-center justify-center text-xs text-gray-400">
+              More
+            </div>
+          )}
+        </div>
+      </nav>
+
       {showServiceModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="glass-panel rounded-2xl w-full max-w-lg p-6 relative border border-white/10 shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-0">
+          <div className="glass-panel rounded-xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6 relative border border-white/10 shadow-2xl">
             <button
               onClick={() => setShowServiceModal(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white"
+              className="absolute top-3 right-3 text-gray-400 hover:text-white flex-shrink-0 w-8 h-8 flex items-center justify-center"
             >
               ✕
             </button>
-            <h3 className="text-xl font-bold text-white mb-4">Add Service</h3>
-            <form className="space-y-4" onSubmit={submitService}>
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Add Service</h3>
+            <form className="space-y-3 sm:space-y-4" onSubmit={submitService}>
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Title</label>
+                <label className="block text-xs sm:text-sm text-gray-300 mb-2">Title</label>
                 <input
                   type="text"
                   value={serviceForm.title}
                   onChange={(e) => handleServiceField('title', e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Description</label>
+                <label className="block text-xs sm:text-sm text-gray-300 mb-2">Description</label>
                 <textarea
                   value={serviceForm.description}
                   onChange={(e) => handleServiceField('description', e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                   rows="3"
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2">Price</label>
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Price</label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={serviceForm.price}
                     onChange={(e) => handleServiceField('price', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2">Category</label>
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Category</label>
                   <input
                     type="text"
                     value={serviceForm.category}
                     onChange={(e) => handleServiceField('category', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                   />
                 </div>
               </div>
               <button
                 type="submit"
                 disabled={serviceSubmitting}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-60 text-white font-bold transition"
+                className="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-60 text-white font-bold transition text-sm sm:text-base"
               >
                 {serviceSubmitting ? 'Saving...' : 'Save Service'}
               </button>
@@ -1709,55 +1750,55 @@ function App() {
       )}
 
       {showGoodsModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="glass-panel rounded-2xl w-full max-w-lg p-6 relative border border-white/10 shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-0">
+          <div className="glass-panel rounded-xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6 relative border border-white/10 shadow-2xl">
             <button
               onClick={() => setShowGoodsModal(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white"
+              className="absolute top-3 right-3 text-gray-400 hover:text-white flex-shrink-0 w-8 h-8 flex items-center justify-center"
             >
               ✕
             </button>
-            <h3 className="text-xl font-bold text-white mb-4">List Goods</h3>
-            <form className="space-y-4" onSubmit={submitGoods}>
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-4">List Goods</h3>
+            <form className="space-y-3 sm:space-y-4" onSubmit={submitGoods}>
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Title</label>
+                <label className="block text-xs sm:text-sm text-gray-300 mb-2">Title</label>
                 <input
                   type="text"
                   value={goodsForm.title}
                   onChange={(e) => handleGoodsField('title', e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Description</label>
+                <label className="block text-xs sm:text-sm text-gray-300 mb-2">Description</label>
                 <textarea
                   value={goodsForm.description}
                   onChange={(e) => handleGoodsField('description', e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                   rows="3"
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2">Price</label>
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Price</label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={goodsForm.price}
                     onChange={(e) => handleGoodsField('price', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2">Condition</label>
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Condition</label>
                   <select
                     value={goodsForm.condition}
                     onChange={(e) => handleGoodsField('condition', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                   >
                     <option>New</option>
                     <option>Excellent</option>
@@ -1766,31 +1807,31 @@ function App() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2">Location</label>
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Location</label>
                   <input
                     type="text"
                     value={goodsForm.location}
                     onChange={(e) => handleGoodsField('location', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2">Image URL (optional)</label>
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Image URL (optional)</label>
                   <input
                     type="url"
                     value={goodsForm.image}
                     onChange={(e) => handleGoodsField('image', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
                   />
                 </div>
               </div>
               <button
                 type="submit"
                 disabled={goodsSubmitting}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-60 text-white font-bold transition"
+                className="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-60 text-white font-bold transition text-sm sm:text-base"
               >
                 {goodsSubmitting ? 'Listing...' : 'Publish Listing'}
               </button>

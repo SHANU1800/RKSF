@@ -28,13 +28,14 @@ export function LocationModal({ onSelectLocation, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="glass-panel rounded-2xl border border-white/10 p-6 max-w-md w-full mx-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="glass-panel rounded-2xl border border-white/10 p-6 max-w-md w-full mx-auto max-h-[90vh] overflow-y-auto -webkit-overflow-scrolling-touch">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-white">📍 Select Location</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">📍 Select Location</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl"
+            className="text-gray-400 hover:text-white text-2xl flex-shrink-0 w-8 h-8 flex items-center justify-center"
+            aria-label="Close"
           >
             ✕
           </button>
@@ -57,22 +58,22 @@ export function LocationModal({ onSelectLocation, onClose }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs text-gray-400 uppercase font-semibold">City</p>
-                  <p className="text-white mt-1">{location.city || '—'}</p>
+                  <p className="text-white mt-1 text-sm sm:text-base">{location.city || '—'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 uppercase font-semibold">State</p>
-                  <p className="text-white mt-1">{location.state || '—'}</p>
+                  <p className="text-white mt-1 text-sm sm:text-base">{location.state || '—'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs text-gray-400 uppercase font-semibold">Postal Code</p>
-                  <p className="text-white mt-1">{location.postalCode || '—'}</p>
+                  <p className="text-white mt-1 text-sm sm:text-base">{location.postalCode || '—'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 uppercase font-semibold">Country</p>
-                  <p className="text-white mt-1">{location.country || '—'}</p>
+                  <p className="text-white mt-1 text-sm sm:text-base">{location.country || '—'}</p>
                 </div>
               </div>
 

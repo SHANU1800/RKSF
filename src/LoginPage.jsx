@@ -208,26 +208,27 @@ function LoginPage({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden flex items-center justify-center p-3 sm:p-4">
       <div className="floating-blob blue" aria-hidden="true" />
       <div className="floating-blob pink" aria-hidden="true" />
       <div className="noisy-layer" aria-hidden="true" />
       <div className="w-full max-w-xl relative">
-        <div className="glass-panel rounded-2xl shadow-2xl p-10 border border-white/10">
-          <div className="text-center mb-8">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Welcome to</p>
-            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-200">RKserve</h1>
-            <p className="text-gray-400 text-sm">Sign in to manage orders and services</p>
+        <div className="glass-panel rounded-2xl shadow-2xl p-6 sm:p-10 border border-white/10">
+          <div className="text-center mb-6 sm:mb-8">
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-slate-400">Welcome to</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-200">RKserve</h1>
+            <p className="text-gray-400 text-xs sm:text-sm">Sign in to manage orders and services</p>
           </div>
 
-          <div className="flex gap-2 mb-6 bg-white/5 p-1 rounded-xl border border-white/10">
+          <div className="flex gap-2 mb-4 sm:mb-6 bg-white/5 p-1 rounded-xl border border-white/10">
             <button
               type="button"
               onClick={() => {
                 setIsSignup(false);
                 setErrors({});
               }}
-              className={`flex-1 py-2 rounded-xl font-semibold transition ${
+              className={`flex-1 py-2 px-3 sm:py-2 sm:px-4 rounded-xl font-semibold text-sm transition ${
+
                 !isSignup ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-300 hover:text-white'
               }`}
             >
