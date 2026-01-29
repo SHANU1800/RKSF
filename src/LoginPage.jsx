@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 function LoginPage({ onLogin }) {
+  const [activeTab, setActiveTab] = useState('password'); // 'password' or 'otp'
   const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -10,6 +11,15 @@ function LoginPage({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // OTP states
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpRequestId, setOtpRequestId] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpStep, setOtpStep] = useState('request'); // 'request' or 'verify'
+  const [otpExpiresAt, setOtpExpiresAt] = useState(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpErrors, setOtpErrors] = useState({});
 
   const getPasswordStrength = () => {
     if (!password) return null;
@@ -41,7 +51,7 @@ function LoginPage({ onLogin }) {
         ? { email, password, name, role }
         : { email, password, rememberMe };
 
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(`https://rksb.onrender.com${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -78,7 +88,7 @@ function LoginPage({ onLogin }) {
     setErrors({});
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('https://rksb.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -110,6 +120,90 @@ function LoginPage({ onLogin }) {
       setErrors({ form: 'Network error. Please try again.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // OTP Functions
+  const handleOtpRequest = async (e) => {
+    e.preventDefault();
+    if (!otpEmail) {
+      setOtpErrors({ email: 'Email is required' });
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpErrors({});
+
+    try {
+      const response = await fetch('https://rksb.onrender.com/api/auth/otp/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setOtpErrors({ form: data.error || 'Failed to send OTP' });
+        return;
+      }
+
+      setOtpRequestId(data.requestId);
+      setOtpExpiresAt(new Date(data.expiresAt));
+      setOtpStep('verify');
+      console.log('✅ OTP sent! Check your email for the 6-digit code');
+    } catch (err) {
+      console.error('OTP request error:', err);
+      setOtpErrors({ form: 'Network error. Please try again.' });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleOtpVerify = async (e) => {
+    e.preventDefault();
+    
+    if (!otpCode || otpCode.length !== 6) {
+      setOtpErrors({ otp: 'OTP must be 6 digits' });
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpErrors({});
+
+    try {
+      const response = await fetch('https://rksb.onrender.com/api/auth/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ requestId: otpRequestId, otp: otpCode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setOtpErrors({ 
+          form: data.error || 'OTP verification failed',
+          attemptsLeft: data.attemptsLeft
+        });
+        return;
+      }
+
+      const user = data.user || {};
+      const mappedUser = {
+        username: user.username || user.email,
+        role: user.role === 'provider' ? 'provider' : 'customer',
+        email: user.email,
+        _id: user._id,
+      };
+
+      console.log('✅ Login successful via OTP!');
+      onLogin(mappedUser);
+    } catch (err) {
+      console.error('OTP verify error:', err);
+      setOtpErrors({ form: 'Network error. Please try again.' });
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -153,12 +247,48 @@ function LoginPage({ onLogin }) {
             </button>
           </div>
 
+          {/* Login/Signup Tabs */}
+          {!isSignup && (
+            <div className="flex gap-2 mb-4 bg-white/5 p-1 rounded-xl border border-white/10">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('password');
+                  setErrors({});
+                }}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition ${
+                  activeTab === 'password'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                Password
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('otp');
+                  setOtpErrors({});
+                }}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition ${
+                  activeTab === 'otp'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                📧 OTP
+              </button>
+            </div>
+          )}
+
           {errors.form && (
             <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded text-red-400 text-sm">
               {errors.form}
             </div>
           )}
 
+          {/* Password Login Form */}
+          {activeTab === 'password' && (
           <form onSubmit={handleSubmit} className="space-y-4" id="authForm">
             {isSignup && (
               <div>
@@ -266,6 +396,100 @@ function LoginPage({ onLogin }) {
               {loading ? 'Please wait...' : isSignup ? 'Create Account' : 'Login'}
             </button>
           </form>
+          )}
+
+          {/* OTP Login Form */}
+          {activeTab === 'otp' && (
+          <form onSubmit={otpStep === 'request' ? handleOtpRequest : handleOtpVerify} className="space-y-4">
+            {otpErrors.form && (
+              <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded text-red-400 text-sm">
+                <div>{otpErrors.form}</div>
+                {otpErrors.attemptsLeft !== undefined && (
+                  <div className="text-xs mt-1">Attempts left: {otpErrors.attemptsLeft}</div>
+                )}
+              </div>
+            )}
+
+            {otpStep === 'request' ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    value={otpEmail}
+                    onChange={(e) => setOtpEmail(e.target.value)}
+                    disabled={otpLoading}
+                    className={`w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60 ${
+                      otpErrors.email ? 'border border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500'
+                    }`}
+                    placeholder="you@example.com"
+                  />
+                  {otpErrors.email && <p className="text-red-400 text-xs mt-1">{otpErrors.email}</p>}
+                </div>
+
+                <p className="text-xs text-gray-400 text-center">
+                  We'll send a 6-digit code to your email. No password needed!
+                </p>
+
+                <button
+                  type="submit"
+                  disabled={otpLoading}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-60 text-white font-bold transition duration-200"
+                >
+                  {otpLoading ? '⏳ Sending...' : '📧 Send OTP Code'}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="bg-blue-900/20 border border-blue-700 rounded-xl p-3 mb-4">
+                  <p className="text-sm text-blue-300">
+                    ✅ OTP sent to <strong>{otpEmail}</strong>
+                  </p>
+                  <p className="text-xs text-blue-400 mt-1">
+                    Expires at: {otpExpiresAt?.toLocaleTimeString()}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">6-Digit Code</label>
+                  <input
+                    type="text"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    disabled={otpLoading}
+                    maxLength="6"
+                    className={`w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl text-center text-2xl letter-spacing-2 focus:outline-none focus:ring-2 disabled:opacity-60 font-mono ${
+                      otpErrors.otp ? 'border border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500'
+                    }`}
+                    placeholder="000000"
+                  />
+                  {otpErrors.otp && <p className="text-red-400 text-xs mt-1">{otpErrors.otp}</p>}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={otpLoading || otpCode.length !== 6}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-lg hover:shadow-green-500/20 disabled:opacity-60 text-white font-bold transition duration-200"
+                >
+                  {otpLoading ? '⏳ Verifying...' : '✓ Verify & Login'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpStep('request');
+                    setOtpCode('');
+                    setOtpErrors({});
+                  }}
+                  disabled={otpLoading}
+                  className="w-full py-2 text-sm text-gray-400 hover:text-white transition"
+                >
+                  ← Request new OTP
+                </button>
+              </>
+            )}
+          </form>
+          )}
 
           <p className="text-center text-xs text-gray-500 mt-6">
             {isSignup ? 'Already have an account? Switch to Login' : 'New here? Switch to Sign Up'}

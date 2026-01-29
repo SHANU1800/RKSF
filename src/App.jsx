@@ -3,12 +3,13 @@ import './App.css';
 import LoginPage from './LoginPage';
 import ProviderCards from './ProviderCards';
 import CustomerCare from './CustomerCare';
+import { LocationModal } from './components/LocationModal';
 import { useToast } from './hooks/useToast';
 import { ToastContainer } from './components/Toast';
 import { handleApiError, validators } from './utils/errorHandler';
 import { io } from 'socket.io-client';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://rksb.onrender.com/api';
 
 function App() {
   const { toasts, addToast, removeToast, success, error, warning, info } = useToast();
@@ -52,6 +53,12 @@ function App() {
   const [orderBill, setOrderBill] = useState(null);
   const [createdOrderId, setCreatedOrderId] = useState(null);
   const [showPayment, setShowPayment] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [paymentForm, setPaymentForm] = useState({
     cardNumber: '',
@@ -65,6 +72,13 @@ function App() {
   const [activeChatRoom, setActiveChatRoom] = useState(null); // { id, title, subtitle, meta }
   const [chatMessages, setChatMessages] = useState({}); // {roomId: [{from, text, at, fromId}]}
   const [chatInput, setChatInput] = useState('');
+  const [userLocation, setUserLocation] = useState(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: 'order', title: 'Order Confirmed', message: 'Your order #12345 has been confirmed', timestamp: new Date(Date.now() - 3600000), read: false },
+    { id: 2, type: 'message', title: 'New Message', message: 'Provider sent you a message', timestamp: new Date(Date.now() - 7200000), read: false },
+    { id: 3, type: 'promo', title: 'Special Offer', message: '20% off on selected services', timestamp: new Date(Date.now() - 86400000), read: true },
+  ]);
   const socketRef = useRef(null);
 
   // Check session on mount and auto-hydrate
@@ -201,7 +215,7 @@ function App() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const socket = io('http://localhost:5000', {
+    const socket = io('https://rksb.onrender.com', {
       withCredentials: true,
       transports: ['websocket', 'polling'],
       path: '/socket.io',
@@ -339,13 +353,17 @@ function App() {
   }
 
   const tabs = [
-    { id: 'market', label: 'Market', icon: '🛒' },
-    { id: 'goods', label: 'Goods', icon: '📦' },
-    { id: 'chat', label: 'Chat', icon: '💬' },
-    { id: 'providers', label: 'Providers', icon: '👥' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'customerCare', label: 'Customer Care', icon: '🤝' },
+    { id: 'market', label: 'Marketplace' },
+    { id: 'goods', label: 'Goods' },
+    { id: 'myOrders', label: 'My Orders' },
+    { id: 'transactions', label: 'Transactions' },
+    { id: 'notifications', label: 'Notifications' },
+    { id: 'reviews', label: 'Reviews' },
+    { id: 'chat', label: 'Messages' },
+    { id: 'providers', label: 'Providers' },
+    { id: 'profile', label: 'Profile' },
+    { id: 'settings', label: 'Settings' },
+    { id: 'customerCare', label: 'Support' },
   ];
 
   const categories = ['all', ...new Set(services.map(s => s.category || 'General'))];
@@ -576,12 +594,84 @@ function App() {
     }
   };
 
-  const processPayment = async () => {
+  const sendOtp = async () => {
     if (!createdOrderId) {
-      error('No order found');
+      setOtpError('Order not found');
       return;
     }
 
+    setOtpError(null);
+    setOtpSending(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${createdOrderId}/payment/otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({}),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send OTP');
+      }
+
+      info('OTP sent to your email and phone');
+      setShowOtpModal(true);
+    } catch (err) {
+      console.error('OTP send error:', err);
+      setOtpError(err.message || 'Failed to send OTP');
+      error(err.message || 'Failed to send OTP');
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!otpInput.trim()) {
+      setOtpError('OTP is required');
+      return;
+    }
+
+    if (!createdOrderId) {
+      setOtpError('Order not found');
+      return;
+    }
+
+    setOtpError(null);
+    setOtpVerifying(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${createdOrderId}/payment/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ otp: otpInput.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'OTP verification failed');
+      }
+
+      setOtpVerified(true);
+      success('OTP verified! Proceeding with payment...');
+      setTimeout(() => {
+        setShowOtpModal(false);
+        proceedWithPayment();
+      }, 1000);
+    } catch (err) {
+      console.error('OTP verification error:', err);
+      setOtpError(err.message || 'Invalid OTP');
+      error(err.message || 'Invalid OTP');
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
+  const proceedWithPayment = async () => {
     // Validate payment form
     if (paymentMethod === 'card') {
       const cardNum = paymentForm.cardNumber.replace(/\s/g, '');
@@ -631,6 +721,8 @@ function App() {
 
       setOrderBill(data.bill);
       setShowPayment(false);
+      setOtpVerified(false);
+      setOtpInput('');
       setPaymentForm({
         cardNumber: '',
         cardExpiry: '',
@@ -646,6 +738,16 @@ function App() {
     } finally {
       setPaymentProcessing(false);
     }
+  };
+
+  const processPayment = async () => {
+    if (!createdOrderId) {
+      error('No order found');
+      return;
+    }
+
+    // Send OTP first
+    await sendOtp();
   };
 
   const renderContent = () => {
@@ -685,17 +787,67 @@ function App() {
 
       case 'profile':
         return (
-          <div className="text-gray-300 space-y-4">
-            <h3 className="text-2xl font-bold text-white">Profile</h3>
+          <div className="text-gray-300 space-y-6">
+            <h3 className="text-2xl font-bold text-white">👤 Profile</h3>
+            
+            {/* User Info */}
             <div className="glass-panel rounded-2xl p-6 space-y-3 border border-white/5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white font-semibold">{currentUser.username}</p>
-                  <p className="text-gray-400 capitalize text-sm">{currentUser.role}</p>
+                  <p className="text-white font-semibold text-lg">{currentUser.username}</p>
+                  <p className="text-gray-400 capitalize text-sm">{currentUser.email}</p>
+                  <p className="text-gray-400 capitalize text-xs mt-1">{currentUser.role}</p>
                 </div>
                 <div className="pill text-emerald-200 border-emerald-500/30 bg-emerald-500/10">Logged in</div>
               </div>
-              <p className="text-gray-400 text-sm">Extend this area with contact info, passwords, and preferences.</p>
+            </div>
+
+            {/* Location Section */}
+            <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-semibold text-white">📍 Delivery Address</h4>
+                <button
+                  onClick={() => setShowLocationModal(true)}
+                  className="text-sm px-3 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-semibold border border-blue-400/30"
+                >
+                  {userLocation ? 'Change' : 'Add'}
+                </button>
+              </div>
+
+              {userLocation ? (
+                <div className="bg-white/5 rounded-xl p-4 space-y-2">
+                  <p className="text-white">{userLocation.fullAddress}</p>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-400">City</p>
+                      <p className="text-white">{userLocation.city || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">State</p>
+                      <p className="text-white">{userLocation.state || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Postal Code</p>
+                      <p className="text-white">{userLocation.postalCode || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Country</p>
+                      <p className="text-white">{userLocation.country || '—'}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 font-mono">
+                    📍 {userLocation.latitude.toFixed(4)}, {userLocation.longitude.toFixed(4)}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">No location set. Click "Add" to use GPS.</p>
+              )}
+            </div>
+
+            {/* More Settings Placeholder */}
+            <div className="glass-panel rounded-2xl p-6 space-y-3 border border-white/5">
+              <h4 className="text-lg font-semibold text-white">⚙️ Settings</h4>
+              <p className="text-gray-400 text-sm">Phone, passwords, and preferences coming soon.</p>
             </div>
           </div>
         );
@@ -854,6 +1006,290 @@ function App() {
           </div>
         );
       }
+
+      case 'myOrders':
+        return (
+          <div className="text-gray-300 space-y-6">
+            <div>
+              <h3 className="text-2xl font-bold text-white">My Orders</h3>
+              <p className="text-gray-400 text-sm">Track and manage your purchases</p>
+            </div>
+
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <div className="space-y-4">
+                <p className="text-gray-400 text-center py-8">
+                  No orders yet. Start shopping from the Marketplace!
+                </p>
+                <button
+                  onClick={() => setActiveTab('market')}
+                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+                >
+                  Browse Marketplace
+                </button>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-3">
+                <h4 className="text-lg font-semibold text-white">Order History</h4>
+                <p className="text-gray-400 text-sm">Your purchase history will appear here</p>
+              </div>
+              <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-3">
+                <h4 className="text-lg font-semibold text-white">Return/Refund</h4>
+                <p className="text-gray-400 text-sm">Manage returns and refunds for your orders</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'transactions':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-2xl font-bold text-white">Transactions & Invoices</h3>
+              <p className="text-gray-400 text-sm">Financial records and billing documents</p>
+            </div>
+
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <div className="flex flex-wrap gap-4 mb-6">
+                <button className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">
+                  All Transactions
+                </button>
+                <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-gray-300 font-semibold border border-white/10 transition">
+                  Purchases
+                </button>
+                <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-gray-300 font-semibold border border-white/10 transition">
+                  Refunds
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="glass-panel border border-white/5 p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-white font-semibold">Order #12345</p>
+                      <p className="text-gray-400 text-sm">Premium Cleaning Service</p>
+                      <p className="text-xs text-gray-500 mt-1">Jan 25, 2026</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-green-400 font-bold text-lg">+2,500</p>
+                      <p className="text-gray-400 text-sm">Paid</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                      View Invoice
+                    </button>
+                    <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+
+                <div className="glass-panel border border-white/5 p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-white font-semibold">Order #12344</p>
+                      <p className="text-gray-400 text-sm">Garden Tool Set</p>
+                      <p className="text-xs text-gray-500 mt-1">Jan 22, 2026</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-red-400 font-bold text-lg">-1,200</p>
+                      <p className="text-gray-400 text-sm">Refunded</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                      View Invoice
+                    </button>
+                    <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="glass-panel rounded-2xl border border-white/5 p-4">
+                <p className="text-gray-400 text-sm">Total Spent</p>
+                <p className="text-white text-2xl font-bold mt-2">₹15,750</p>
+              </div>
+              <div className="glass-panel rounded-2xl border border-white/5 p-4">
+                <p className="text-gray-400 text-sm">Total Refunded</p>
+                <p className="text-red-400 text-2xl font-bold mt-2">₹1,200</p>
+              </div>
+              <div className="glass-panel rounded-2xl border border-white/5 p-4">
+                <p className="text-gray-400 text-sm">This Month</p>
+                <p className="text-green-400 text-2xl font-bold mt-2">₹5,300</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'notifications':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-white">Notifications</h3>
+                <p className="text-gray-400 text-sm">Stay updated with important alerts</p>
+              </div>
+              <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-gray-300 font-semibold border border-white/10 transition text-sm">
+                Mark All Read
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {notifications.length === 0 ? (
+                <div className="glass-panel rounded-2xl border border-white/5 p-8 text-center text-gray-400">
+                  No notifications
+                </div>
+              ) : (
+                notifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    className={`glass-panel rounded-2xl border p-4 cursor-pointer transition ${
+                      notif.read ? 'border-white/5 bg-white/5' : 'border-blue-400/30 bg-blue-400/10'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-semibold">{notif.title}</p>
+                          {!notif.read && (
+                            <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                          )}
+                        </div>
+                        <p className="text-gray-400 text-sm mt-1">{notif.message}</p>
+                        <p className="text-gray-500 text-xs mt-2">
+                          {notif.timestamp.toLocaleDateString()} {notif.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                          Action
+                        </button>
+                        <button className="p-2 rounded-lg bg-white/10 hover:bg-white/15 text-gray-400 hover:text-white transition">
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <h4 className="text-lg font-semibold text-white mb-4">Notification Settings</h4>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                  <span className="text-gray-300">Order updates and confirmations</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                  <span className="text-gray-300">Messages from providers</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                  <span className="text-gray-300">Promotional offers and deals</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" className="w-4 h-4" />
+                  <span className="text-gray-300">Price drop alerts for saved searches</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'reviews':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-2xl font-bold text-white">Reviews & Ratings</h3>
+              <p className="text-gray-400 text-sm">Manage your feedback and leave reviews</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="glass-panel rounded-2xl border border-white/5 p-6">
+                <h4 className="text-lg font-semibold text-white mb-4">Pending Reviews</h4>
+                <div className="space-y-3">
+                  <div className="glass-panel border border-white/5 p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-white font-semibold">Premium Cleaning Service</p>
+                        <p className="text-gray-400 text-sm">Order #12345</p>
+                      </div>
+                      <p className="text-gray-400 text-xs">Jan 25, 2026</p>
+                    </div>
+                    <button className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition">
+                      Write Review
+                    </button>
+                  </div>
+                  <div className="glass-panel border border-white/5 p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-white font-semibold">Garden Tool Set</p>
+                        <p className="text-gray-400 text-sm">Order #12344</p>
+                      </div>
+                      <p className="text-gray-400 text-xs">Jan 22, 2026</p>
+                    </div>
+                    <button className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition">
+                      Write Review
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-panel rounded-2xl border border-white/5 p-6">
+                <h4 className="text-lg font-semibold text-white mb-4">Reviews You Left</h4>
+                <div className="space-y-3">
+                  <div className="glass-panel border border-white/5 p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="text-white font-semibold">Professional Plumber</p>
+                      <div className="flex text-yellow-400">★★★★★</div>
+                    </div>
+                    <p className="text-gray-400 text-sm">Excellent service, very professional and on time.</p>
+                    <p className="text-gray-500 text-xs mt-2">Jan 20, 2026</p>
+                  </div>
+                  <div className="glass-panel border border-white/5 p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="text-white font-semibold">Web Design Package</p>
+                      <div className="flex text-yellow-400">★★★★</div>
+                    </div>
+                    <p className="text-gray-400 text-sm">Good quality work, minor delays in delivery.</p>
+                    <p className="text-gray-500 text-xs mt-2">Jan 15, 2026</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <h4 className="text-lg font-semibold text-white mb-4">Your Rating Summary (Providers Only)</h4>
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">Average Rating</p>
+                  <p className="text-white text-3xl font-bold mt-2">4.8</p>
+                  <div className="flex justify-center text-yellow-400 mt-1">★★★★★</div>
+                </div>
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">Total Reviews</p>
+                  <p className="text-white text-3xl font-bold mt-2">47</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">Response Rate</p>
+                  <p className="text-white text-3xl font-bold mt-2">95%</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">Positive Reviews</p>
+                  <p className="text-white text-3xl font-bold mt-2">44</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
 
       case 'goods': {
         const conditions = ['all', 'excellent', 'good', 'fair', 'new'];
@@ -1162,7 +1598,6 @@ function App() {
                     : 'text-gray-300 border-white/5 hover:bg-white/5'
                 }`}
               >
-                <span>{tab.icon}</span>
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -1183,6 +1618,14 @@ function App() {
                 ? 'Explore curated services from trusted providers, search, filter, and transact in a few clicks.'
                 : activeTab === 'goods'
                   ? 'Browse items, chat live with sellers, and make offers on goods.'
+                  : activeTab === 'myOrders'
+                    ? 'Track your purchases, manage orders, and handle returns.'
+                  : activeTab === 'transactions'
+                    ? 'View your financial records, invoices, and billing history.'
+                  : activeTab === 'notifications'
+                    ? 'Receive and manage important alerts about your orders and activity.'
+                  : activeTab === 'reviews'
+                    ? 'Leave reviews for services you purchased and see your ratings.'
                   : activeTab === 'chat'
                     ? 'Keep all your conversations in one place and reach providers or sellers instantly.'
                 : activeTab === 'providers'
@@ -1580,10 +2023,10 @@ function App() {
                   </button>
                   <button
                     onClick={processPayment}
-                    disabled={paymentProcessing}
+                    disabled={paymentProcessing || otpSending}
                     className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-60 text-white font-bold transition"
                   >
-                    {paymentProcessing ? '⏳ Processing...' : '✓ Pay Now'}
+                    {otpSending ? '📤 Sending OTP...' : paymentProcessing ? '⏳ Processing...' : '✓ Pay Now'}
                   </button>
                 </div>
               </div>
@@ -1759,6 +2202,85 @@ function App() {
             )}
           </div>
         </div>
+      )}
+
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="glass-panel rounded-2xl border border-white/10 p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-white mb-2">🔐 Verify Payment</h2>
+            <p className="text-gray-400 text-sm mb-6">Enter the OTP sent to your email and phone</p>
+
+            {otpError && (
+              <div className="bg-red-900/50 border border-red-700 text-red-200 p-3 rounded-lg text-sm mb-4">
+                {otpError}
+              </div>
+            )}
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-300 mb-2">One-Time Password</label>
+              <input
+                type="text"
+                placeholder="000000"
+                maxLength="6"
+                value={otpInput}
+                onChange={(e) => {
+                  setOtpInput(e.target.value.replace(/\D/g, ''));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && otpInput.length === 6) {
+                    e.preventDefault();
+                    verifyOtp();
+                  }
+                }}
+                className="w-full px-4 py-3 bg-slate-900/70 text-white text-center text-2xl tracking-widest rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+              />
+              <p className="text-xs text-gray-500 mt-2">Check your email/SMS for the 6-digit code</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowOtpModal(false);
+                  setOtpInput('');
+                  setOtpError(null);
+                }}
+                className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold border border-white/10 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={verifyOtp}
+                disabled={otpVerifying || otpInput.length !== 6}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-60 text-white font-bold transition"
+              >
+                {otpVerifying ? '⏳ Verifying...' : '✓ Verify'}
+              </button>
+            </div>
+
+            <button
+              onClick={async () => {
+                setOtpInput('');
+                setOtpError(null);
+                await sendOtp();
+              }}
+              className="w-full mt-4 py-2 text-sm text-blue-400 hover:text-blue-300 font-semibold"
+            >
+              Resend OTP
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Location Modal */}
+      {showLocationModal && (
+        <LocationModal
+          onSelectLocation={(location) => {
+            setUserLocation(location);
+            success(`Location set: ${location.city}, ${location.state}`);
+          }}
+          onClose={() => setShowLocationModal(false)}
+        />
       )}
 
       {/* Global Chat Drawer */}

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://rksb.onrender.com/api';
 
 export default function CustomerCare({ currentUser }) {
   const [messages, setMessages] = useState([]); // { role: 'user'|'assistant', content }
