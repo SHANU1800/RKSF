@@ -12,7 +12,7 @@ import { io } from 'socket.io-client';
 const API_BASE_URL = 'https://rksb.onrender.com/api';
 
 function App() {
-  const { toasts, addToast, removeToast, success, error, warning, info } = useToast();
+  const { toasts, removeToast, success, error, warning, info } = useToast();
   const [currentUser, setCurrentUser] = useState(null);
   const [providers, setProviders] = useState([]);
   const [services, setServices] = useState([]);
@@ -57,7 +57,6 @@ function App() {
   const [otpInput, setOtpInput] = useState('');
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
   const [otpError, setOtpError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [paymentForm, setPaymentForm] = useState({
@@ -74,7 +73,7 @@ function App() {
   const [chatInput, setChatInput] = useState('');
   const [userLocation, setUserLocation] = useState(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [notifications, setNotifications] = useState([
+  const [notifications] = useState([
     { id: 1, type: 'order', title: 'Order Confirmed', message: 'Your order #12345 has been confirmed', timestamp: new Date(Date.now() - 3600000), read: false },
     { id: 2, type: 'message', title: 'New Message', message: 'Provider sent you a message', timestamp: new Date(Date.now() - 7200000), read: false },
     { id: 3, type: 'promo', title: 'Special Offer', message: '20% off on selected services', timestamp: new Date(Date.now() - 86400000), read: true },
@@ -135,8 +134,7 @@ function App() {
       error('Failed to load providers');
       setProviders([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [error]);
 
   const fetchServices = useCallback(async () => {
     setLoadingServices(true);
@@ -156,8 +154,7 @@ function App() {
     } finally {
       setLoadingServices(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [error]);
 
   const fetchGoods = useCallback(async () => {
     setLoadingGoods(true);
@@ -199,7 +196,6 @@ function App() {
     } finally {
       setLoadingGoods(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch providers and services when user logs in
@@ -656,7 +652,6 @@ function App() {
         throw new Error(data.error || 'OTP verification failed');
       }
 
-      setOtpVerified(true);
       success('OTP verified! Proceeding with payment...');
       setTimeout(() => {
         setShowOtpModal(false);
@@ -721,7 +716,6 @@ function App() {
 
       setOrderBill(data.bill);
       setShowPayment(false);
-      setOtpVerified(false);
       setOtpInput('');
       setPaymentForm({
         cardNumber: '',
@@ -943,7 +937,7 @@ function App() {
                 </div>
               </div>
 
-              <div className="lg:col-span-2 glass-panel rounded-2xl border border-white/5 p-4 flex flex-col min-h-[420px]">
+              <div className="lg:col-span-2 glass-panel rounded-2xl border border-white/5 p-4 flex flex-col min-h-105">
                 {activeChatRoom ? (
                   <>
                     <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-3">
@@ -967,7 +961,7 @@ function App() {
                         <div key={idx} className={`flex ${m.fromId === currentUser._id ? 'justify-end' : 'justify-start'}`}>
                           <div className={`px-3 py-2 rounded-xl text-sm max-w-[75%] ${m.fromId === currentUser._id ? 'bg-emerald-500/20 border border-emerald-400/40' : 'bg-white/5 border border-white/10'}`}>
                             <p className="text-gray-200 font-semibold">{m.from}</p>
-                            <p className="text-white whitespace-pre-wrap break-words">{m.text}</p>
+                            <p className="text-white whitespace-pre-wrap wrap-break-word">{m.text}</p>
                             <p className="text-[10px] text-gray-400 mt-1">{new Date(m.at).toLocaleTimeString()}</p>
                           </div>
                         </div>
@@ -990,7 +984,7 @@ function App() {
                       />
                       <button
                         onClick={sendChatMessage}
-                        className="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold"
+                        className="px-4 py-3 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold"
                       >
                         Send
                       </button>
@@ -1305,7 +1299,7 @@ function App() {
                 {currentUser.role === 'provider' && (
                   <button
                     onClick={() => setShowGoodsModal(true)}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 text-white font-semibold transition"
+                    className="px-4 py-2 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 text-white font-semibold transition"
                   >
                     + List Goods
                   </button>
@@ -1380,7 +1374,7 @@ function App() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => openGoodsChat(item)}
-                              className="flex-1 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:shadow-lg hover:shadow-sky-500/25 text-white font-semibold transition"
+                              className="flex-1 py-2 rounded-xl bg-linear-to-r from-sky-500 to-indigo-600 hover:shadow-lg hover:shadow-sky-500/25 text-white font-semibold transition"
                             >
                               View & Chat
                             </button>
@@ -1417,7 +1411,7 @@ function App() {
                   {currentUser.role === 'provider' && (
                     <button
                       onClick={() => setShowServiceModal(true)}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 text-white font-semibold transition"
+                      className="px-4 py-2 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 text-white font-semibold transition"
                     >
                       + Add Service
                     </button>
@@ -1488,7 +1482,7 @@ function App() {
                     const price = Number.isFinite(service.price) ? `₹${service.price}` : '—';
                     return (
                       <div key={service._id} className="glass-panel rounded-2xl border border-white/5 overflow-hidden card-hover">
-                        <div className="h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400" />
+                        <div className="h-1 bg-linear-to-r from-blue-500 via-cyan-400 to-emerald-400" />
                         {service.image && (
                           <div className="w-full h-48 bg-gray-700/40">
                             <img 
@@ -1529,7 +1523,7 @@ function App() {
                                 openCheckout(service);
                                 setCheckoutType('buy');
                               }}
-                              className="flex-1 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 text-white font-semibold transition"
+                              className="flex-1 py-2 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 text-white font-semibold transition"
                             >
                               🧾 Buy Package
                             </button>
@@ -1565,7 +1559,7 @@ function App() {
             {/* Logo */}
             <div className="flex-1 min-w-0">
               <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-slate-400 truncate">RKserve</p>
-              <h1 className="text-lg sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-200 truncate">Marketplace</h1>
+              <h1 className="text-lg sm:text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-sky-400 via-cyan-300 to-emerald-200 truncate">Marketplace</h1>
             </div>
             
             {/* User Info - Hidden on very small screens */}
@@ -1580,7 +1574,7 @@ function App() {
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
+                  className="px-4 py-2 rounded-xl bg-linear-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
                 >
                   Logout
                 </button>
@@ -1590,7 +1584,7 @@ function App() {
             {/* Mobile logout button */}
             <button
               onClick={handleLogout}
-              className="sm:hidden px-3 py-2 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
+              className="sm:hidden px-3 py-2 rounded-lg bg-linear-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
             >
               Out
             </button>
@@ -1610,7 +1604,7 @@ function App() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition font-semibold border text-sm ${
                     activeTab === tab.id
-                      ? 'bg-gradient-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40 shadow-lg'
+                      ? 'bg-linear-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40 shadow-lg'
                       : 'text-gray-300 border-white/5 hover:bg-white/5'
                   }`}
                 >
@@ -1625,8 +1619,12 @@ function App() {
             <div className="mb-6 sm:mb-10">
               <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <span className="badge-soft text-xs">{activeTab}</span>
-                <h2 className="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-200">
-                  {activeTab === 'market' ? 'Market' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                <h2 className="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-cyan-300 to-emerald-200">
+                  {activeTab === 'market'
+                    ? 'Market'
+                    : activeTab === 'rps'
+                      ? 'Rock Paper Scissors'
+                      : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                 </h2>
               </div>
               <p className="text-gray-300 text-xs sm:text-sm max-w-2xl">
@@ -1634,6 +1632,8 @@ function App() {
                   ? 'Explore curated services from trusted providers, search, filter, and transact in a few clicks.'
                   : activeTab === 'goods'
                     ? 'Browse items, chat live with sellers, and make offers on goods.'
+                    : activeTab === 'rps'
+                      ? 'Challenge the bot in a fast best-of match. First to the target wins.'
                     : activeTab === 'myOrders'
                       ? 'Track your purchases, manage orders, and handle returns.'
                       : activeTab === 'transactions'
@@ -1668,7 +1668,7 @@ function App() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 min-w-max flex flex-col items-center justify-center px-2 py-2 rounded-lg text-xs transition font-semibold border ${
                 activeTab === tab.id
-                  ? 'bg-gradient-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40'
+                  ? 'bg-linear-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40'
                   : 'text-gray-400 border-white/5 hover:bg-white/5'
               }`}
             >
@@ -1688,7 +1688,7 @@ function App() {
           <div className="glass-panel rounded-xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6 relative border border-white/10 shadow-2xl">
             <button
               onClick={() => setShowServiceModal(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white flex-shrink-0 w-8 h-8 flex items-center justify-center"
+              className="absolute top-3 right-3 text-gray-400 hover:text-white shrink-0 w-8 h-8 flex items-center justify-center"
             >
               ✕
             </button>
@@ -1740,7 +1740,7 @@ function App() {
               <button
                 type="submit"
                 disabled={serviceSubmitting}
-                className="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-60 text-white font-bold transition text-sm sm:text-base"
+                className="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-60 text-white font-bold transition text-sm sm:text-base"
               >
                 {serviceSubmitting ? 'Saving...' : 'Save Service'}
               </button>
@@ -1754,7 +1754,7 @@ function App() {
           <div className="glass-panel rounded-xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6 relative border border-white/10 shadow-2xl">
             <button
               onClick={() => setShowGoodsModal(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white flex-shrink-0 w-8 h-8 flex items-center justify-center"
+              className="absolute top-3 right-3 text-gray-400 hover:text-white shrink-0 w-8 h-8 flex items-center justify-center"
             >
               ✕
             </button>
@@ -1831,7 +1831,7 @@ function App() {
               <button
                 type="submit"
                 disabled={goodsSubmitting}
-                className="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-60 text-white font-bold transition text-sm sm:text-base"
+                className="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-60 text-white font-bold transition text-sm sm:text-base"
               >
                 {goodsSubmitting ? 'Listing...' : 'Publish Listing'}
               </button>
@@ -1925,7 +1925,7 @@ function App() {
                     type="button"
                     onClick={submitOrder}
                     disabled={checkoutSubmitting}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:shadow-lg hover:shadow-sky-500/25 disabled:opacity-60 text-white font-bold transition"
+                    className="w-full py-3 rounded-xl bg-linear-to-r from-sky-500 to-indigo-600 hover:shadow-lg hover:shadow-sky-500/25 disabled:opacity-60 text-white font-bold transition"
                   >
                     {checkoutSubmitting ? 'Processing...' : 'Proceed to Payment'}
                   </button>
@@ -1960,7 +1960,7 @@ function App() {
                       onClick={() => setPaymentMethod('card')}
                       className={`py-3 rounded-xl font-semibold transition border ${
                         paymentMethod === 'card'
-                          ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white border-sky-400/40 shadow-lg shadow-sky-500/20'
+                          ? 'bg-linear-to-r from-sky-500 to-indigo-600 text-white border-sky-400/40 shadow-lg shadow-sky-500/20'
                           : 'bg-slate-900/70 text-gray-200 border-white/10 hover:bg-white/5'
                       }`}
                     >
@@ -1971,7 +1971,7 @@ function App() {
                       onClick={() => setPaymentMethod('upi')}
                       className={`py-3 rounded-xl font-semibold transition border ${
                         paymentMethod === 'upi'
-                          ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white border-sky-400/40 shadow-lg shadow-sky-500/20'
+                          ? 'bg-linear-to-r from-sky-500 to-indigo-600 text-white border-sky-400/40 shadow-lg shadow-sky-500/20'
                           : 'bg-slate-900/70 text-gray-200 border-white/10 hover:bg-white/5'
                       }`}
                     >
@@ -2065,7 +2065,7 @@ function App() {
                   <button
                     onClick={processPayment}
                     disabled={paymentProcessing || otpSending}
-                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-60 text-white font-bold transition"
+                    className="flex-1 py-3 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-60 text-white font-bold transition"
                   >
                     {otpSending ? '📤 Sending OTP...' : paymentProcessing ? '⏳ Processing...' : '✓ Pay Now'}
                   </button>
@@ -2078,7 +2078,7 @@ function App() {
                 <div className="border-b-2 border-gray-600 pb-6 mb-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">RKserve</h1>
+                      <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-400">RKserve</h1>
                       <p className="text-gray-500 text-sm">B2B Service Marketplace</p>
                     </div>
                     <div className="text-right">
@@ -2293,7 +2293,7 @@ function App() {
               <button
                 onClick={verifyOtp}
                 disabled={otpVerifying || otpInput.length !== 6}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-60 text-white font-bold transition"
+                className="flex-1 py-3 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-60 text-white font-bold transition"
               >
                 {otpVerifying ? '⏳ Verifying...' : '✓ Verify'}
               </button>
@@ -2349,7 +2349,7 @@ function App() {
                 <div key={idx} className={`flex ${m.fromId === currentUser._id ? 'justify-end' : 'justify-start'}`}>
                   <div className={`px-3 py-2 rounded-xl text-sm max-w-[80%] ${m.fromId === currentUser._id ? 'bg-emerald-500/20 border border-emerald-400/40' : 'bg-white/5 border border-white/10'}`}>
                     <p className="text-gray-200 font-semibold">{m.from}</p>
-                    <p className="text-white whitespace-pre-wrap break-words">{m.text}</p>
+                    <p className="text-white whitespace-pre-wrap wrap-break-word">{m.text}</p>
                     <p className="text-[10px] text-gray-400 mt-1">{new Date(m.at).toLocaleTimeString()}</p>
                   </div>
                 </div>
@@ -2372,7 +2372,7 @@ function App() {
               />
               <button
                 onClick={sendChatMessage}
-                className="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold"
+                className="px-4 py-3 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold"
               >
                 Send
               </button>
