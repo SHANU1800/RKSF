@@ -134,7 +134,7 @@ function App() {
       error('Failed to load providers');
       setProviders([]);
     }
-  }, [error]);
+  }, []);
 
   const fetchServices = useCallback(async () => {
     setLoadingServices(true);
@@ -154,7 +154,7 @@ function App() {
     } finally {
       setLoadingServices(false);
     }
-  }, [error]);
+  }, []);
 
   const fetchGoods = useCallback(async () => {
     setLoadingGoods(true);
@@ -198,18 +198,18 @@ function App() {
     }
   }, []);
 
-  // Fetch providers and services when user logs in
+  // Fetch providers and services when user logs in - only trigger once per user
   useEffect(() => {
     if (currentUser) {
       fetchProviders();
       fetchServices();
       fetchGoods();
     }
-  }, [currentUser, fetchProviders, fetchServices, fetchGoods]);
+  }, [currentUser?._id]);
 
   // Socket connection for chat
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser?._id) return;
 
     const socket = io('https://rksb.onrender.com', {
       withCredentials: true,
@@ -222,8 +222,6 @@ function App() {
 
     socket.on('connect', () => {
       console.log('socket connected');
-
-      // Auto-join provider inbox room so providers receive customer messages without manual open
       if (currentUser?.role === 'provider' && currentUser?._id) {
         socket.emit('chat:join', { room: `provider-${currentUser._id}` });
       }
@@ -231,7 +229,6 @@ function App() {
 
     socket.on('connect_error', (err) => {
       console.error('socket connect_error', err?.message || err);
-      error('Realtime connection failed. Please refresh.');
     });
 
     socket.on('chat:message', (payload) => {
@@ -244,7 +241,6 @@ function App() {
         [key]: [...(prev[key] || []), msg],
       }));
 
-      // passive toast if message for a different room
       if (!activeChatRoom || activeChatRoom.id !== key) {
         info(msg.from ? `${msg.from}: ${msg.text}` : 'New message received');
       }
@@ -265,10 +261,7 @@ function App() {
     return () => {
       socket.disconnect();
     };
-    // Note: toast helpers are intentionally omitted from deps to avoid
-    // re-creating the socket on each render (they are stable enough).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const checkServerHealth = async () => {
     try {
