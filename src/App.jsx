@@ -1547,13 +1547,13 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-950 text-slate-50 pb-24 sm:pb-0">
+    <div className="min-h-screen relative overflow-hidden bg-slate-950 text-slate-50 pb-24 sm:pb-0 page-shell">
       <div className="floating-blob blue" aria-hidden="true" />
       <div className="floating-blob pink" aria-hidden="true" />
       <div className="noisy-layer" aria-hidden="true" />
 
       {/* Header - Responsive */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10 header-veil">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex justify-between items-center gap-3">
             {/* Logo */}
@@ -1596,7 +1596,7 @@ function App() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-10">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
           {/* Sidebar - Hidden on mobile, shown on tablet+ */}
-          <aside className="hidden sm:block sm:w-48 glass-panel rounded-2xl p-4 h-fit sticky top-24 border border-white/5 shadow-xl">
+          <aside className="hidden sm:block sm:w-48 glass-panel rounded-2xl p-4 h-fit sticky top-24 border border-white/5 shadow-xl lift-card">
             <nav className="space-y-2">
               {tabs.map((tab) => (
                 <button
@@ -1615,7 +1615,7 @@ function App() {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 min-w-0">
+          <main className="flex-1 min-w-0 fade-in content-shell">
             <div className="mb-6 sm:mb-10">
               <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <span className="badge-soft text-xs">{activeTab}</span>
@@ -1660,7 +1660,7 @@ function App() {
       </div>
 
       {/* Mobile Bottom Navigation - Only on small screens */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-white/10">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-white/10 header-veil">
         <div className="flex overflow-x-auto gap-1 px-2 py-2 h-20">
           {tabs.slice(0, 6).map((tab) => (
             <button
