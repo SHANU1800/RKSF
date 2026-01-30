@@ -1616,9 +1616,9 @@ function App() {
 
           {/* Main Content */}
           <main className="flex-1 min-w-0 fade-in content-shell">
-            <div className="mb-6 sm:mb-10">
+            <div className="mb-6 sm:mb-10 section-hero">
               <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <span className="badge-soft text-xs">{activeTab}</span>
+                <span className="badge-soft text-xs accent-dot">{activeTab}</span>
                 <h2 className="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-cyan-300 to-emerald-200">
                   {activeTab === 'market'
                     ? 'Market'
