@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 
-const API_BASE_URL = 'https://rksb.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://rksb.onrender.com/api';
 
 export default function CustomerCare({ currentUser }) {
   const [messages, setMessages] = useState([]); // { role: 'user'|'assistant', content }
@@ -67,7 +67,7 @@ export default function CustomerCare({ currentUser }) {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 glass-panel rounded-2xl border border-white/5 p-3 sm:p-4 flex flex-col min-h-[400px] sm:min-h-[480px]">
+        <div className="lg:col-span-2 glass-panel rounded-2xl border border-white/5 p-3 sm:p-4 flex flex-col min-h-100 sm:min-h-120">
           <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-3">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-wide text-slate-400">AI Assistant</p>
@@ -86,7 +86,7 @@ export default function CustomerCare({ currentUser }) {
                 <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`px-3 py-2 rounded-xl text-xs sm:text-sm max-w-[85%] sm:max-w-[75%] ${m.role === 'user' ? 'bg-emerald-500/20 border border-emerald-400/40' : 'bg-white/5 border border-white/10'}`}>
                     <p className="text-gray-200 font-semibold text-xs">{m.role === 'user' ? currentUser?.username || 'You' : 'RKserve Care'}</p>
-                    <p className="text-white whitespace-pre-wrap break-words">{m.content}</p>
+                    <p className="text-white whitespace-pre-wrap wrap-break-word">{m.content}</p>
                   </div>
                 </div>
               ))
@@ -105,7 +105,7 @@ export default function CustomerCare({ currentUser }) {
             <button
               onClick={sendMessage}
               disabled={loading}
-              className="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold disabled:opacity-60 text-sm whitespace-nowrap"
+              className="px-4 py-3 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold disabled:opacity-60 text-sm whitespace-nowrap"
             >
               {loading ? 'Thinking…' : 'Send'}
             </button>

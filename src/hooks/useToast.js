@@ -28,5 +28,6 @@ export const useToast = () => {
     error: (msg, duration) => addToast(msg, 'error', duration),
     warning: (msg, duration) => addToast(msg, 'warning', duration),
     info: (msg, duration) => addToast(msg, 'info', duration),
+    retry: (msg, duration) => addToast(msg, 'retry', duration),
   };
 };

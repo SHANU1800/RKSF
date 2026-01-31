@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { LockIcon, AlertCircleIcon, EyeIcon, EyeOffIcon, CheckIcon } from './components/icons/IconTypes';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://rksb.onrender.com/api';
 
 function LoginPage({ onLogin }) {
   const [activeTab, setActiveTab] = useState('password'); // 'password' or 'otp'
@@ -51,7 +54,7 @@ function LoginPage({ onLogin }) {
         ? { email, password, name, role }
         : { email, password, rememberMe };
 
-      const response = await fetch(`https://rksb.onrender.com${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -88,7 +91,7 @@ function LoginPage({ onLogin }) {
     setErrors({});
 
     try {
-      const response = await fetch('https://rksb.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -135,7 +138,7 @@ function LoginPage({ onLogin }) {
     setOtpErrors({});
 
     try {
-      const response = await fetch('https://rksb.onrender.com/api/auth/otp/request', {
+      const response = await fetch(`${API_BASE_URL}/auth/otp/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: otpEmail }),
@@ -151,7 +154,7 @@ function LoginPage({ onLogin }) {
       setOtpRequestId(data.requestId);
       setOtpExpiresAt(new Date(data.expiresAt));
       setOtpStep('verify');
-      console.log('✅ OTP sent! Check your email for the 6-digit code');
+      console.log('OTP sent! Check your email for the 6-digit code');
     } catch (err) {
       console.error('OTP request error:', err);
       setOtpErrors({ form: 'Network error. Please try again.' });
@@ -172,7 +175,7 @@ function LoginPage({ onLogin }) {
     setOtpErrors({});
 
     try {
-      const response = await fetch('https://rksb.onrender.com/api/auth/otp/verify', {
+      const response = await fetch(`${API_BASE_URL}/auth/otp/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -197,7 +200,7 @@ function LoginPage({ onLogin }) {
         _id: user._id,
       };
 
-      console.log('✅ Login successful via OTP!');
+      console.log('Login successful via OTP!');
       onLogin(mappedUser);
     } catch (err) {
       console.error('OTP verify error:', err);
@@ -208,31 +211,47 @@ function LoginPage({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 relative overflow-hidden flex items-center justify-center p-3 sm:p-4">
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden flex items-center justify-center p-4 sm:p-6">
+      {/* Beautiful animated background */}
       <div className="floating-blob blue" aria-hidden="true" />
       <div className="floating-blob pink" aria-hidden="true" />
       <div className="noisy-layer" aria-hidden="true" />
-      <div className="w-full max-w-xl relative">
-        <div className="glass-panel rounded-2xl shadow-2xl p-6 sm:p-10 border border-white/10">
-          <div className="text-center mb-6 sm:mb-8">
-            <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-slate-400">Welcome to</p>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-200">RKserve</h1>
-            <p className="text-gray-400 text-xs sm:text-sm">Sign in to manage orders and services</p>
+      
+      {/* Gradient orbs for extra depth */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-linear-to-br from-cyan-500/20 to-transparent rounded-full blur-3xl" aria-hidden="true" />
+      <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-linear-to-tr from-purple-500/15 to-transparent rounded-full blur-3xl" aria-hidden="true" />
+      
+      <div className="w-full max-w-md sm:max-w-xl relative">
+        <div className="glass-panel rounded-3xl shadow-2xl p-6 sm:p-10 border border-white/10 relative overflow-hidden">
+          {/* Top gradient accent */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-sky-400 via-cyan-400 to-emerald-400" />
+          
+          {/* Logo and Welcome */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-2xl bg-linear-to-br from-sky-400 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-xl shadow-cyan-500/30">
+              <span className="text-white font-bold text-3xl sm:text-4xl">R</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-sky-400 via-cyan-300 to-emerald-200">
+              RKserve
+            </h1>
+            <p className="text-gray-400 text-sm sm:text-base mt-2">Your trusted marketplace</p>
           </div>
 
-          <div className="flex gap-2 mb-4 sm:mb-6 bg-white/5 p-1 rounded-xl border border-white/10">
+          {/* Login/Signup Toggle */}
+          <div className="flex gap-2 mb-6 bg-white/5 p-1.5 rounded-2xl border border-white/10">
             <button
               type="button"
               onClick={() => {
                 setIsSignup(false);
                 setErrors({});
               }}
-              className={`flex-1 py-2 px-3 sm:py-2 sm:px-4 rounded-xl font-semibold text-sm transition ${
-
-                !isSignup ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-300 hover:text-white'
+              className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all duration-200 ${
+                !isSignup 
+                  ? 'bg-linear-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Login
+              Sign In
             </button>
             <button
               type="button"
@@ -240,30 +259,32 @@ function LoginPage({ onLogin }) {
                 setIsSignup(true);
                 setErrors({});
               }}
-              className={`flex-1 py-2 rounded-xl font-semibold transition ${
-                isSignup ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-300 hover:text-white'
+              className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all duration-200 ${
+                isSignup 
+                  ? 'bg-linear-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Sign Up
+              Create Account
             </button>
           </div>
 
-          {/* Login/Signup Tabs */}
+          {/* Login Method Tabs (only for login) */}
           {!isSignup && (
-            <div className="flex gap-2 mb-4 bg-white/5 p-1 rounded-xl border border-white/10">
+            <div className="flex gap-2 mb-6 bg-white/5 p-1 rounded-xl border border-white/10">
               <button
                 type="button"
                 onClick={() => {
                   setActiveTab('password');
                   setErrors({});
                 }}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition ${
+                className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${
                   activeTab === 'password'
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20'
-                    : 'text-gray-300 hover:text-white'
+                    ? 'bg-linear-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20'
+                    : 'text-gray-400 hover:text-white'
                 }`}
               >
-                Password
+                <LockIcon size={14} className="inline mr-1" /> Password
               </button>
               <button
                 type="button"
@@ -271,20 +292,21 @@ function LoginPage({ onLogin }) {
                   setActiveTab('otp');
                   setOtpErrors({});
                 }}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition ${
+                className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${
                   activeTab === 'otp'
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20'
-                    : 'text-gray-300 hover:text-white'
+                    ? 'bg-linear-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20'
+                    : 'text-gray-400 hover:text-white'
                 }`}
               >
-                📧 OTP
+                📧 Email OTP
               </button>
             </div>
           )}
 
           {errors.form && (
-            <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded text-red-400 text-sm">
-              {errors.form}
+            <div className="mb-4 p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-300 text-sm flex items-center gap-3">
+              <AlertCircleIcon size={20} className="text-yellow-400" />
+              <span>{errors.form}</span>
             </div>
           )}
 
@@ -293,32 +315,32 @@ function LoginPage({ onLogin }) {
           <form onSubmit={handleSubmit} className="space-y-4" id="authForm">
             {isSignup && (
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className={`w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 ${
-                    errors.name ? 'border border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500'
+                  className={`w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                    errors.name ? 'border-2 border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500 focus:border-blue-500'
                   }`}
-                  placeholder="Jane Doe"
+                  placeholder="John Doe"
                 />
-                {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                {errors.name && <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1"><AlertCircleIcon size={12} className="inline" /> {errors.name}</p>}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 ${
-                  errors.email ? 'border border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500'
+                className={`w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                  errors.email ? 'border-2 border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500 focus:border-blue-500'
                 }`}
                 placeholder="you@example.com"
               />
-              {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+              {errors.email && <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1"><AlertCircleIcon size={12} className="inline" /> {errors.email}</p>}
             </div>
 
             <div>
@@ -328,73 +350,74 @@ function LoginPage({ onLogin }) {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 pr-10 ${
-                    errors.password ? 'border border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500'
+                  className={`w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 pr-12 transition-all ${
+                    errors.password ? 'border-2 border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500 focus:border-blue-500'
                   }`}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/10"
                 >
-                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                  {showPassword ? <EyeIcon size={18} /> : <EyeOffIcon size={18} />}
                 </button>
               </div>
-              {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+              {errors.password && <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1"><AlertCircleIcon size={12} className="inline" /> {errors.password}</p>}
               {strength && (
-                <p className={`text-xs mt-1 font-semibold ${strength.color}`}>
-                  Password strength: {strength.text}
-                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-300 ${
+                        strength.text === 'Too short' ? 'w-1/4 bg-red-500' :
+                        strength.text === 'Weak' ? 'w-1/2 bg-yellow-500' :
+                        strength.text === 'Medium' ? 'w-3/4 bg-blue-500' :
+                        'w-full bg-green-500'
+                      }`}
+                    />
+                  </div>
+                  <span className={`text-xs font-semibold ${strength.color}`}>{strength.text}</span>
+                </div>
               )}
             </div>
 
-            {!isSignup && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Role</label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10"
-                >
-                  <option value="user">Customer</option>
-                  <option value="provider">Provider</option>
-                </select>
-              </div>
-            )}
-
-            {isSignup && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">I am a</label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10"
-                >
-                  <option value="user">Customer</option>
-                  <option value="provider">Provider</option>
-                </select>
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">I am a</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10"
+              >
+                <option value="user">👤 Customer</option>
+                <option value="provider">🏢 Service Provider</option>
+              </select>
+            </div>
 
             {!isSignup && (
-              <label className="flex items-center gap-2 text-sm text-gray-300">
+              <label className="flex items-center gap-3 text-sm text-gray-300 py-2 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4"
+                  className="w-5 h-5 rounded-md border-gray-600 bg-slate-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
                 />
-                Remember me for 30 days
+                <span className="group-hover:text-white transition-colors">Remember me for 30 days</span>
               </label>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-60 text-white font-bold transition duration-200"
+              className="w-full py-4 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-xl hover:shadow-blue-500/25 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-base transition-all duration-200 active:scale-[0.98]"
             >
-              {loading ? 'Please wait...' : isSignup ? 'Create Account' : 'Login'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Please wait...
+                </span>
+              ) : (
+                isSignup ? '🚀 Create Account' : '→ Sign In'
+              )}
             </button>
           </form>
           )}
@@ -403,10 +426,13 @@ function LoginPage({ onLogin }) {
           {activeTab === 'otp' && (
           <form onSubmit={otpStep === 'request' ? handleOtpRequest : handleOtpVerify} className="space-y-4">
             {otpErrors.form && (
-              <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded text-red-400 text-sm">
-                <div>{otpErrors.form}</div>
+              <div className="mb-4 p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-300 text-sm">
+                <div className="flex items-center gap-2">
+                  <AlertCircleIcon size={20} className="text-yellow-400" />
+                  <span>{otpErrors.form}</span>
+                </div>
                 {otpErrors.attemptsLeft !== undefined && (
-                  <div className="text-xs mt-1">Attempts left: {otpErrors.attemptsLeft}</div>
+                  <div className="text-xs mt-2 text-red-400">Attempts remaining: {otpErrors.attemptsLeft}</div>
                 )}
               </div>
             )}
@@ -420,59 +446,81 @@ function LoginPage({ onLogin }) {
                     value={otpEmail}
                     onChange={(e) => setOtpEmail(e.target.value)}
                     disabled={otpLoading}
-                    className={`w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60 ${
-                      otpErrors.email ? 'border border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500'
+                    className={`w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60 transition-all ${
+                      otpErrors.email ? 'border-2 border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500'
                     }`}
                     placeholder="you@example.com"
                   />
-                  {otpErrors.email && <p className="text-red-400 text-xs mt-1">{otpErrors.email}</p>}
+                  {otpErrors.email && <p className="text-red-400 text-xs mt-1.5"><AlertCircleIcon size={12} className="inline" /> {otpErrors.email}</p>}
                 </div>
 
-                <p className="text-xs text-gray-400 text-center">
-                  We'll send a 6-digit code to your email. No password needed!
-                </p>
+                <div className="p-4 bg-blue-500/10 border border-blue-400/20 rounded-xl">
+                  <p className="text-sm text-blue-300 text-center">
+                    📧 We'll send a 6-digit code to your email. No password needed!
+                  </p>
+                </div>
 
                 <button
                   type="submit"
                   disabled={otpLoading}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-60 text-white font-bold transition duration-200"
+                  className="w-full py-4 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-xl hover:shadow-blue-500/25 disabled:opacity-60 text-white font-bold text-base transition-all duration-200 active:scale-[0.98]"
                 >
-                  {otpLoading ? '⏳ Sending...' : '📧 Send OTP Code'}
+                  {otpLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Sending...
+                    </span>
+                  ) : (
+                    '📧 Send OTP Code'
+                  )}
                 </button>
               </>
             ) : (
               <>
-                <div className="bg-blue-900/20 border border-blue-700 rounded-xl p-3 mb-4">
-                  <p className="text-sm text-blue-300">
-                    ✅ OTP sent to <strong>{otpEmail}</strong>
-                  </p>
-                  <p className="text-xs text-blue-400 mt-1">
-                    Expires at: {otpExpiresAt?.toLocaleTimeString()}
-                  </p>
+                <div className="p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <span className="text-xl">✉️</span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-emerald-300 font-semibold">OTP sent!</p>
+                      <p className="text-xs text-gray-400">{otpEmail}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Expires: {otpExpiresAt?.toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">6-Digit Code</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Enter 6-Digit Code</label>
                   <input
                     type="text"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     disabled={otpLoading}
                     maxLength="6"
-                    className={`w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl text-center text-2xl letter-spacing-2 focus:outline-none focus:ring-2 disabled:opacity-60 font-mono ${
-                      otpErrors.otp ? 'border border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500'
+                    className={`w-full px-4 py-4 bg-slate-900/70 text-white rounded-xl text-center text-3xl tracking-[0.5em] focus:outline-none focus:ring-2 disabled:opacity-60 font-mono ${
+                      otpErrors.otp ? 'border-2 border-red-500 focus:ring-red-500' : 'border border-white/10 focus:ring-blue-500'
                     }`}
-                    placeholder="000000"
+                    placeholder="••••••"
                   />
-                  {otpErrors.otp && <p className="text-red-400 text-xs mt-1">{otpErrors.otp}</p>}
+                  {otpErrors.otp && <p className="text-red-400 text-xs mt-1.5 text-center"><AlertCircleIcon size={12} className="inline" /> {otpErrors.otp}</p>}
                 </div>
 
                 <button
                   type="submit"
                   disabled={otpLoading || otpCode.length !== 6}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-lg hover:shadow-green-500/20 disabled:opacity-60 text-white font-bold transition duration-200"
+                  className="w-full py-4 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-xl hover:shadow-green-500/25 disabled:opacity-60 text-white font-bold text-base transition-all duration-200 active:scale-[0.98]"
                 >
-                  {otpLoading ? '⏳ Verifying...' : '✓ Verify & Login'}
+                  {otpLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Verifying...
+                    </span>
+                  ) : (
+                    <><CheckIcon size={16} className="inline mr-1" /> Verify & Sign In</>
+                  )}
                 </button>
 
                 <button
@@ -483,9 +531,9 @@ function LoginPage({ onLogin }) {
                     setOtpErrors({});
                   }}
                   disabled={otpLoading}
-                  className="w-full py-2 text-sm text-gray-400 hover:text-white transition"
+                  className="w-full py-3 text-sm text-gray-400 hover:text-white transition-colors font-semibold"
                 >
-                  ← Request new OTP
+                  ← Request new code
                 </button>
               </>
             )}
@@ -493,17 +541,25 @@ function LoginPage({ onLogin }) {
           )}
 
           <p className="text-center text-xs text-gray-500 mt-6">
-            {isSignup ? 'Already have an account? Switch to Login' : 'New here? Switch to Sign Up'}
+            {isSignup ? 'Already have an account? ' : 'New here? '}
+            <button 
+              type="button"
+              onClick={() => setIsSignup(!isSignup)}
+              className="text-blue-400 hover:text-blue-300 font-semibold"
+            >
+              {isSignup ? 'Sign In' : 'Create Account'}
+            </button>
           </p>
 
-          <div className="border-t border-white/10 pt-4 mt-6">
-            <p className="text-xs text-gray-400 text-center mb-3">Quick login (dev only)</p>
-            <div className="flex gap-2">
+          {/* Quick Login - Dev Only */}
+          <div className="border-t border-white/10 pt-5 mt-6">
+            <p className="text-xs text-gray-500 text-center mb-3">Quick login (development)</p>
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => quickLogin('customer@test.com', 'user')}
                 disabled={loading}
-                className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold transition border border-white/10"
+                className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all border border-white/10 active:scale-[0.98]"
               >
                 👤 Customer
               </button>
@@ -511,7 +567,7 @@ function LoginPage({ onLogin }) {
                 type="button"
                 onClick={() => quickLogin('provider@test.com', 'provider')}
                 disabled={loading}
-                className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold transition border border-white/10"
+                className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all border border-white/10 active:scale-[0.98]"
               >
                 🏢 Provider
               </button>

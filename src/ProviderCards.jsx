@@ -9,7 +9,7 @@ function ProviderCards({ providers }) {
         providers.map((provider) => (
           <div key={provider._id} className="glass-panel rounded-xl sm:rounded-2xl overflow-hidden card-hover border border-white/5 flex flex-col">
             {/* Provider Avatar */}
-            <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-500 h-24 sm:h-32 flex items-center justify-center relative">
+            <div className="bg-linear-to-br from-blue-600 via-indigo-600 to-sky-500 h-24 sm:h-32 flex items-center justify-center relative">
               {provider.avatar ? (
                 <img 
                   src={provider.avatar} 
@@ -49,6 +49,14 @@ function ProviderCards({ providers }) {
                 );
               })()}
 
+              <div className="text-xs text-emerald-200">
+                {provider.distanceKm != null && provider.etaMinutes != null
+                  ? `${provider.distanceKm.toFixed(1)} km | ${provider.etaMinutes} min`
+                  : provider.location?.latitude && provider.location?.longitude
+                    ? 'Add your location to see distance'
+                    : 'Location unavailable'}
+              </div>
+
               {/* Bio */}
               {provider.bio && (
                 <p className="text-gray-300 text-xs sm:text-sm line-clamp-2">{provider.bio}</p>
@@ -56,7 +64,10 @@ function ProviderCards({ providers }) {
 
               {/* Action Buttons */}
               <div className="flex gap-2 mt-auto pt-2">
-                <button className="flex-1 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/20 text-white font-semibold transition text-sm active:opacity-90">
+                <button
+                  onClick={() => provider.onViewServices?.(provider)}
+                  className="flex-1 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/20 text-white font-semibold transition text-sm active:opacity-90"
+                >
                   View Services
                 </button>
                 <button

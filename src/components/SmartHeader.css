@@ -1,0 +1,37 @@
+.smart-header-wrapper {
+  width: 100%;
+}
+
+.smart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface, rgba(0, 0, 0, 0.4));
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: height 0.3s ease, opacity 0.2s ease;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.smart-header.expanded {
+  opacity: 1;
+  padding: 1rem;
+}
+
+.smart-header.collapsed {
+  opacity: 0.95;
+  padding: 0.5rem 1rem;
+}
+
+@media (max-width: 768px) {
+  .smart-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .smart-header.expanded {
+    padding: 0.75rem;
+  }
+}

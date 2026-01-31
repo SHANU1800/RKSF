@@ -1,0 +1,237 @@
+.fab-container {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Position variants */
+.fab-bottom-right {
+  bottom: 24px;
+  right: 24px;
+  gap: 16px;
+}
+
+.fab-bottom-left {
+  bottom: 24px;
+  left: 24px;
+  gap: 16px;
+}
+
+.fab-top-right {
+  top: 24px;
+  right: 24px;
+  gap: 16px;
+}
+
+.fab-top-left {
+  top: 24px;
+  left: 24px;
+  gap: 16px;
+}
+
+/* Main FAB button */
+.fab-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  position: relative;
+}
+
+.fab-button:active {
+  transform: scale(0.92);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.fab-button:hover {
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  transform: translateY(-2px);
+}
+
+.fab-button.open {
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, #ef4444, #f97316);
+}
+
+/* Icon animation */
+.fab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+/* Submenu */
+.fab-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.fab-menu.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Submenu actions */
+.fab-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+  animation: fab-slide-in 0.3s ease forwards;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.9);
+}
+
+@keyframes fab-slide-in {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fab-action:active {
+  transform: scale(0.95);
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.fab-action:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fab-action-icon {
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fab-action-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Backdrop */
+.fab-backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: -1;
+  cursor: default;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .fab-container {
+    bottom: 16px;
+    right: 16px;
+    gap: 12px;
+  }
+
+  .fab-bottom-right,
+  .fab-bottom-left,
+  .fab-top-right,
+  .fab-top-left {
+    bottom: auto;
+    right: auto;
+    top: auto;
+    left: auto;
+  }
+
+  .fab-bottom-right {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .fab-bottom-left {
+    bottom: 16px;
+    left: 16px;
+  }
+
+  .fab-button {
+    width: 52px;
+    height: 52px;
+    font-size: 1.375rem;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+
+  .fab-action {
+    padding: 10px 12px;
+    font-size: 0.8125rem;
+    border-radius: 8px;
+  }
+
+  .fab-action-icon {
+    font-size: 1.125rem;
+  }
+
+  .fab-action-label {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 320px) {
+  .fab-button {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+
+  .fab-action-label {
+    display: none;
+  }
+
+  .fab-action {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    gap: 0;
+  }
+}
+
+/* High DPI screens */
+@media (min-width: 769px) and (hover: hover) {
+  .fab-button:hover {
+    transform: translateY(-4px);
+  }
+
+  .fab-action:hover {
+    transform: translateX(-4px) scale(1.05);
+  }
+}

@@ -1,18 +1,76 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import LoginPage from './LoginPage';
+import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon } from './components/icons/IconTypes';
 import ProviderCards from './ProviderCards';
+import ProvidersMap from './components/ProvidersMap';
 import CustomerCare from './CustomerCare';
+import SettingsPage from './components/SettingsPage';
+import ThemeToggle from './components/ThemeToggle';
 import { LocationModal } from './components/LocationModal';
 import { useToast } from './hooks/useToast';
 import { ToastContainer } from './components/Toast';
 import { handleApiError, validators } from './utils/errorHandler';
+import { formatCurrency, formatTime } from './utils/format';
+import { estimateBikeEtaMinutes, haversineDistanceKm } from './utils/geo';
+import { t } from './i18n';
 import { io } from 'socket.io-client';
+import useSettingsStore from './store/settingsStore';
+import { useRazorpay } from './hooks/useRazorpay';
+import SkeletonLoader from './components/SkeletonLoader';
+import BottomSheet from './components/BottomSheet';
+import ContextMenu from './components/ContextMenu';
+import Accordion from './components/Accordion';
+import SwipeCard from './components/SwipeCard';
+import MiniChatPreview from './components/MiniChatPreview';
 
-const API_BASE_URL = 'https://rksb.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://rksb.onrender.com/api';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://rksb.onrender.com';
+
+const EmptyState = ({ title, body, actionLabel, onAction, icon }) => (
+  <div className="glass-panel rounded-2xl border border-dashed border-white/10 p-8 text-center text-gray-400">
+    <div className="text-3xl mb-3" aria-hidden="true">{icon || <SparklesIcon size={32} className="mx-auto text-primary-400" />}</div>
+    <h4 className="text-white font-semibold text-lg mb-2">{title}</h4>
+    <p className="text-gray-400 text-sm mb-4">{body}</p>
+    {actionLabel && onAction && (
+      <button
+        onClick={onAction}
+        className="px-4 py-2 rounded-xl bg-linear-to-r from-sky-500 to-indigo-600 text-white font-semibold"
+      >
+        {actionLabel}
+      </button>
+    )}
+  </div>
+);
+
+const Stepper = ({ steps, current }) => (
+  <div className="flex items-center gap-2 mb-5">
+    {steps.map((step, idx) => {
+      const isActive = idx + 1 === current;
+      const isDone = idx + 1 < current;
+      return (
+        <div key={step} className="flex items-center gap-2">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border ${
+              isDone ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-200'
+                : isActive ? 'bg-sky-500/20 border-sky-400/40 text-white'
+                  : 'bg-white/5 border-white/10 text-gray-400'
+            }`}
+          >
+            {isDone ? <CheckIcon size={14} /> : idx + 1}
+          </div>
+          <span className={`text-xs sm:text-sm ${isActive ? 'text-white' : 'text-gray-400'}`}>{step}</span>
+          {idx < steps.length - 1 && <div className="w-6 h-px bg-white/10" />}
+        </div>
+      );
+    })}
+  </div>
+);
 
 function App() {
-  const { toasts, removeToast, success, error, warning, info } = useToast();
+  const { toasts, removeToast, success, error, warning, info, retry } = useToast();
+  const { theme, reducedMotion } = useSettingsStore();
+  const razorpay = useRazorpay();
   const [currentUser, setCurrentUser] = useState(null);
   const [providers, setProviders] = useState([]);
   const [services, setServices] = useState([]);
@@ -53,32 +111,55 @@ function App() {
   const [orderBill, setOrderBill] = useState(null);
   const [createdOrderId, setCreatedOrderId] = useState(null);
   const [showPayment, setShowPayment] = useState(false);
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otpInput, setOtpInput] = useState('');
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpVerifying, setOtpVerifying] = useState(false);
-  const [otpError, setOtpError] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [paymentForm, setPaymentForm] = useState({
-    cardNumber: '',
-    cardExpiry: '',
-    cardCvv: '',
-    cardName: '',
-    upiId: '',
-  });
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
   const [activeChatRoom, setActiveChatRoom] = useState(null); // { id, title, subtitle, meta }
   const [chatMessages, setChatMessages] = useState({}); // {roomId: [{from, text, at, fromId}]}
   const [chatInput, setChatInput] = useState('');
+  const [typingRooms, setTypingRooms] = useState({});
+  const [lastReadAt, setLastReadAt] = useState({});
   const [userLocation, setUserLocation] = useState(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [notifications] = useState([
+  const [profileEditMode, setProfileEditMode] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    gender: '',
+    age: '',
+    dateOfBirth: '',
+    bio: '',
+  });
+  const [notifications, setNotifications] = useState([
     { id: 1, type: 'order', title: 'Order Confirmed', message: 'Your order #12345 has been confirmed', timestamp: new Date(Date.now() - 3600000), read: false },
     { id: 2, type: 'message', title: 'New Message', message: 'Provider sent you a message', timestamp: new Date(Date.now() - 7200000), read: false },
     { id: 3, type: 'promo', title: 'Special Offer', message: '20% off on selected services', timestamp: new Date(Date.now() - 86400000), read: true },
   ]);
+  const [transactionFilter, setTransactionFilter] = useState('all');
+  
+  // Mobile-specific state
+  const [touchStart, setTouchStart] = useState(0);
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const [_oneHandedMode, setOneHandedMode] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState({ show: false, x: 0, y: 0, itemId: null });
+  const [_miniChatVisible, setMiniChatVisible] = useState(false);
+  const [_selectedCardForSwipe, setSelectedCardForSwipe] = useState(null);
+  const [_cardSwipeIndex, setCardSwipeIndex] = useState(0);
+  const [notificationBadges, setNotificationBadges] = useState({ order: 1, message: 1, promo: 0 });
+  const [expandedSections, setExpandedSections] = useState({
+    personal: true,
+    location: true,
+    security: false,
+    appearance: true,
+    audio: true,
+    notifications: true,
+  });
+  
   const socketRef = useRef(null);
+  const typingTimeoutRef = useRef({});
+  const lastScrollRef = useRef(0);
+  const contentRef = useRef(null);
 
   // Check session on mount and auto-hydrate
   useEffect(() => {
@@ -99,6 +180,11 @@ function App() {
           };
           setCurrentUser(mappedUser);
           localStorage.setItem('user', JSON.stringify(mappedUser));
+          if (user.location?.latitude && user.location?.longitude) {
+            setUserLocation(user.location);
+          } else {
+            setUserLocation(null);
+          }
         } else if (response.status === 401) {
           localStorage.removeItem('user');
           setCurrentUser(null);
@@ -112,9 +198,38 @@ function App() {
     checkServerHealth();
   }, []);
 
+  // Apply theme to document
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('light-theme', 'dark-theme');
+    
+    if (theme === 'auto') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.classList.add(prefersDark ? 'dark-theme' : 'light-theme');
+    } else {
+      root.classList.add(`${theme}-theme`);
+    }
+
+    if (reducedMotion) {
+      root.classList.add('reduce-motion');
+    } else {
+      root.classList.remove('reduce-motion');
+    }
+  }, [theme, reducedMotion]);
+
+  // Update notification badges
+  useEffect(() => {
+    const badges = {
+      order: notifications.filter(n => n.type === 'order' && !n.read).length,
+      message: notifications.filter(n => n.type === 'message' && !n.read).length,
+      promo: notifications.filter(n => n.type === 'promo' && !n.read).length,
+    };
+    setNotificationBadges(badges);
+  }, [notifications]);
+
   const fetchProviders = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`);
+      const response = await fetch(`${API_BASE_URL}/users/providers`);
       if (!response.ok) {
         const errorData = handleApiError({ response });
         throw new Error(errorData.message);
@@ -131,10 +246,10 @@ function App() {
       setProviders(providerList);
     } catch (err) {
       console.error('Error fetching providers:', err);
-      error('Failed to load providers');
+      retry('Failed to load providers. Please retry.');
       setProviders([]);
     }
-  }, []);
+  }, [retry]);
 
   const fetchServices = useCallback(async () => {
     setLoadingServices(true);
@@ -149,12 +264,12 @@ function App() {
       setServices(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching services:', err);
-      error('Failed to load services');
+      retry('Failed to load services. Retry in a moment.');
       setServices([]);
     } finally {
       setLoadingServices(false);
     }
-  }, []);
+  }, [retry]);
 
   const fetchGoods = useCallback(async () => {
     setLoadingGoods(true);
@@ -167,6 +282,7 @@ function App() {
       setGoods(Array.isArray(data) ? data : []);
     } catch (err) {
       console.warn('Goods fetch failed, using fallback seed', err);
+      retry('Could not load goods. Showing demo items; retry when online.');
       setGoods([
         {
           _id: 'demo-1',
@@ -196,7 +312,7 @@ function App() {
     } finally {
       setLoadingGoods(false);
     }
-  }, []);
+  }, [retry]);
 
   // Fetch providers and services when user logs in - only trigger once per user
   useEffect(() => {
@@ -205,13 +321,13 @@ function App() {
       fetchServices();
       fetchGoods();
     }
-  }, [currentUser?._id]);
+  }, [currentUser, fetchProviders, fetchServices, fetchGoods]);
 
   // Socket connection for chat
   useEffect(() => {
     if (!currentUser?._id) return;
 
-    const socket = io('https://rksb.onrender.com', {
+    const socket = io(SOCKET_URL, {
       withCredentials: true,
       transports: ['websocket', 'polling'],
       path: '/socket.io',
@@ -229,6 +345,7 @@ function App() {
 
     socket.on('connect_error', (err) => {
       console.error('socket connect_error', err?.message || err);
+      error('Realtime connection failed. We will retry automatically.');
     });
 
     socket.on('chat:message', (payload) => {
@@ -241,9 +358,31 @@ function App() {
         [key]: [...(prev[key] || []), msg],
       }));
 
+      if (activeChatRoom?.id === key) {
+        const readAt = new Date().toISOString();
+        setLastReadAt((prev) => ({ ...prev, [key]: readAt }));
+        socket.emit('chat:read', { roomId: key, at: readAt });
+      }
+
       if (!activeChatRoom || activeChatRoom.id !== key) {
         info(msg.from ? `${msg.from}: ${msg.text}` : 'New message received');
       }
+    });
+
+    socket.on('chat:typing', ({ roomId, userId }) => {
+      if (!roomId || userId === currentUser?._id) return;
+      setTypingRooms((prev) => ({ ...prev, [roomId]: true }));
+      if (typingTimeoutRef.current[roomId]) {
+        clearTimeout(typingTimeoutRef.current[roomId]);
+      }
+      typingTimeoutRef.current[roomId] = setTimeout(() => {
+        setTypingRooms((prev) => ({ ...prev, [roomId]: false }));
+      }, 2000);
+    });
+
+    socket.on('chat:read', ({ roomId, at }) => {
+      if (!roomId) return;
+      setLastReadAt((prev) => ({ ...prev, [roomId]: at || new Date().toISOString() }));
     });
 
     socket.on('notification', (payload) => {
@@ -254,26 +393,63 @@ function App() {
       else info(message);
     });
 
-    socket.on('disconnect', () => {
-      console.log('socket disconnected');
+    socket.on('disconnect', (reason) => {
+      console.warn('socket disconnected', reason);
+      warning(`Realtime disconnected: ${reason || 'unknown'}. Retrying...`);
+    });
+
+    socket.on('error', (err) => {
+      console.error('socket error', err);
+      error('Realtime channel error. Check your connection.');
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [currentUser?._id]);
+  }, [activeChatRoom, currentUser, error, info, success, warning]);
+
+  useEffect(() => {
+    if (!activeChatRoom?.id || !socketRef.current) return;
+    const readAt = new Date().toISOString();
+    setLastReadAt((prev) => ({ ...prev, [activeChatRoom.id]: readAt }));
+    socketRef.current.emit('chat:read', { roomId: activeChatRoom.id, at: readAt });
+  }, [activeChatRoom?.id]);
 
   const checkServerHealth = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/health`);
       if (response.ok) {
-        setServerStatus('✅ Connected');
+        setServerStatus('Connected');
       } else {
-        setServerStatus('❌ Server error');
+        setServerStatus('Server error');
       }
     } catch (err) {
-      setServerStatus('❌ Connection failed');
+      setServerStatus('Connection failed');
       console.error('Server health check failed:', err);
+    }
+  };
+
+  const saveUserLocation = async (location) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/me/location`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(location),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to save location');
+      }
+
+      const data = await response.json();
+      if (data.location) {
+        setUserLocation(data.location);
+      }
+    } catch (err) {
+      console.error('Location update failed:', err);
+      error(err.message || 'Could not save location');
     }
   };
 
@@ -288,6 +464,7 @@ function App() {
     }
     localStorage.removeItem('user');
     setCurrentUser(null);
+    setUserLocation(null);
     setProviders([]);
     setServices([]);
     success('Logged out successfully');
@@ -299,6 +476,11 @@ function App() {
       if (userData && userData.username && userData._id) {
         localStorage.setItem('user', JSON.stringify(userData));
         setCurrentUser(userData);
+        if (userData.location?.latitude && userData.location?.longitude) {
+          setUserLocation(userData.location);
+        } else {
+          setUserLocation(null);
+        }
         success(`Welcome back, ${userData.username}!`);
         return;
       }
@@ -328,6 +510,11 @@ function App() {
       
       localStorage.setItem('user', JSON.stringify(mappedUser));
       setCurrentUser(mappedUser);
+      if (user.location?.latitude && user.location?.longitude) {
+        setUserLocation(user.location);
+      } else {
+        setUserLocation(null);
+      }
       success(`Welcome back, ${mappedUser.username}!`);
     } catch (err) {
       console.error('Login error:', err);
@@ -341,18 +528,72 @@ function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
+  // ===== MOBILE INTERACTION HANDLERS =====
+  
+  // Swipe navigation handler
+  const handleTouchStart = (e) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEnd = e.changedTouches[0].clientX;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (!isLeftSwipe && !isRightSwipe) return;
+
+    const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
+    if (isLeftSwipe && currentIndex < tabs.length - 1) {
+      setActiveTab(tabs[currentIndex + 1].id);
+      info(`Switched to ${tabs[currentIndex + 1].label}`);
+    } else if (isRightSwipe && currentIndex > 0) {
+      setActiveTab(tabs[currentIndex - 1].id);
+      info(`Switched to ${tabs[currentIndex - 1].label}`);
+    }
+  };
+
+  // Smart header scroll handler
+  const handleContentScroll = (e) => {
+    const scrollTop = e.target.scrollTop;
+    const scrollDelta = scrollTop - lastScrollRef.current;
+    lastScrollRef.current = scrollTop;
+    
+    if (scrollDelta > 10 && !headerCollapsed) {
+      setHeaderCollapsed(true);
+    } else if (scrollDelta < -10 && headerCollapsed) {
+      setHeaderCollapsed(false);
+    }
+  };
+
+  // Haptic feedback
+  const triggerHaptic = (duration = 10) => {
+    if (navigator.vibrate) {
+      navigator.vibrate(duration);
+    }
+  };
+
+  // Toggle accordion section
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+    triggerHaptic(20);
+  };
+
   const tabs = [
-    { id: 'market', label: 'Marketplace' },
-    { id: 'goods', label: 'Goods' },
-    { id: 'myOrders', label: 'My Orders' },
-    { id: 'transactions', label: 'Transactions' },
-    { id: 'notifications', label: 'Notifications' },
-    { id: 'reviews', label: 'Reviews' },
-    { id: 'chat', label: 'Messages' },
-    { id: 'providers', label: 'Providers' },
-    { id: 'profile', label: 'Profile' },
-    { id: 'settings', label: 'Settings' },
-    { id: 'customerCare', label: 'Support' },
+    { id: 'market', label: 'Market', icon: '🏪' },
+    { id: 'goods', label: 'Goods', icon: <PackageIcon size={18} /> },
+    { id: 'myOrders', label: 'Orders', icon: <ClipboardIcon size={18} /> },
+    { id: 'transactions', label: 'Wallet', icon: <CreditCardIcon size={18} /> },
+    { id: 'notifications', label: 'Alerts', icon: <BellIcon size={18} /> },
+    { id: 'reviews', label: 'Reviews', icon: <StarIcon size={18} /> },
+    { id: 'chat', label: 'Chat', icon: <MessageIcon size={18} /> },
+    { id: 'providers', label: 'Providers', icon: '👥' },
+    { id: 'profile', label: 'Profile', icon: '👤' },
+    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'customerCare', label: 'Support', icon: '🎧' },
   ];
 
   const categories = ['all', ...new Set(services.map(s => s.category || 'General'))];
@@ -524,6 +765,40 @@ function App() {
     openChatRoom(roomId, service.title, subtitle, { kind: 'service', providerId: service.provider?._id });
   };
 
+  const handleComingSoon = (label) => {
+    info(`${label} is coming soon.`);
+  };
+
+  const handleTransactionFilter = (filter) => {
+    setTransactionFilter(filter);
+    const label = filter === 'all' ? 'All transactions' : filter === 'purchases' ? 'Purchases' : 'Refunds';
+    info(`Showing ${label.toLowerCase()}.`);
+  };
+
+  const markAllNotificationsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    info('All notifications marked as read.');
+  };
+
+  const markNotificationRead = (id) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  };
+
+  const removeNotification = (id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    info('Notification dismissed.');
+  };
+
+  const handleNotificationAction = (notif) => {
+    markNotificationRead(notif.id);
+    info(`Action queued for: ${notif.title}`);
+  };
+
+  const emitTyping = () => {
+    if (!activeChatRoom?.id || !socketRef.current || !currentUser?._id) return;
+    socketRef.current.emit('chat:typing', { roomId: activeChatRoom.id, userId: currentUser._id });
+  };
+
   const sendChatMessage = () => {
     if (!chatInput.trim() || !activeChatRoom || !socketRef.current) return;
     const message = {
@@ -583,145 +858,49 @@ function App() {
     }
   };
 
-  const sendOtp = async () => {
+
+  // New Razorpay payment flow
+  const processRazorpayPayment = async () => {
     if (!createdOrderId) {
-      setOtpError('Order not found');
+      error('No order found');
       return;
     }
 
-    setOtpError(null);
-    setOtpSending(true);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/orders/${createdOrderId}/payment/otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({}),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to send OTP');
-      }
-
-      info('OTP sent to your email and phone');
-      setShowOtpModal(true);
-    } catch (err) {
-      console.error('OTP send error:', err);
-      setOtpError(err.message || 'Failed to send OTP');
-      error(err.message || 'Failed to send OTP');
-    } finally {
-      setOtpSending(false);
-    }
-  };
-
-  const verifyOtp = async () => {
-    if (!otpInput.trim()) {
-      setOtpError('OTP is required');
-      return;
-    }
-
-    if (!createdOrderId) {
-      setOtpError('Order not found');
-      return;
-    }
-
-    setOtpError(null);
-    setOtpVerifying(true);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/orders/${createdOrderId}/payment/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ otp: otpInput.trim() }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'OTP verification failed');
-      }
-
-      success('OTP verified! Proceeding with payment...');
-      setTimeout(() => {
-        setShowOtpModal(false);
-        proceedWithPayment();
-      }, 1000);
-    } catch (err) {
-      console.error('OTP verification error:', err);
-      setOtpError(err.message || 'Invalid OTP');
-      error(err.message || 'Invalid OTP');
-    } finally {
-      setOtpVerifying(false);
-    }
-  };
-
-  const proceedWithPayment = async () => {
-    // Validate payment form
-    if (paymentMethod === 'card') {
-      const cardNum = paymentForm.cardNumber.replace(/\s/g, '');
-      let validationError = '';
-      
-      if (!paymentForm.cardNumber) validationError = 'Card number is required';
-      else if (!paymentForm.cardExpiry) validationError = 'Expiry date is required';
-      else if (!paymentForm.cardCvv) validationError = 'CVV is required';
-      else if (!paymentForm.cardName) validationError = 'Cardholder name is required';
-      else if (cardNum.length !== 16) validationError = `Card number must be 16 digits (you have ${cardNum.length})`;
-      
-      if (validationError) {
-        setPaymentError(validationError);
-        return;
-      }
-    } else if (paymentMethod === 'upi') {
-      const upiErr = validators.upiId(paymentForm.upiId);
-      if (upiErr) {
-        setPaymentError(upiErr);
-        return;
-      }
-    }
-
-    setPaymentError(null);
     setPaymentProcessing(true);
+    setPaymentError(null);
 
     try {
-      info('Processing payment...');
-      const response = await fetch(`${API_BASE_URL}/orders/${createdOrderId}/payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          paymentMethod,
-          cardNumber: paymentForm.cardNumber.replace(/\s/g, ''),
-          cardExpiry: paymentForm.cardExpiry,
-          cardCvv: paymentForm.cardCvv,
-          upiId: paymentForm.upiId,
-        }),
+      // Get auth token from cookie or make authenticated request
+      const result = await razorpay.pay(createdOrderId, null, {
+        merchantName: 'RKserve',
+        themeColor: '#3b82f6',
       });
 
-      const data = await response.json();
+      if (result.success) {
+        // Fetch the updated order bill
+        const orderResponse = await fetch(`${API_BASE_URL}/orders/${createdOrderId}`, {
+          credentials: 'include',
+        });
+        
+        if (orderResponse.ok) {
+          const orderData = await orderResponse.json();
+          setOrderBill(orderData.bill || {
+            billNumber: `INV-${createdOrderId.slice(-8).toUpperCase()}`,
+            date: new Date().toLocaleDateString(),
+            status: 'Paid',
+            transactionId: result.paymentId,
+          });
+        }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Payment failed');
+        setShowPayment(false);
+        success('Payment successful!');
       }
-
-      setOrderBill(data.bill);
-      setShowPayment(false);
-      setOtpInput('');
-      setPaymentForm({
-        cardNumber: '',
-        cardExpiry: '',
-        cardCvv: '',
-        cardName: '',
-        upiId: '',
-      });
-      success('Payment successful!');
     } catch (err) {
-      console.error('Payment error:', err);
-      setPaymentError(err.message || 'Payment processing failed');
-      error(err.message || 'Payment failed');
+      console.error('Razorpay payment error:', err);
+      if (err.message !== 'Payment cancelled by user') {
+        setPaymentError(err.message || 'Payment failed');
+        error(err.message || 'Payment failed');
+      }
     } finally {
       setPaymentProcessing(false);
     }
@@ -733,77 +912,262 @@ function App() {
       return;
     }
 
-    // Send OTP first
-    await sendOtp();
+    if (!razorpay.sdkReady) {
+      warning('Payment gateway is still loading. Please try again in a moment.');
+      return;
+    }
+
+    await processRazorpayPayment();
   };
+
+  const checkoutSteps = [t('checkout.steps.details'), t('checkout.steps.payment'), t('checkout.steps.receipt')];
+  const checkoutStep = orderBill ? 3 : showPayment ? 2 : 1;
 
   const renderContent = () => {
     switch (activeTab) {
       case 'providers':
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-white">Providers</h3>
-                <p className="text-gray-400 text-sm">Browse trusted service providers</p>
+        return (() => {
+          const providersWithDistance = providers.map((provider) => {
+            const distanceKm = haversineDistanceKm(
+              userLocation?.latitude,
+              userLocation?.longitude,
+              provider.location?.latitude,
+              provider.location?.longitude
+            );
+            const etaMinutes = estimateBikeEtaMinutes(distanceKm, 30);
+
+            return {
+              ...provider,
+              distanceKm,
+              etaMinutes,
+            };
+          });
+
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Providers</h3>
+                  <p className="text-gray-400 text-sm">Browse trusted service providers</p>
+                </div>
+                <span className="pill text-sm border-white/10 bg-white/5">{providers.length} providers</span>
               </div>
-              <span className="pill text-sm border-white/10 bg-white/5">{providers.length} providers</span>
+
+              {providers.length > 0 && (
+                <div className="glass-panel rounded-2xl border border-white/10 p-4 sm:p-6 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">Provider Map</p>
+                      <p className="text-xs text-gray-400">Distance and ETA use a 30 km/h bike speed</p>
+                    </div>
+                    <button
+                      onClick={() => setShowLocationModal(true)}
+                      className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold border border-white/10"
+                    >
+                      {userLocation ? 'Update location' : 'Add location'}
+                    </button>
+                  </div>
+                  <ProvidersMap userLocation={userLocation} providers={providersWithDistance} />
+                  {!userLocation && (
+                    <p className="text-xs text-gray-400">
+                      Add your location to see provider distance and ETA.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <ProviderCards
+                providers={providersWithDistance.map((p) => ({
+                  ...p,
+                  onContact: () => openChatRoom(`provider-${p._id}`, p.name || 'Provider', p.email || '', { kind: 'provider', providerId: p._id }),
+                  onViewServices: () => {
+                    setActiveTab('market');
+                    setSearchTerm(p.name || '');
+                    info(`Showing services for ${p.name || 'provider'}.`);
+                  },
+                }))}
+              />
             </div>
-            <ProviderCards
-              providers={providers.map((p) => ({
-                ...p,
-                onContact: () => openChatRoom(`provider-${p._id}`, p.name || 'Provider', p.email || '', { kind: 'provider', providerId: p._id }),
-              }))}
-            />
-          </div>
-        );
+          );
+        })();
 
       case 'settings':
-        return (
-          <div className="text-gray-300 space-y-4">
-            <h3 className="text-2xl font-bold text-white">Settings</h3>
-            <div className="glass-panel rounded-2xl p-6 space-y-3 border border-white/5">
-              <p className="text-gray-400">Placeholder settings panel. Add preferences and notification toggles here.</p>
-              <div className="flex items-center gap-2 text-sm text-gray-300">
-                <span>Status:</span>
-                <span className="pill text-emerald-200 border-emerald-500/30 bg-emerald-500/10">{serverStatus}</span>
-              </div>
-            </div>
-          </div>
-        );
+        return <SettingsPage />;
 
       case 'profile':
         return (
-          <div className="text-gray-300 space-y-6">
-            <h3 className="text-2xl font-bold text-white">👤 Profile</h3>
-            
-            {/* User Info */}
-            <div className="glass-panel rounded-2xl p-6 space-y-3 border border-white/5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-semibold text-lg">{currentUser.username}</p>
-                  <p className="text-gray-400 capitalize text-sm">{currentUser.email}</p>
-                  <p className="text-gray-400 capitalize text-xs mt-1">{currentUser.role}</p>
+          <div className="text-gray-300 space-y-6 animate-fade-in">
+            {/* User Header Card */}
+            <div className="glass-panel rounded-2xl p-6 sm:p-8 space-y-4 border border-white/5 shadow-lg animate-scale-in">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl font-bold text-white shadow-lg">
+                    {currentUser?.username?.charAt(0).toUpperCase() || '👤'}
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-xl">{currentUser?.username}</p>
+                    <p className="text-gray-400 text-sm">{currentUser?.email}</p>
+                    <div className="flex gap-2 mt-2">
+                      <span className="pill text-emerald-200 border-emerald-500/30 bg-emerald-500/10">
+                        {currentUser?.role === 'provider' ? '🏢 Provider' : '👥 Customer'}
+                      </span>
+                      <span className="pill text-blue-200 border-blue-500/30 bg-blue-500/10">Verified</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="pill text-emerald-200 border-emerald-500/30 bg-emerald-500/10">Logged in</div>
+                <button
+                  onClick={() => setProfileEditMode(!profileEditMode)}
+                  className="px-4 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-semibold border border-blue-400/30 transition-all hover:shadow-lg"
+                >
+                  {profileEditMode ? '✕ Cancel' : '✏️ Edit'}
+                </button>
+              </div>
+
+              {/* Account Stats */}
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/10">
+                <div className="text-center p-3 bg-blue-500/5 rounded-xl">
+                  <p className="text-2xl font-bold text-blue-400">12</p>
+                  <p className="text-xs text-gray-400 mt-1">Orders</p>
+                </div>
+                <div className="text-center p-3 bg-emerald-500/5 rounded-xl">
+                  <p className="text-2xl font-bold text-emerald-400">4.8</p>
+                  <p className="text-xs text-gray-400 mt-1">Rating</p>
+                </div>
+                <div className="text-center p-3 bg-purple-500/5 rounded-xl">
+                  <p className="text-2xl font-bold text-purple-400">₹2.4k</p>
+                  <p className="text-xs text-gray-400 mt-1">Spent</p>
+                </div>
               </div>
             </div>
 
+            {/* Personal Information */}
+            {!profileEditMode ? (
+              <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4 animate-slide-up">
+                <h4 className="text-lg font-semibold text-white flex items-center gap-2">👤 Personal Information</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide">First Name</p>
+                    <p className="text-white font-semibold mt-1">{profileForm.firstName || '—'}</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide">Last Name</p>
+                    <p className="text-white font-semibold mt-1">{profileForm.lastName || '—'}</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide">Phone</p>
+                    <p className="text-white font-semibold mt-1">{profileForm.phone || '—'}</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide">Gender</p>
+                    <p className="text-white font-semibold mt-1">{profileForm.gender || '—'}</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide">Age</p>
+                    <p className="text-white font-semibold mt-1">{profileForm.age || '—'}</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide">Date of Birth</p>
+                    <p className="text-white font-semibold mt-1">{profileForm.dateOfBirth || '—'}</p>
+                  </div>
+                </div>
+                {profileForm.bio && (
+                  <div className="p-3 bg-white/5 rounded-xl">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Bio</p>
+                    <p className="text-white text-sm">{profileForm.bio}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4 animate-slide-up">
+                <h4 className="text-lg font-semibold text-white flex items-center gap-2">✏️ Edit Profile</h4>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="First Name"
+                      value={profileForm.firstName}
+                      onChange={(e) => setProfileForm({...profileForm, firstName: e.target.value})}
+                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Last Name"
+                      value={profileForm.lastName}
+                      onChange={(e) => setProfileForm({...profileForm, lastName: e.target.value})}
+                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                    />
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={profileForm.phone}
+                    onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <select
+                      value={profileForm.gender}
+                      onChange={(e) => setProfileForm({...profileForm, gender: e.target.value})}
+                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm appearance-none cursor-pointer"
+                      style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem'}}
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                    <input
+                      type="number"
+                      placeholder="Age"
+                      min="18"
+                      max="120"
+                      value={profileForm.age}
+                      onChange={(e) => setProfileForm({...profileForm, age: e.target.value})}
+                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                    />
+                  </div>
+                  <input
+                    type="date"
+                    value={profileForm.dateOfBirth}
+                    onChange={(e) => setProfileForm({...profileForm, dateOfBirth: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                  />
+                  <textarea
+                    placeholder="Bio (optional)"
+                    value={profileForm.bio}
+                    onChange={(e) => setProfileForm({...profileForm, bio: e.target.value})}
+                    rows="3"
+                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm resize-none"
+                  />
+                  <button
+                    onClick={() => {
+                      success('Profile updated successfully!');
+                      setProfileEditMode(false);
+                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all active:scale-[0.98]"
+                  >
+                    💾 Save Changes
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Location Section */}
-            <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-3">
+            <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-3 animate-slide-up">
               <div className="flex items-center justify-between">
                 <h4 className="text-lg font-semibold text-white">📍 Delivery Address</h4>
                 <button
                   onClick={() => setShowLocationModal(true)}
-                  className="text-sm px-3 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-semibold border border-blue-400/30"
+                  className="text-sm px-3 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-semibold border border-blue-400/30 transition-all"
                 >
                   {userLocation ? 'Change' : 'Add'}
                 </button>
               </div>
 
               {userLocation ? (
-                <div className="bg-white/5 rounded-xl p-4 space-y-2">
-                  <p className="text-white">{userLocation.fullAddress}</p>
+                <div className="bg-white/5 rounded-xl p-4 space-y-2 animate-scale-in">
+                  <p className="text-white font-semibold">{userLocation.fullAddress}</p>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-gray-400">City</p>
@@ -831,10 +1195,20 @@ function App() {
               )}
             </div>
 
-            {/* More Settings Placeholder */}
-            <div className="glass-panel rounded-2xl p-6 space-y-3 border border-white/5">
-              <h4 className="text-lg font-semibold text-white">⚙️ Settings</h4>
-              <p className="text-gray-400 text-sm">Phone, passwords, and preferences coming soon.</p>
+            {/* Account Security */}
+            <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-3 animate-slide-up">
+              <h4 className="text-lg font-semibold text-white flex items-center gap-2">🔒 Account Security</h4>
+              <div className="space-y-2">
+                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-blue-400 hover:text-blue-300">
+                  🔑 Change Password
+                </button>
+                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-blue-400 hover:text-blue-300">
+                  🔐 Two-Factor Authentication
+                </button>
+                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-red-400 hover:text-red-300">
+                  🚪 Logout from All Devices
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -950,22 +1324,38 @@ function App() {
                     </div>
 
                     <div className="flex-1 bg-slate-900/60 rounded-xl border border-white/5 p-3 overflow-y-auto space-y-2">
-                      {(chatMessages[activeChatRoom.id] || []).map((m, idx) => (
-                        <div key={idx} className={`flex ${m.fromId === currentUser._id ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`px-3 py-2 rounded-xl text-sm max-w-[75%] ${m.fromId === currentUser._id ? 'bg-emerald-500/20 border border-emerald-400/40' : 'bg-white/5 border border-white/10'}`}>
-                            <p className="text-gray-200 font-semibold">{m.from}</p>
-                            <p className="text-white whitespace-pre-wrap wrap-break-word">{m.text}</p>
-                            <p className="text-[10px] text-gray-400 mt-1">{new Date(m.at).toLocaleTimeString()}</p>
+                      {(chatMessages[activeChatRoom.id] || []).map((m, idx) => {
+                        const isMine = m.fromId === currentUser._id;
+                        const readAt = lastReadAt[activeChatRoom.id];
+                        const isRead = isMine && readAt && new Date(readAt) >= new Date(m.at);
+                        return (
+                          <div key={idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`px-3 py-2 rounded-xl text-sm max-w-[75%] ${isMine ? 'bg-emerald-500/20 border border-emerald-400/40' : 'bg-white/5 border border-white/10'}`}>
+                              <p className="text-gray-200 font-semibold">{m.from}</p>
+                              <p className="text-white whitespace-pre-wrap wrap-break-word">{m.text}</p>
+                              <div className="flex items-center justify-between gap-2 mt-1">
+                                <p className="text-[10px] text-gray-400">{formatTime(m.at)}</p>
+                                {isMine && (
+                                  <span className="text-[10px] text-gray-400 flex items-center gap-0.5">{isRead ? <><CheckIcon size={10} /><CheckIcon size={10} /></> : <CheckIcon size={10} />} {isRead ? t('chat.read') : t('chat.delivered')}</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
+                      {typingRooms[activeChatRoom.id] && (
+                        <div className="text-xs text-slate-400 px-2">{t('chat.typing')}</div>
+                      )}
                     </div>
 
                     <div className="flex gap-2 mt-3">
                       <input
                         type="text"
                         value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
+                        onChange={(e) => {
+                          setChatInput(e.target.value);
+                          emitTyping();
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -1039,13 +1429,34 @@ function App() {
 
             <div className="glass-panel rounded-2xl border border-white/5 p-6">
               <div className="flex flex-wrap gap-4 mb-6">
-                <button className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">
+                <button
+                  onClick={() => handleTransactionFilter('all')}
+                  className={`px-4 py-2 rounded-xl font-semibold transition ${
+                    transactionFilter === 'all'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-white/10'
+                  }`}
+                >
                   All Transactions
                 </button>
-                <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-gray-300 font-semibold border border-white/10 transition">
+                <button
+                  onClick={() => handleTransactionFilter('purchases')}
+                  className={`px-4 py-2 rounded-xl font-semibold transition ${
+                    transactionFilter === 'purchases'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-white/10'
+                  }`}
+                >
                   Purchases
                 </button>
-                <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-gray-300 font-semibold border border-white/10 transition">
+                <button
+                  onClick={() => handleTransactionFilter('refunds')}
+                  className={`px-4 py-2 rounded-xl font-semibold transition ${
+                    transactionFilter === 'refunds'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-white/10'
+                  }`}
+                >
                   Refunds
                 </button>
               </div>
@@ -1064,10 +1475,16 @@ function App() {
                     </div>
                   </div>
                   <div className="flex gap-2 mt-3">
-                    <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                    <button
+                      onClick={() => handleComingSoon('View invoice')}
+                      className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition"
+                    >
                       View Invoice
                     </button>
-                    <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                    <button
+                      onClick={() => handleComingSoon('Download PDF')}
+                      className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition"
+                    >
                       Download PDF
                     </button>
                   </div>
@@ -1086,10 +1503,16 @@ function App() {
                     </div>
                   </div>
                   <div className="flex gap-2 mt-3">
-                    <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                    <button
+                      onClick={() => handleComingSoon('View invoice')}
+                      className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition"
+                    >
                       View Invoice
                     </button>
-                    <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                    <button
+                      onClick={() => handleComingSoon('Download PDF')}
+                      className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition"
+                    >
                       Download PDF
                     </button>
                   </div>
@@ -1122,7 +1545,10 @@ function App() {
                 <h3 className="text-2xl font-bold text-white">Notifications</h3>
                 <p className="text-gray-400 text-sm">Stay updated with important alerts</p>
               </div>
-              <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-gray-300 font-semibold border border-white/10 transition text-sm">
+              <button
+                onClick={markAllNotificationsRead}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-gray-300 font-semibold border border-white/10 transition text-sm"
+              >
                 Mark All Read
               </button>
             </div>
@@ -1136,6 +1562,7 @@ function App() {
                 notifications.map((notif) => (
                   <div
                     key={notif.id}
+                    onClick={() => markNotificationRead(notif.id)}
                     className={`glass-panel rounded-2xl border p-4 cursor-pointer transition ${
                       notif.read ? 'border-white/5 bg-white/5' : 'border-blue-400/30 bg-blue-400/10'
                     }`}
@@ -1154,10 +1581,22 @@ function App() {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <button className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNotificationAction(notif);
+                          }}
+                          className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition"
+                        >
                           Action
                         </button>
-                        <button className="p-2 rounded-lg bg-white/10 hover:bg-white/15 text-gray-400 hover:text-white transition">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeNotification(notif.id);
+                          }}
+                          className="p-2 rounded-lg bg-white/10 hover:bg-white/15 text-gray-400 hover:text-white transition"
+                        >
                           ×
                         </button>
                       </div>
@@ -1211,7 +1650,10 @@ function App() {
                       </div>
                       <p className="text-gray-400 text-xs">Jan 25, 2026</p>
                     </div>
-                    <button className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition">
+                    <button
+                      onClick={() => handleComingSoon('Write review')}
+                      className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+                    >
                       Write Review
                     </button>
                   </div>
@@ -1223,7 +1665,10 @@ function App() {
                       </div>
                       <p className="text-gray-400 text-xs">Jan 22, 2026</p>
                     </div>
-                    <button className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition">
+                    <button
+                      onClick={() => handleComingSoon('Write review')}
+                      className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+                    >
                       Write Review
                     </button>
                   </div>
@@ -1496,7 +1941,7 @@ function App() {
                               <p className="text-gray-300 text-sm mt-2 line-clamp-3">{service.description}</p>
                             </div>
                             {service.rating !== undefined && (
-                              <div className="pill text-xs bg-white/5 border-white/10 text-yellow-200">⭐ {Number(service.rating).toFixed(1)}</div>
+                              <div className="pill text-xs bg-white/5 border-white/10 text-yellow-200 flex items-center gap-1"><StarIcon size={12} filled /> {Number(service.rating).toFixed(1)}</div>
                             )}
                           </div>
                           <div className="flex items-center justify-between text-sm text-gray-400">
@@ -1522,9 +1967,9 @@ function App() {
                             </button>
                             <button
                               onClick={() => openServiceChat(service)}
-                              className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 font-semibold transition"
+                              className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 font-semibold transition flex items-center gap-1"
                             >
-                              💬 Chat
+                              <MessageIcon size={14} /> Chat
                             </button>
                           </div>
                         </div>
@@ -1545,42 +1990,63 @@ function App() {
       <div className="floating-blob pink" aria-hidden="true" />
       <div className="noisy-layer" aria-hidden="true" />
 
-      {/* Header - Responsive */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10 header-veil">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex justify-between items-center gap-3">
-            {/* Logo */}
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-slate-400 truncate">RKserve</p>
-              <h1 className="text-lg sm:text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-sky-400 via-cyan-300 to-emerald-200 truncate">Marketplace</h1>
+      {/* Header - Beautiful & Responsive */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-white/10 header-veil">
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
+          <div className="flex justify-between items-center gap-4">
+            {/* Logo - Refined for mobile */}
+            <div className="shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-sky-400 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                  <span className="text-white font-bold text-lg sm:text-xl">R</span>
+                </div>
+                <div>
+                  <h1 className="text-lg sm:text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-sky-400 via-cyan-300 to-emerald-200 leading-tight">
+                    RKserve
+                  </h1>
+                  <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-slate-400 -mt-0.5">Marketplace</p>
+                </div>
+              </div>
             </div>
             
-            {/* User Info - Hidden on very small screens */}
+            {/* User Info & Actions - Desktop */}
             <div className="hidden sm:flex items-center gap-5">
               <div className="text-right">
                 <p className="text-white font-semibold leading-5 text-sm">{currentUser.username}</p>
                 <p className="text-xs text-gray-400 capitalize">{currentUser.role}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="pill text-xs text-emerald-200 border-emerald-500/30 bg-emerald-500/10">
-                  {serverStatus}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 rounded-xl bg-linear-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
-                >
-                  Logout
-                </button>
-              </div>
+              <ThemeToggle />
+              <span
+                className="pill text-xs text-emerald-200 border-emerald-500/30 bg-emerald-500/10"
+                role="status"
+                aria-live="polite"
+              >
+                {serverStatus}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-xl bg-linear-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
+              >
+                Logout
+              </button>
             </div>
 
-            {/* Mobile logout button */}
-            <button
-              onClick={handleLogout}
-              className="sm:hidden px-3 py-2 rounded-lg bg-linear-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
-            >
-              Out
-            </button>
+            {/* Mobile Actions - Compact & Beautiful */}
+            <div className="sm:hidden flex items-center gap-2">
+              <span
+                className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50 animate-pulse"
+                role="status"
+                aria-label={serverStatus}
+              />
+              <ThemeToggle />
+              <button
+                onClick={handleLogout}
+                className="w-9 h-9 rounded-xl bg-linear-to-br from-rose-500 to-red-600 text-white font-bold text-sm flex items-center justify-center shadow-lg shadow-rose-500/20"
+                aria-label="Logout"
+              >
+                ↗
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1589,18 +2055,19 @@ function App() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-10">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
           {/* Sidebar - Hidden on mobile, shown on tablet+ */}
-          <aside className="hidden sm:block sm:w-48 glass-panel rounded-2xl p-4 h-fit sticky top-24 border border-white/5 shadow-xl lift-card">
-            <nav className="space-y-2">
+          <aside className="hidden sm:block sm:w-52 glass-panel rounded-2xl p-4 h-fit sticky top-24 border border-white/5 shadow-xl lift-card">
+            <nav className="space-y-1">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition font-semibold border text-sm ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition font-semibold border text-sm ${
                     activeTab === tab.id
                       ? 'bg-linear-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40 shadow-lg'
-                      : 'text-gray-300 border-white/5 hover:bg-white/5'
+                      : 'text-gray-300 border-transparent hover:bg-white/5 hover:border-white/5'
                   }`}
                 >
+                  <span className="text-base">{tab.icon}</span>
                   <span>{tab.label}</span>
                 </button>
               ))}
@@ -1608,7 +2075,13 @@ function App() {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 min-w-0 fade-in content-shell">
+          <main 
+            className="flex-1 min-w-0 fade-in content-shell"
+            ref={contentRef}
+            onScroll={handleContentScroll}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             <div className="mb-6 sm:mb-10 section-hero">
               <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <span className="badge-soft text-xs accent-dot">{activeTab}</span>
@@ -1652,90 +2125,171 @@ function App() {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation - Only on small screens */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-white/10 header-veil">
-        <div className="flex overflow-x-auto gap-1 px-2 py-2 h-20">
-          {tabs.slice(0, 6).map((tab) => (
+      {/* Floating Action Button (Mobile Only) */}
+      <button
+        onClick={() => {
+          triggerHaptic(30);
+          if (activeTab === 'market') {
+            setShowGoodsModal(true);
+          } else if (activeTab === 'goods') {
+            setShowGoodsModal(true);
+          } else {
+            setShowServiceModal(true);
+          }
+        }}
+        className="sm:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/40 flex items-center justify-center hover:shadow-xl hover:shadow-blue-500/60 active:scale-95 transition-all animate-bounce border border-blue-400/30"
+        aria-label="Add new item"
+        title={activeTab === 'market' ? 'Add Service' : 'Add Goods'}
+      >
+        <span className="text-2xl">➕</span>
+      </button>
+
+      {/* Mobile Bottom Navigation - Improved Design */}
+      <nav className="sm:hidden mobile-nav animate-slide-up">
+        <div className="flex justify-around items-stretch px-1 py-0 gap-0.5 w-full">
+          {tabs.slice(0, 4).map((tab) => {
+            const badgeCount = tab.id === 'notifications' ? (notificationBadges.order + notificationBadges.message) : 0;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setShowMobileMenu(false);
+                  triggerHaptic(15);
+                }}
+                className={`mobile-nav-item flex-1 relative ${activeTab === tab.id ? 'active' : ''}`}
+              >
+                <span className="mobile-nav-icon relative">{tab.icon}
+                  {badgeCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                      {badgeCount}
+                    </span>
+                  )}
+                </span>
+                <span className="mobile-nav-label">{tab.label}</span>
+              </button>
+            );
+          })}
+          <div className="relative flex-1">
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-max flex flex-col items-center justify-center px-2 py-2 rounded-lg text-xs transition font-semibold border ${
-                activeTab === tab.id
-                  ? 'bg-linear-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40'
-                  : 'text-gray-400 border-white/5 hover:bg-white/5'
-              }`}
+              onClick={() => {
+                setShowMobileMenu(!showMobileMenu);
+                triggerHaptic(15);
+              }}
+              className={`mobile-nav-item w-full relative ${['profile', 'settings', 'customerCare', 'reviews', 'chat', 'notifications', 'providers', 'rps', 'wallet'].includes(activeTab) || showMobileMenu ? 'active' : ''}`}
             >
-              <span className="leading-tight text-center">{tab.label}</span>
+              <span className="mobile-nav-icon">⋯</span>
+              <span className="mobile-nav-label">More</span>
             </button>
-          ))}
-          {tabs.length > 6 && (
-            <div className="flex-1 min-w-max border border-white/10 rounded-lg bg-white/5 px-2 py-2 flex items-center justify-center text-xs text-gray-400">
-              More
-            </div>
-          )}
+            
+            {/* Mobile Menu Dropdown */}
+            {showMobileMenu && (
+              <div className="absolute bottom-full right-0 mb-2 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
+                <div className="space-y-1">
+                  {tabs.slice(4).map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setShowMobileMenu(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-semibold transition-all ${
+                        activeTab === tab.id
+                          ? 'bg-linear-to-r from-blue-500/30 to-indigo-500/20 text-white border border-blue-400/40'
+                          : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <span className="text-lg">{tab.icon}</span>
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
       {showServiceModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-0">
-          <div className="glass-panel rounded-xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6 relative border border-white/10 shadow-2xl">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50" role="presentation">
+          <div
+            className="glass-panel w-full sm:max-w-lg sm:mx-4 max-h-[90vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl sm:rounded-2xl animate-[slideUp_0.3s_ease-out]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="service-modal-title"
+          >
+            {/* Mobile drag handle */}
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
+            
             <button
               onClick={() => setShowServiceModal(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white shrink-0 w-8 h-8 flex items-center justify-center"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+              aria-label="Close add service dialog"
             >
               ✕
             </button>
-            <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Add Service</h3>
-            <form className="space-y-3 sm:space-y-4" onSubmit={submitService}>
+            <h3 id="service-modal-title" className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2"><SparklesIcon size={24} className="text-primary-400" /> Add Service</h3>
+            <form className="space-y-4" onSubmit={submitService}>
               <div>
-                <label className="block text-xs sm:text-sm text-gray-300 mb-2">Title</label>
+                <label className="block text-sm text-gray-300 mb-2 font-medium">Title</label>
                 <input
                   type="text"
                   value={serviceForm.title}
                   onChange={(e) => handleServiceField('title', e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-base"
+                  placeholder="e.g., Premium Web Design"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm text-gray-300 mb-2">Description</label>
+                <label className="block text-sm text-gray-300 mb-2 font-medium">Description</label>
                 <textarea
                   value={serviceForm.description}
                   onChange={(e) => handleServiceField('description', e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-base resize-none"
                   rows="3"
+                  placeholder="Describe your service..."
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Price</label>
+                  <label className="block text-sm text-gray-300 mb-2 font-medium">Price (₹)</label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={serviceForm.price}
                     onChange={(e) => handleServiceField('price', e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-base"
+                    placeholder="999"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Category</label>
+                  <label className="block text-sm text-gray-300 mb-2 font-medium">Category</label>
                   <input
                     type="text"
                     value={serviceForm.category}
                     onChange={(e) => handleServiceField('category', e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-base"
+                    placeholder="General"
                   />
                 </div>
               </div>
               <button
                 type="submit"
                 disabled={serviceSubmitting}
-                className="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-60 text-white font-bold transition text-sm sm:text-base"
+                className="w-full py-4 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-xl hover:shadow-blue-500/25 disabled:opacity-60 text-white font-bold transition-all text-base active:scale-[0.98]"
               >
-                {serviceSubmitting ? 'Saving...' : 'Save Service'}
+                {serviceSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving...
+                  </span>
+                ) : (
+                  '🚀 Publish Service'
+                )}
               </button>
             </form>
           </div>
@@ -1743,55 +2297,67 @@ function App() {
       )}
 
       {showGoodsModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-0">
-          <div className="glass-panel rounded-xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6 relative border border-white/10 shadow-2xl">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50" role="presentation">
+          <div
+            className="glass-panel w-full sm:max-w-lg sm:mx-4 max-h-[90vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl sm:rounded-2xl animate-[slideUp_0.3s_ease-out]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="goods-modal-title"
+          >
+            {/* Mobile drag handle */}
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
+            
             <button
               onClick={() => setShowGoodsModal(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white shrink-0 w-8 h-8 flex items-center justify-center"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+              aria-label="Close list goods dialog"
             >
               ✕
             </button>
-            <h3 className="text-lg sm:text-xl font-bold text-white mb-4">List Goods</h3>
-            <form className="space-y-3 sm:space-y-4" onSubmit={submitGoods}>
+            <h3 id="goods-modal-title" className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2"><PackageIcon size={24} className="text-primary-400" /> List Goods</h3>
+            <form className="space-y-4" onSubmit={submitGoods}>
               <div>
-                <label className="block text-xs sm:text-sm text-gray-300 mb-2">Title</label>
+                <label className="block text-sm text-gray-300 mb-2 font-medium">Title</label>
                 <input
                   type="text"
                   value={goodsForm.title}
                   onChange={(e) => handleGoodsField('title', e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
+                  placeholder="e.g., MacBook Pro 14"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm text-gray-300 mb-2">Description</label>
+                <label className="block text-sm text-gray-300 mb-2 font-medium">Description</label>
                 <textarea
                   value={goodsForm.description}
                   onChange={(e) => handleGoodsField('description', e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base resize-none"
                   rows="3"
+                  placeholder="Describe your item..."
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Price</label>
+                  <label className="block text-sm text-gray-300 mb-2 font-medium">Price (₹)</label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={goodsForm.price}
                     onChange={(e) => handleGoodsField('price', e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
+                    placeholder="15000"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Condition</label>
+                  <label className="block text-sm text-gray-300 mb-2 font-medium">Condition</label>
                   <select
                     value={goodsForm.condition}
                     onChange={(e) => handleGoodsField('condition', e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
                   >
                     <option>New</option>
                     <option>Excellent</option>
@@ -1800,33 +2366,42 @@ function App() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Location</label>
+                  <label className="block text-sm text-gray-300 mb-2 font-medium">📍 Location</label>
                   <input
                     type="text"
                     value={goodsForm.location}
                     onChange={(e) => handleGoodsField('location', e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
+                    placeholder="Mumbai"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-2">Image URL (optional)</label>
+                  <label className="block text-sm text-gray-300 mb-2 font-medium">🖼️ Image URL</label>
                   <input
                     type="url"
                     value={goodsForm.image}
                     onChange={(e) => handleGoodsField('image', e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/70 text-white rounded-lg sm:rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none text-sm"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
+                    placeholder="Optional"
                   />
                 </div>
               </div>
               <button
                 type="submit"
                 disabled={goodsSubmitting}
-                className="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-60 text-white font-bold transition text-sm sm:text-base"
+                className="w-full py-4 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-xl hover:shadow-emerald-500/25 disabled:opacity-60 text-white font-bold transition-all text-base active:scale-[0.98]"
               >
-                {goodsSubmitting ? 'Listing...' : 'Publish Listing'}
+                {goodsSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Publishing...
+                  </span>
+                ) : (
+                  '🚀 Publish Listing'
+                )}
               </button>
             </form>
           </div>
@@ -1835,8 +2410,16 @@ function App() {
 
       {/* Checkout Modal */}
       {showCheckout && checkoutService && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="glass-panel rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50" role="presentation">
+          <div
+            className="glass-panel w-full sm:max-w-2xl sm:mx-4 max-h-[95vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl sm:rounded-2xl animate-[slideUp_0.3s_ease-out]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checkout-modal-title"
+          >
+            {/* Mobile drag handle */}
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
+            
             <button
               onClick={() => {
                 setShowCheckout(false);
@@ -1846,23 +2429,19 @@ function App() {
                 setCheckoutDays(1);
                 setCheckoutQuantity(1);
                 setCreatedOrderId(null);
-                setPaymentForm({
-                  cardNumber: '',
-                  cardExpiry: '',
-                  cardCvv: '',
-                  cardName: '',
-                  upiId: '',
-                });
                 setPaymentError(null);
               }}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+              aria-label="Close checkout dialog"
             >
               ✕
             </button>
 
+            <Stepper steps={checkoutSteps} current={checkoutStep} />
+
             {!showPayment && !orderBill ? (
               <>
-                <h3 className="text-2xl font-bold text-white mb-6">{checkoutService.title}</h3>
+                <h3 id="checkout-modal-title" className="text-xl sm:text-2xl font-bold text-white mb-6">{checkoutService.title}</h3>
 
                 <div className="space-y-4 mb-6">
                   <div>
@@ -1925,9 +2504,9 @@ function App() {
                 </div>
               </>
             ) : showPayment ? (
-              // Payment Form
+              // Payment Form - Razorpay Integration
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-white mb-4">💳 Payment</h2>
+                <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2"><CreditCardIcon size={24} /> Payment</h2>
                 
                 {paymentError && (
                   <div className="bg-red-900/50 border border-red-700 text-red-200 p-3 rounded-lg text-sm">
@@ -1935,133 +2514,84 @@ function App() {
                   </div>
                 )}
 
-                <div className="glass-panel border border-white/10 p-4 rounded-2xl mb-4">
-                  <div className="flex justify-between">
-                    <p className="text-gray-400">Amount to Pay:</p>
-                    <p className="text-white text-xl font-bold">
-                      ₹{Math.round((checkoutService.price * checkoutQuantity) * 1.18)}
-                    </p>
+                {/* Order Summary */}
+                <div className="glass-panel border border-white/10 p-5 rounded-2xl space-y-3">
+                  <div className="flex items-start gap-3 pb-3 border-b border-white/10">
+                    <PackageIcon size={20} className="text-primary-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-white font-medium">{checkoutService?.title || checkoutService?.name}</p>
+                      <p className="text-gray-400 text-xs mt-1">
+                        {checkoutType === 'buy' ? `Qty: ${checkoutQuantity}` : `${checkoutDays} day${checkoutDays > 1 ? 's' : ''} rental`}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Includes 18% GST</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Payment Method</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('card')}
-                      className={`py-3 rounded-xl font-semibold transition border ${
-                        paymentMethod === 'card'
-                          ? 'bg-linear-to-r from-sky-500 to-indigo-600 text-white border-sky-400/40 shadow-lg shadow-sky-500/20'
-                          : 'bg-slate-900/70 text-gray-200 border-white/10 hover:bg-white/5'
-                      }`}
-                    >
-                      💳 Card
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('upi')}
-                      className={`py-3 rounded-xl font-semibold transition border ${
-                        paymentMethod === 'upi'
-                          ? 'bg-linear-to-r from-sky-500 to-indigo-600 text-white border-sky-400/40 shadow-lg shadow-sky-500/20'
-                          : 'bg-slate-900/70 text-gray-200 border-white/10 hover:bg-white/5'
-                      }`}
-                    >
-                      📱 UPI
-                    </button>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Subtotal</span>
+                      <span className="text-white">{formatCurrency(checkoutService.price * checkoutQuantity)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">GST (18%)</span>
+                      <span className="text-white">{formatCurrency(Math.round(checkoutService.price * checkoutQuantity * 0.18))}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-white/10 text-base font-bold">
+                      <span className="text-white">Total</span>
+                      <span className="text-emerald-400">{formatCurrency(Math.round(checkoutService.price * checkoutQuantity * 1.18))}</span>
+                    </div>
                   </div>
                 </div>
 
-                {paymentMethod === 'card' ? (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm text-gray-300 mb-1">Card Number</label>
-                      <input
-                        type="text"
-                        placeholder="1234 5678 9012 3456"
-                        maxLength="19"
-                        value={paymentForm.cardNumber}
-                        onChange={(e) => {
-                          let value = e.target.value.replace(/\s/g, '');
-                          if (value.length > 16) value = value.slice(0, 16);
-                          value = value.replace(/(\d{4})/g, '$1 ').trim();
-                          setPaymentForm({ ...paymentForm, cardNumber: value });
-                        }}
-                        className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gray-300 mb-1">Cardholder Name</label>
-                      <input
-                        type="text"
-                        placeholder="JOHN DOE"
-                        value={paymentForm.cardName}
-                        onChange={(e) => setPaymentForm({ ...paymentForm, cardName: e.target.value.toUpperCase() })}
-                        className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm text-gray-300 mb-1">Expiry (MM/YY)</label>
-                        <input
-                          type="text"
-                          placeholder="12/28"
-                          maxLength="5"
-                          value={paymentForm.cardExpiry}
-                          onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, '');
-                            if (value.length >= 2) {
-                              value = value.slice(0, 2) + '/' + value.slice(2, 4);
-                            }
-                            setPaymentForm({ ...paymentForm, cardExpiry: value });
-                          }}
-                          className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm text-gray-300 mb-1">CVV</label>
-                        <input
-                          type="password"
-                          placeholder="123"
-                          maxLength="3"
-                          value={paymentForm.cardCvv}
-                          onChange={(e) => setPaymentForm({ ...paymentForm, cardCvv: e.target.value.replace(/\D/g, '') })}
-                          className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
-                        />
-                      </div>
-                    </div>
+                {/* Payment Methods Info */}
+                <div className="glass-panel border border-white/10 p-4 rounded-2xl">
+                  <p className="text-gray-400 text-xs uppercase font-semibold tracking-wide mb-3">Accepted Payment Methods</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['UPI', 'Cards', 'NetBanking', 'Wallets'].map((method) => (
+                      <span key={method} className="px-3 py-1.5 bg-white/10 rounded-lg text-white text-xs font-medium">
+                        {method}
+                      </span>
+                    ))}
                   </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-1">UPI ID</label>
-                    <input
-                      type="text"
-                      placeholder="yourname@paytm"
-                      value={paymentForm.upiId}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, upiId: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
-                    />
+                </div>
+
+                {/* Razorpay SDK Status */}
+                {!razorpay.sdkReady && (
+                  <div className="bg-amber-900/30 border border-amber-500/50 text-amber-300 p-3 rounded-xl text-sm flex items-center gap-2">
+                    <LoaderIcon size={16} />
+                    <span>Loading payment gateway...</span>
                   </div>
                 )}
 
+                {/* Action Buttons */}
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={() => {
                       setShowPayment(false);
                       setPaymentError(null);
                     }}
-                    className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold border border-white/10 transition"
+                    className="flex-1 py-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold border border-white/10 transition active:scale-[0.98]"
                   >
                     Back
                   </button>
                   <button
                     onClick={processPayment}
-                    disabled={paymentProcessing || otpSending}
-                    className="flex-1 py-3 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-60 text-white font-bold transition"
+                    disabled={paymentProcessing || !razorpay.sdkReady}
+                    className="flex-1 py-4 rounded-xl bg-(--color-primary-500) hover:bg-(--color-primary-600) disabled:opacity-60 text-white font-bold transition active:scale-[0.98] flex items-center justify-center gap-2"
                   >
-                    {otpSending ? '📤 Sending OTP...' : paymentProcessing ? '⏳ Processing...' : '✓ Pay Now'}
+                    {paymentProcessing ? (
+                      <><LoaderIcon size={16} /> Processing...</>
+                    ) : (
+                      <><LockIcon size={16} /> Pay {formatCurrency(Math.round(checkoutService.price * checkoutQuantity * 1.18))}</>
+                    )}
                   </button>
+                </div>
+
+                {/* Security Note */}
+                <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                  <LockIcon size={18} className="text-gray-400 shrink-0" />
+                  <p className="text-xs text-gray-400">
+                    Payments are processed securely by Razorpay. Your card details are never stored on our servers.
+                  </p>
                 </div>
               </div>
             ) : (
@@ -2209,13 +2739,6 @@ function App() {
                       setOrderBill(null);
                       setShowPayment(false);
                       setCreatedOrderId(null);
-                      setPaymentForm({
-                        cardNumber: '',
-                        cardExpiry: '',
-                        cardCvv: '',
-                        cardName: '',
-                        upiId: '',
-                      });
                       setCheckoutType('buy');
                     }}
                     className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-lg transition"
@@ -2238,136 +2761,107 @@ function App() {
         </div>
       )}
 
-      {/* OTP Modal */}
-      {showOtpModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="glass-panel rounded-2xl border border-white/10 p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-white mb-2">🔐 Verify Payment</h2>
-            <p className="text-gray-400 text-sm mb-6">Enter the OTP sent to your email and phone</p>
-
-            {otpError && (
-              <div className="bg-red-900/50 border border-red-700 text-red-200 p-3 rounded-lg text-sm mb-4">
-                {otpError}
-              </div>
-            )}
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">One-Time Password</label>
-              <input
-                type="text"
-                placeholder="000000"
-                maxLength="6"
-                value={otpInput}
-                onChange={(e) => {
-                  setOtpInput(e.target.value.replace(/\D/g, ''));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && otpInput.length === 6) {
-                    e.preventDefault();
-                    verifyOtp();
-                  }
-                }}
-                className="w-full px-4 py-3 bg-slate-900/70 text-white text-center text-2xl tracking-widest rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
-              />
-              <p className="text-xs text-gray-500 mt-2">Check your email/SMS for the 6-digit code</p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowOtpModal(false);
-                  setOtpInput('');
-                  setOtpError(null);
-                }}
-                className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold border border-white/10 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={verifyOtp}
-                disabled={otpVerifying || otpInput.length !== 6}
-                className="flex-1 py-3 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-60 text-white font-bold transition"
-              >
-                {otpVerifying ? '⏳ Verifying...' : '✓ Verify'}
-              </button>
-            </div>
-
-            <button
-              onClick={async () => {
-                setOtpInput('');
-                setOtpError(null);
-                await sendOtp();
-              }}
-              className="w-full mt-4 py-2 text-sm text-blue-400 hover:text-blue-300 font-semibold"
-            >
-              Resend OTP
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Location Modal */}
       {showLocationModal && (
         <LocationModal
           onSelectLocation={(location) => {
             setUserLocation(location);
+            saveUserLocation(location);
             success(`Location set: ${location.city}, ${location.state}`);
           }}
           onClose={() => setShowLocationModal(false)}
         />
       )}
 
-      {/* Global Chat Drawer */}
+      {/* Global Chat Drawer - Beautiful Mobile Experience */}
       {activeChatRoom && activeTab !== 'chat' && (
-        <div className="fixed bottom-4 right-4 w-full max-w-md z-50">
-          <div className="glass-panel rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-400">Chat</p>
-                <p className="text-white font-semibold leading-tight">{activeChatRoom.title}</p>
-                {activeChatRoom.subtitle && (
-                  <p className="text-xs text-slate-400">{activeChatRoom.subtitle}</p>
-                )}
+        <div className="fixed inset-x-0 bottom-0 sm:bottom-4 sm:right-4 sm:left-auto w-full sm:max-w-md z-50 animate-[slideUp_0.3s_ease-out]">
+          <div className="glass-panel sm:rounded-2xl rounded-t-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+            {/* Mobile drag handle */}
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mt-3 sm:hidden" />
+            
+            <div className="flex items-center justify-between px-4 py-4 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                  💬
+                </div>
+                <div>
+                  <p className="text-white font-semibold leading-tight">{activeChatRoom.title}</p>
+                  {activeChatRoom.subtitle && (
+                    <p className="text-xs text-slate-400">{activeChatRoom.subtitle}</p>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => setActiveChatRoom(null)}
-                className="text-slate-400 hover:text-white text-lg"
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white transition-all active:scale-95"
               >
                 ✕
               </button>
             </div>
 
-            <div className="bg-slate-900/60 px-4 py-3 h-64 overflow-y-auto space-y-2">
-              {(chatMessages[activeChatRoom.id] || []).map((m, idx) => (
-                <div key={idx} className={`flex ${m.fromId === currentUser._id ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`px-3 py-2 rounded-xl text-sm max-w-[80%] ${m.fromId === currentUser._id ? 'bg-emerald-500/20 border border-emerald-400/40' : 'bg-white/5 border border-white/10'}`}>
-                    <p className="text-gray-200 font-semibold">{m.from}</p>
-                    <p className="text-white whitespace-pre-wrap wrap-break-word">{m.text}</p>
-                    <p className="text-[10px] text-gray-400 mt-1">{new Date(m.at).toLocaleTimeString()}</p>
-                  </div>
+            <div className="bg-slate-900/60 px-4 py-4 flex-1 overflow-y-auto space-y-3 min-h-70 max-h-[50vh]">
+              {(chatMessages[activeChatRoom.id] || []).length === 0 && (
+                <div className="text-center py-8">
+                  <span className="text-4xl mb-3 block">💬</span>
+                  <p className="text-gray-400 text-sm">No messages yet</p>
+                  <p className="text-gray-500 text-xs mt-1">Start the conversation!</p>
                 </div>
-              ))}
+              )}
+              {(chatMessages[activeChatRoom.id] || []).map((m, idx) => {
+                const isMine = m.fromId === currentUser._id;
+                const readAt = lastReadAt[activeChatRoom.id];
+                const isRead = isMine && readAt && new Date(readAt) >= new Date(m.at);
+                return (
+                  <div key={idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`px-4 py-3 rounded-2xl text-sm max-w-[85%] shadow-lg ${isMine ? 'bg-linear-to-r from-emerald-500 to-green-600 text-white rounded-br-md' : 'bg-white/10 border border-white/10 rounded-bl-md'}`}>
+                      {!isMine && <p className="text-emerald-400 font-semibold text-xs mb-1">{m.from}</p>}
+                      <p className="text-white whitespace-pre-wrap wrap-break-word">{m.text}</p>
+                      <div className="flex items-center justify-end gap-2 mt-1.5">
+                        <p className="text-[10px] opacity-70">{formatTime(m.at)}</p>
+                        {isMine && (
+                          <span className="text-[10px] opacity-70">{isRead ? '✓✓' : '✓'}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {typingRooms[activeChatRoom.id] && (
+                <div className="flex items-center gap-2 text-xs text-slate-400 px-2">
+                  <span className="flex gap-1">
+                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </span>
+                  {t('chat.typing')}
+                </div>
+              )}
             </div>
 
-            <div className="flex gap-2 p-3 border-t border-white/5">
+            <div className="flex gap-2 p-4 border-t border-white/5 bg-slate-900/80">
               <input
                 type="text"
                 value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
+                onChange={(e) => {
+                  setChatInput(e.target.value);
+                  emitTyping();
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     sendChatMessage();
                   }
                 }}
-                placeholder="Type a message"
-                className="flex-1 px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                placeholder="Type a message..."
+                className="flex-1 px-4 py-3.5 bg-white/10 text-white rounded-2xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
               />
               <button
                 onClick={sendChatMessage}
-                className="px-4 py-3 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold"
+                disabled={!chatInput.trim()}
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 text-white font-semibold transition-all active:scale-95 disabled:opacity-50"
               >
-                Send
+                ➤
               </button>
             </div>
           </div>
