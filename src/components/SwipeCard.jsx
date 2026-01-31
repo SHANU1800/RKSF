@@ -42,7 +42,7 @@ export const SwipeCard = ({ cards = [], onSwipeLeft, onSwipeRight, onTap, render
   return (
     <div className="w-full">
       <div
-        className="relative h-96 sm:h-[500px] rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing transition-transform"
+        className="relative h-96 sm:h-128 rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing transition-transform"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >

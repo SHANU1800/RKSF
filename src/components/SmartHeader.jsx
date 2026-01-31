@@ -20,7 +20,6 @@ const SmartHeader = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const scrollableRef = useRef(null);
-  const hideTimeoutRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {

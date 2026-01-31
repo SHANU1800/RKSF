@@ -16,14 +16,14 @@ export const GoodsCard = ({
             alt={item.title} 
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-slate-900/70 via-transparent to-transparent" />
           {/* Price overlay on image */}
           <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-emerald-500/90 backdrop-blur-sm shadow-lg">
             <span className="text-white font-bold text-lg">₹{item.price}</span>
           </div>
         </div>
       ) : (
-        <div className="h-36 sm:h-44 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center relative">
+        <div className="h-36 sm:h-44 bg-linear-to-br from-slate-800 to-slate-900 flex items-center justify-center relative">
           <span className="text-4xl opacity-30">📦</span>
           <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-emerald-500/90">
             <span className="text-white font-bold text-lg">₹{item.price}</span>
@@ -47,12 +47,12 @@ export const GoodsCard = ({
             <span className="text-base">📍</span>
             <span className="truncate">{item.location}</span>
           </div>
-          <span className="text-gray-500 shrink-0">{new Date(item.createdAt || Date.now()).toLocaleDateString('en-IN')}</span>
+          <span className="text-gray-500 shrink-0">{new Date(item.createdAt || new Date()).toLocaleDateString('en-IN')}</span>
         </div>
 
         {/* Seller info */}
         <div className="flex items-center gap-2 text-sm">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
+          <div className="w-6 h-6 rounded-full bg-linear-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
             {(item.sellerName || 'P').charAt(0).toUpperCase()}
           </div>
           <span className="text-gray-300 truncate">{item.sellerName || 'Provider'}</span>

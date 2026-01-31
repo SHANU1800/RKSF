@@ -42,7 +42,7 @@ export default function VisitSessionTracker({
       const data = await getVisitSession(sessionId);
       setSession(data);
       setLoading(false);
-    } catch (_err) {
+    } catch (_error) { // eslint-disable-line no-unused-vars
       setError('Failed to load session');
       setLoading(false);
     }

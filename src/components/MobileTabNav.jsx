@@ -9,7 +9,7 @@ import './MobileTabNav.css';
  * - Touch-optimized buttons
  * - Smooth animations
  */
-const MobileTabNav = ({ tabs, activeTab, onTabChange, showHeader = true }) => {
+const MobileTabNav = ({ tabs, activeTab, onTabChange }) => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const scrollContainerRef = useRef(null);

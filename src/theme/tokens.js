@@ -189,7 +189,7 @@ export const themes = {
 
 // Helper function to generate CSS custom properties
 export const generateCSSVariables = (theme = 'dark') => {
-  const themeMode = tokens.themes[theme];
+  const _themeMode = tokens.themes[theme];
   
   return {
     // Spacing

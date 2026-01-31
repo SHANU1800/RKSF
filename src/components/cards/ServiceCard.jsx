@@ -13,7 +13,7 @@ export const ServiceCard = ({
   return (
     <div className="glass-panel rounded-2xl sm:rounded-2xl border border-white/8 overflow-hidden card-hover group">
       {/* Gradient accent line */}
-      <div className="h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 opacity-80" />
+      <div className="h-1 bg-linear-to-r from-blue-500 via-cyan-400 to-emerald-400 opacity-80" />
       
       {/* Image with overlay */}
       {service.image && (
@@ -26,7 +26,7 @@ export const ServiceCard = ({
               e.target.style.display = 'none';
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-slate-900/60 to-transparent" />
         </div>
       )}
 

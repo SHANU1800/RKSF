@@ -23,7 +23,7 @@ export const BottomSheet = ({ isOpen, onClose, title, children, snapPoints = [0.
         }}
       >
         {/* Handle/Drag Indicator */}
-        <div className="flex justify-center py-3 sticky top-0 bg-gradient-to-b from-slate-900 to-transparent">
+        <div className="flex justify-center py-3 sticky top-0 bg-linear-to-b from-slate-900 to-transparent">
           <div className="w-12 h-1.5 bg-white/30 rounded-full" />
         </div>
 

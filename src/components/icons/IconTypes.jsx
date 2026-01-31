@@ -355,4 +355,4 @@ export const PackageIcon = ({ size = 20, className = '' }) => (
 );
 
 // Legacy export for backwards compatibility
-export const closeIcon = CloseIcon;
+// Icon exports handled by component exports above

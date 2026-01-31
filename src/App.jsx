@@ -141,13 +141,9 @@ function App() {
   // Mobile-specific state
   const [touchStart, setTouchStart] = useState(0);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
-  const [_oneHandedMode, setOneHandedMode] = useState(false);
-  const [showContextMenu, setShowContextMenu] = useState({ show: false, x: 0, y: 0, itemId: null });
-  const [_miniChatVisible, setMiniChatVisible] = useState(false);
-  const [_selectedCardForSwipe, setSelectedCardForSwipe] = useState(null);
-  const [_cardSwipeIndex, setCardSwipeIndex] = useState(0);
+  const [_showContextMenu] = useState({ show: false, x: 0, y: 0, itemId: null });
   const [notificationBadges, setNotificationBadges] = useState({ order: 1, message: 1, promo: 0 });
-  const [expandedSections, setExpandedSections] = useState({
+  const [_expandedSections] = useState({
     personal: true,
     location: true,
     security: false,
@@ -573,13 +569,9 @@ function App() {
     }
   };
 
-  // Toggle accordion section
-  const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-    triggerHaptic(20);
+  // Placeholder for future accordion functionality
+  const _toggleSection = () => {
+    // _expandedSections state available for future use
   };
 
   const tabs = [

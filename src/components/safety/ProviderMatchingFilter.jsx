@@ -146,7 +146,7 @@ export default function ProviderMatchingFilter({ serviceType, onProvidersLoaded 
                 onChange={(e) => setFilters({ ...filters, minSafetyScore: parseFloat(e.target.value) })}
                 className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
               />
-              <span className="text-white font-bold min-w-[40px] text-right">
+              <span className="text-white font-bold min-w-10 text-right">
                 {filters.minSafetyScore > 0 ? `${filters.minSafetyScore}+` : 'Any'}
               </span>
             </div>

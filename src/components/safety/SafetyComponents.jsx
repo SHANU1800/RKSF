@@ -102,7 +102,7 @@ export function SOSButton({ sessionId, enabled = true, size = 'normal' }) {
 
       {/* Confirmation Modal */}
       {showConfirm && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100]">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-100">
           <div className="glass-panel rounded-2xl p-6 max-w-sm mx-4 border border-red-500/50 text-center animate-[slideUp_0.2s_ease-out]">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-red-500 flex items-center justify-center animate-pulse">
               <span className="text-4xl">{countdown}</span>
@@ -199,7 +199,7 @@ export function CheckInCodeInput({ sessionId, onVerified }) {
       } else {
         setError(result.message || 'Invalid code');
       }
-    } catch (_err) {
+    } catch (_error) { // eslint-disable-line no-unused-vars
       setError('Verification failed');
     }
     setVerifying(false);

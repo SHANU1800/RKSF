@@ -44,7 +44,7 @@ export function useRazorpay() {
       try {
         await loadRazorpayScript();
         setSdkReady(true);
-      } catch (err) {
+      } catch (_error) { // eslint-disable-line no-unused-vars
         throw new Error('Payment gateway unavailable. Please try again.');
       }
     }

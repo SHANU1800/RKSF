@@ -54,7 +54,7 @@ export default function SafetyCenter({ currentUser, onClose }) {
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
       <div className="glass-panel w-full sm:max-w-2xl sm:mx-4 max-h-[90vh] overflow-hidden rounded-t-3xl sm:rounded-2xl border border-white/10 animate-[slideUp_0.3s_ease-out] flex flex-col">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-white/10 flex-shrink-0">
+        <div className="p-4 sm:p-6 border-b border-white/10 shrink-0">
           <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -360,7 +360,7 @@ function VerificationSection({ verificationStatus, onRefresh }) {
       {verificationTypes.map((v) => (
         <div key={v.type} className="glass-panel rounded-xl p-4 border border-white/10">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl shrink-0">
               {v.icon}
             </div>
             <div className="flex-1 min-w-0">
@@ -566,7 +566,7 @@ function ToggleSetting({ label, description, checked, onChange }) {
       </div>
       <button
         onClick={() => onChange(!checked)}
-        className={`relative w-12 h-7 rounded-full transition-all flex-shrink-0 ${
+        className={`relative w-12 h-7 rounded-full transition-all shrink-0 ${
           checked ? 'bg-emerald-500' : 'bg-gray-600'
         }`}
       >
@@ -766,7 +766,7 @@ function TrainingSection({ conductAgreement, onUpdate }) {
       {/* Code of Conduct */}
       <div className="glass-panel rounded-xl p-4 border border-white/10">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-2xl flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-2xl shrink-0">
             📜
           </div>
           <div className="flex-1">
@@ -796,7 +796,7 @@ function TrainingSection({ conductAgreement, onUpdate }) {
       {/* Anti-Harassment Training */}
       <div className="glass-panel rounded-xl p-4 border border-white/10">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-rose-500/20 flex items-center justify-center text-2xl flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-rose-500/20 flex items-center justify-center text-2xl shrink-0">
             🛑
           </div>
           <div className="flex-1">
@@ -825,7 +825,7 @@ function TrainingSection({ conductAgreement, onUpdate }) {
       {/* Safety Training */}
       <div className="glass-panel rounded-xl p-4 border border-white/10">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-2xl flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-2xl shrink-0">
             🛡️
           </div>
           <div className="flex-1">

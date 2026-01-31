@@ -1076,7 +1076,7 @@ select:focus {
 /* ===== CONTENT SHELL ===== */
 .content-shell {
   animation: fadeIn var(--transition-normal);
-  overflow-y-auto;
+  overflow-y: auto;
   max-height: calc(100vh - 240px);
 }
 
@@ -1424,5 +1424,4 @@ textarea {
   a[role="button"] {
     border: 1px solid transparent;
   }
-}
 }
