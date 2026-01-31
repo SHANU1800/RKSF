@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { API_BASE_URL } from '../utils/apiConfig';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://rksb.onrender.com/api';
+const API_BASE = API_BASE_URL;
 
 // Custom hook for safety API calls
 export function useSafetyAPI() {

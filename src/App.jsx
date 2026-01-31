@@ -11,6 +11,7 @@ import { LocationModal } from './components/LocationModal';
 import { useToast } from './hooks/useToast';
 import { ToastContainer } from './components/Toast';
 import { handleApiError, validators } from './utils/errorHandler';
+import { API_BASE_URL, SOCKET_URL } from './utils/apiConfig';
 import { formatCurrency, formatTime } from './utils/format';
 import { estimateBikeEtaMinutes, haversineDistanceKm } from './utils/geo';
 import { t } from './i18n';
@@ -23,9 +24,6 @@ import ContextMenu from './components/ContextMenu';
 import Accordion from './components/Accordion';
 import SwipeCard from './components/SwipeCard';
 import MiniChatPreview from './components/MiniChatPreview';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://rksb.onrender.com/api';
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://rksb.onrender.com';
 
 const EmptyState = ({ title, body, actionLabel, onAction, icon }) => (
   <div className="glass-panel rounded-2xl border border-dashed border-white/10 p-8 text-center text-gray-400">

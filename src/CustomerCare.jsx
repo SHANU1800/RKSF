@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://rksb.onrender.com/api';
+import { API_BASE_URL } from './utils/apiConfig';
 
 export default function CustomerCare({ currentUser }) {
   const [messages, setMessages] = useState([]); // { role: 'user'|'assistant', content }

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { LockIcon, AlertCircleIcon, EyeIcon, EyeOffIcon, CheckIcon } from './components/icons/IconTypes';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://rksb.onrender.com/api';
+import { API_BASE_URL } from './utils/apiConfig';
 
 function LoginPage({ onLogin }) {
   const [activeTab, setActiveTab] = useState('password'); // 'password' or 'otp'
@@ -49,7 +48,7 @@ function LoginPage({ onLogin }) {
     setErrors({});
 
     try {
-      const endpoint = isSignup ? '/api/auth/signup' : '/api/auth/login';
+      const endpoint = isSignup ? '/auth/signup' : '/auth/login';
       const payload = isSignup
         ? { email, password, name, role }
         : { email, password, rememberMe };

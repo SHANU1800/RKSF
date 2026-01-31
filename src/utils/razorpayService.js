@@ -3,8 +3,10 @@
  * Handles loading Razorpay SDK and processing payments
  */
 
+import { API_BASE_URL } from './apiConfig';
+
 const RAZORPAY_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
-const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = API_BASE_URL;
 
 // Track script loading state
 let razorpayScriptLoaded = false;
