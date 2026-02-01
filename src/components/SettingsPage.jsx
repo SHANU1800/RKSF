@@ -28,9 +28,30 @@ const GlobeIcon = ({ size = 20, className = '' }) => (
   </svg>
 );
 
+const ZapIcon = ({ size = 20, className = '' }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+);
+
+const DatabaseIcon = ({ size = 20, className = '' }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2">
+    <ellipse cx="12" cy="5" rx="9" ry="3" />
+    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+  </svg>
+);
+
+const TrashIcon = ({ size = 20, className = '' }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+  </svg>
+);
+
 // Helper components moved outside to prevent recreation on each render
 const SettingSection = ({ title, icon, children }) => (
-  <div className="glass-panel rounded-2xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 space-y-4">
+  <div className="glass-panel rounded-2xl border border-white/10 p-4 md:p-6 space-y-4">
     <div className="flex items-center gap-3 pb-2 border-b border-white/10">
       <span className="text-primary-400">{icon}</span>
       <h4 className="text-lg font-bold text-white">{title}</h4>
@@ -40,20 +61,20 @@ const SettingSection = ({ title, icon, children }) => (
 );
 
 const Toggle = ({ label, checked, onChange, description }) => (
-  <div className="flex items-start sm:items-center justify-between gap-4 p-3 sm:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4 active:bg-white/10">
+  <div className="flex items-start md:items-center justify-between gap-4 p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4 active:bg-white/10">
     <div className="flex-1 min-w-0">
-      <p className="text-white font-medium text-sm sm:text-base">{label}</p>
-      {description && <p className="text-gray-400 text-xs sm:text-sm mt-0.5 leading-relaxed">{description}</p>}
+      <p className="text-white font-medium text-sm md:text-base">{label}</p>
+      {description && <p className="text-gray-400 text-xs md:text-sm mt-0.5 leading-relaxed">{description}</p>}
     </div>
     <button
       onClick={onChange}
-      className={`relative inline-flex h-7 w-12 sm:h-6 sm:w-11 items-center rounded-full transition-all shrink-0 ${
+      className={`relative inline-flex h-7 w-12 md:h-6 md:w-11 items-center rounded-full transition-all shrink-0 ${
         checked ? 'bg-linear-to-r from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30' : 'bg-gray-600'
       }`}
     >
       <span
-        className={`inline-block h-5 w-5 sm:h-4 sm:w-4 transform rounded-full bg-white shadow-md transition-transform ${
-          checked ? 'translate-x-6 sm:translate-x-6' : 'translate-x-1'
+        className={`inline-block h-5 w-5 md:h-4 md:w-4 transform rounded-full bg-white shadow-md transition-transform ${
+          checked ? 'translate-x-6 md:translate-x-6' : 'translate-x-1'
         }`}
       />
     </button>
@@ -61,12 +82,12 @@ const Toggle = ({ label, checked, onChange, description }) => (
 );
 
 const Select = ({ label, value, onChange, options }) => (
-  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
-    <label className="text-white font-medium text-sm sm:text-base">{label}</label>
+  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4 p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
+    <label className="text-white font-medium text-sm md:text-base">{label}</label>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full sm:w-auto px-4 py-3 sm:py-2 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm appearance-none cursor-pointer"
+      className="w-full md:w-auto px-4 py-3 md:py-2 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm appearance-none cursor-pointer"
       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
     >
       {options.map((opt) => (
@@ -131,7 +152,7 @@ const SettingsPage = () => {
   return (
     <div className="space-y-4 sm:space-y-6 pb-24 sm:pb-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-0 -mx-4 sm:mx-0 bg-linear-to-r from-slate-900/50 to-transparent sm:bg-transparent animate-slide-down">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-0 -mx-4 md:mx-0 bg-linear-to-r from-slate-900/50 to-transparent md:bg-transparent animate-slide-down">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-slate-500 to-slate-700 flex items-center justify-center shadow-lg animate-float">
             <SettingsIcon size={28} className="text-white" />
@@ -143,36 +164,38 @@ const SettingsPage = () => {
         </div>
         <button
           onClick={resetSettings}
-          className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-white/10 hover:bg-white/15 text-gray-300 font-bold border border-white/10 transition-all active:scale-[0.98] text-sm flex items-center justify-center gap-2 hover:shadow-lg"
+          className="w-full md:w-auto px-4 py-3 md:py-2 rounded-xl bg-white/10 hover:bg-white/15 text-gray-300 font-bold border border-white/10 transition-all active:scale-[0.98] text-sm flex items-center justify-center gap-2 hover:shadow-lg"
         >
           <RefreshIcon size={16} />
           <span>Reset to Defaults</span>
         </button>
       </div>
 
-      {/* Settings Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:gap-3">
-        {[
-          { id: 'appearance', label: '🎨 Appearance', icon: '🎨' },
-          { id: 'audio', label: '🔊 Audio', icon: '🔊' },
-          { id: 'notifications', label: '🔔 Notifications', icon: '🔔' },
-          { id: 'privacy', label: '🔒 Privacy', icon: '🔒' },
-          { id: 'regional', label: '🌍 Regional', icon: '🌍' },
-          { id: 'advanced', label: '⚡ Advanced', icon: '⚡' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all ${
-              activeTab === tab.id
-                ? 'bg-linear-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
-                : 'bg-white/10 text-gray-300 hover:bg-white/15'
-            }`}
-          >
-            <span className="hidden sm:inline">{tab.icon} </span>
-            {tab.label}
-          </button>
-        ))}
+      {/* Settings Tabs - Mobile Nav Style */}
+      <div className="glass-panel rounded-2xl border border-white/10 p-2">
+        <div className="flex justify-around items-stretch gap-1">
+          {[
+            { id: 'appearance', label: 'Appearance', icon: <PaletteIcon size={24} /> },
+            { id: 'audio', label: 'Audio', icon: <VolumeIcon size={24} /> },
+            { id: 'notifications', label: 'Notifications', icon: <BellIcon size={24} /> },
+            { id: 'privacy', label: 'Privacy', icon: <LockIcon size={24} /> },
+            { id: 'regional', label: 'Regional', icon: <GlobeIcon size={24} /> },
+            { id: 'advanced', label: 'Advanced', icon: <ZapIcon size={24} /> },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl font-semibold text-sm transition-all ${
+                activeTab === tab.id
+                  ? 'bg-linear-to-r from-blue-500/20 to-indigo-500/10 text-blue-300 shadow-lg border border-blue-400/40'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="w-6 h-6 flex items-center justify-center">{tab.icon}</span>
+              <span className="text-[10px] md:text-xs uppercase tracking-wide font-bold">{tab.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Appearance Section */}
@@ -351,12 +374,12 @@ const SettingsPage = () => {
               onChange={() => {}}
               description="Show suggestions based on activity"
             />
-            <div className="p-3 sm:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
+            <div className="p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
               <button className="text-sm text-blue-400 hover:text-blue-300 font-semibold">
                 📥 Download My Data
               </button>
             </div>
-            <div className="p-3 sm:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
+            <div className="p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
               <button className="text-sm text-red-400 hover:text-red-300 font-semibold">
                 🗑️ Delete My Account
               </button>
@@ -408,7 +431,7 @@ const SettingsPage = () => {
       {/* Advanced Section */}
       {activeTab === 'advanced' && (
         <div className="space-y-6 animate-fade-in">
-          <SettingSection title="Advanced Settings" icon="⚙️">
+          <SettingSection title="Advanced Settings" icon={<SettingsIcon size={20} />}>
             <Toggle
               label="Developer Mode"
               checked={false}
@@ -429,14 +452,14 @@ const SettingsPage = () => {
             />
           </SettingSection>
 
-          <SettingSection title="Storage & Cache" icon="💾">
-            <div className="p-3 sm:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
+          <SettingSection title="Storage & Cache" icon={<DatabaseIcon size={20} />}>
+            <div className="p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-white font-medium">Cache Usage</span>
                 <span className="text-blue-400 font-bold">128 MB</span>
               </div>
-              <button className="text-sm text-blue-400 hover:text-blue-300 font-semibold">
-                🗑️ Clear Cache
+              <button className="text-sm text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-2">
+                <TrashIcon size={16} /> Clear Cache
               </button>
             </div>
           </SettingSection>
@@ -444,7 +467,7 @@ const SettingsPage = () => {
       )}
 
       {/* App Info */}
-      <div className="glass-panel rounded-2xl border border-white/10 p-4 sm:p-6">
+      <div className="glass-panel rounded-2xl border border-white/10 p-4 md:p-6">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
             <GridIcon size={24} className="text-white" />

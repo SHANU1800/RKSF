@@ -611,8 +611,8 @@ export function ReportIncidentButton({ orderId, reportedAgainst, onReported }) {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
-          <div className="glass-panel w-full sm:max-w-md sm:mx-4 max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/10 p-6 animate-[slideUp_0.3s_ease-out]">
-            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6 sm:hidden" />
+          <div className="glass-panel w-full md:max-w-md md:mx-4 max-h-[90vh] overflow-y-auto rounded-t-3xl md:rounded-2xl border border-white/10 p-6 animate-[slideUp_0.3s_ease-out]">
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6 md:hidden" />
             
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">

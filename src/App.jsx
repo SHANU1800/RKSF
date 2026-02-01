@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import LoginPage from './LoginPage';
-import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon } from './components/icons/IconTypes';
+import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon, SearchIcon, PlusIcon, MoreIcon, ArrowUpRightIcon, UsersIcon, UserIcon, SettingsIcon, SendIcon, BuildingIcon, FileTextIcon } from './components/icons/IconTypes';
 import ProviderCards from './ProviderCards';
 import ProvidersMap from './components/ProvidersMap';
 import CustomerCare from './CustomerCare';
@@ -114,6 +114,28 @@ function App() {
   const [activeChatRoom, setActiveChatRoom] = useState(null); // { id, title, subtitle, meta }
   const [chatMessages, setChatMessages] = useState({}); // {roomId: [{from, text, at, fromId}]}
   const [chatInput, setChatInput] = useState('');
+  const [showMessageTemplates, setShowMessageTemplates] = useState(false);
+  
+  // Admin grievances state
+  const [grievances, setGrievances] = useState([]);
+  const [grievancesLoading, setGrievancesLoading] = useState(false);
+  const [grievanceFilter, setGrievanceFilter] = useState('all');
+  
+  // Predefined message templates to prevent contact sharing
+  const messageTemplates = [
+    "Hello! I'm interested in this service.",
+    "What are the details and pricing?",
+    "Is this still available?",
+    "Can we discuss the requirements?",
+    "When can you start?",
+    "What's included in this service?",
+    "Do you offer any discounts?",
+    "How long will this take?",
+    "What's your availability?",
+    "I'd like to proceed with this.",
+    "Thank you for your response!",
+    "I'll get back to you soon.",
+  ];
   const [typingRooms, setTypingRooms] = useState({});
   const [lastReadAt, setLastReadAt] = useState({});
   const [userLocation, setUserLocation] = useState(null);
@@ -315,11 +337,13 @@ function App() {
       fetchServices();
       fetchGoods();
     }
-  }, [currentUser, fetchProviders, fetchServices, fetchGoods]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
 
-  // Socket connection for chat
+  // Socket connection for chat - only connect once per user login
   useEffect(() => {
     if (!currentUser?._id) return;
+    if (socketRef.current?.connected) return; // Prevent reconnection if already connected
 
     const socket = io(SOCKET_URL, {
       withCredentials: true,
@@ -347,10 +371,14 @@ function App() {
       const key = roomId || goodsId || serviceId;
       if (!key) return;
       const msg = message || payload;
-      setChatMessages((prev) => ({
-        ...prev,
-        [key]: [...(prev[key] || []), msg],
-      }));
+      
+      // Only add message if it's from someone else (not from current user)
+      if (msg.fromId !== currentUser?._id) {
+        setChatMessages((prev) => ({
+          ...prev,
+          [key]: [...(prev[key] || []), msg],
+        }));
+      }
 
       if (activeChatRoom?.id === key) {
         const readAt = new Date().toISOString();
@@ -400,7 +428,7 @@ function App() {
     return () => {
       socket.disconnect();
     };
-  }, [activeChatRoom, currentUser, error, info, success, warning]);
+  }, [currentUser]);
 
   useEffect(() => {
     if (!activeChatRoom?.id || !socketRef.current) return;
@@ -408,6 +436,28 @@ function App() {
     setLastReadAt((prev) => ({ ...prev, [activeChatRoom.id]: readAt }));
     socketRef.current.emit('chat:read', { roomId: activeChatRoom.id, at: readAt });
   }, [activeChatRoom?.id]);
+
+  // Fetch grievances for admin
+  useEffect(() => {
+    if (currentUser?.role !== 'admin' || activeTab !== 'adminGrievances') return;
+    
+    const fetchGrievances = async () => {
+      setGrievancesLoading(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/support/grievances?status=${grievanceFilter}`, {
+          credentials: 'include',
+        });
+        const data = await response.json();
+        setGrievances(data.grievances || []);
+      } catch (err) {
+        console.error('Error fetching grievances:', err);
+      } finally {
+        setGrievancesLoading(false);
+      }
+    };
+    
+    fetchGrievances();
+  }, [currentUser?.role, activeTab, grievanceFilter]);
 
   const checkServerHealth = async () => {
     try {
@@ -573,17 +623,18 @@ function App() {
   };
 
   const tabs = [
-    { id: 'market', label: 'Market', icon: '🏪' },
+    { id: 'market', label: 'Market', icon: <SparklesIcon size={18} /> },
     { id: 'goods', label: 'Goods', icon: <PackageIcon size={18} /> },
     { id: 'myOrders', label: 'Orders', icon: <ClipboardIcon size={18} /> },
     { id: 'transactions', label: 'Wallet', icon: <CreditCardIcon size={18} /> },
     { id: 'notifications', label: 'Alerts', icon: <BellIcon size={18} /> },
     { id: 'reviews', label: 'Reviews', icon: <StarIcon size={18} /> },
     { id: 'chat', label: 'Chat', icon: <MessageIcon size={18} /> },
-    { id: 'providers', label: 'Providers', icon: '👥' },
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
-    { id: 'customerCare', label: 'Support', icon: '🎧' },
+    { id: 'providers', label: 'Providers', icon: <UsersIcon size={18} /> },
+    { id: 'profile', label: 'Profile', icon: <UserIcon size={18} /> },
+    { id: 'settings', label: 'Settings', icon: <SettingsIcon size={18} /> },
+    { id: 'customerCare', label: 'Support', icon: <MessageIcon size={18} /> },
+    ...(currentUser?.role === 'admin' ? [{ id: 'adminGrievances', label: 'Admin Panel', icon: <SettingsIcon size={18} /> }] : []),
   ];
 
   const categories = ['all', ...new Set(services.map(s => s.category || 'General'))];
@@ -789,20 +840,28 @@ function App() {
     socketRef.current.emit('chat:typing', { roomId: activeChatRoom.id, userId: currentUser._id });
   };
 
-  const sendChatMessage = () => {
-    if (!chatInput.trim() || !activeChatRoom || !socketRef.current) return;
+  const sendChatMessage = (templateMessage = null) => {
+    const messageText = templateMessage || chatInput.trim();
+    if (!messageText || !activeChatRoom || !socketRef.current) return;
+    
     const message = {
       from: currentUser.username,
       fromId: currentUser._id,
-      text: chatInput.trim(),
+      text: messageText,
       at: new Date().toISOString(),
     };
+    
+    // Emit to socket (server will broadcast to others)
     socketRef.current.emit('chat:message', { roomId: activeChatRoom.id, message });
+    
+    // Add to local state immediately for sender
     setChatMessages((prev) => ({
       ...prev,
       [activeChatRoom.id]: [...(prev[activeChatRoom.id] || []), message],
     }));
+    
     setChatInput('');
+    setShowMessageTemplates(false);
   };
 
   const submitOrder = async () => {
@@ -944,7 +1003,7 @@ function App() {
               </div>
 
               {providers.length > 0 && (
-                <div className="glass-panel rounded-2xl border border-white/10 p-4 sm:p-6 space-y-4">
+                <div className="glass-panel rounded-2xl border border-white/10 p-4 md:p-6 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-white">Provider Map</p>
@@ -988,18 +1047,22 @@ function App() {
         return (
           <div className="text-gray-300 space-y-6 animate-fade-in">
             {/* User Header Card */}
-            <div className="glass-panel rounded-2xl p-6 sm:p-8 space-y-4 border border-white/5 shadow-lg animate-scale-in">
+            <div className="glass-panel rounded-2xl p-6 md:p-8 space-y-4 border border-white/5 shadow-lg animate-scale-in">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl font-bold text-white shadow-lg">
-                    {currentUser?.username?.charAt(0).toUpperCase() || '👤'}
+                    {currentUser?.username?.charAt(0).toUpperCase() || <UserIcon size={32} className="text-white" />}
                   </div>
                   <div>
                     <p className="text-white font-bold text-xl">{currentUser?.username}</p>
                     <p className="text-gray-400 text-sm">{currentUser?.email}</p>
                     <div className="flex gap-2 mt-2">
-                      <span className="pill text-emerald-200 border-emerald-500/30 bg-emerald-500/10">
-                        {currentUser?.role === 'provider' ? '🏢 Provider' : '👥 Customer'}
+                      <span className="pill text-emerald-200 border-emerald-500/30 bg-emerald-500/10 flex items-center gap-1.5">
+                        {currentUser?.role === 'provider' ? (
+                          <><BuildingIcon size={14} /> Provider</>
+                        ) : (
+                          <><UsersIcon size={14} /> Customer</>
+                        )}
                       </span>
                       <span className="pill text-blue-200 border-blue-500/30 bg-blue-500/10">Verified</span>
                     </div>
@@ -1033,8 +1096,10 @@ function App() {
             {/* Personal Information */}
             {!profileEditMode ? (
               <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4 animate-slide-up">
-                <h4 className="text-lg font-semibold text-white flex items-center gap-2">👤 Personal Information</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <UserIcon size={20} /> Personal Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-3 bg-white/5 rounded-xl">
                     <p className="text-xs text-gray-400 uppercase tracking-wide">First Name</p>
                     <p className="text-white font-semibold mt-1">{profileForm.firstName || '—'}</p>
@@ -1071,7 +1136,7 @@ function App() {
               <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4 animate-slide-up">
                 <h4 className="text-lg font-semibold text-white flex items-center gap-2">✏️ Edit Profile</h4>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
                       type="text"
                       placeholder="First Name"
@@ -1094,7 +1159,7 @@ function App() {
                     onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
                     className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
                   />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <select
                       value={profileForm.gender}
                       onChange={(e) => setProfileForm({...profileForm, gender: e.target.value})}
@@ -1208,6 +1273,107 @@ function App() {
           <CustomerCare currentUser={currentUser} />
         );
 
+      case 'adminGrievances': {
+        const updateGrievanceStatus = async (id, status) => {
+          try {
+            await fetch(`${API_BASE_URL}/support/grievance/${id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ status }),
+            });
+            setGrievances(prev => prev.map(g => g.id === id ? { ...g, status } : g));
+            success(`Grievance #${id} marked as ${status}`);
+          } catch (_err) {
+            error('Failed to update grievance');
+          }
+        };
+
+        return (
+          <div className="space-y-6 animate-fade-in">
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-300">
+                    Admin Panel - Grievances
+                  </h2>
+                  <p className="text-gray-400 text-sm mt-1">Review and manage user grievances</p>
+                </div>
+                <div className="flex gap-2">
+                  {['all', 'pending', 'reviewed', 'resolved'].map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setGrievanceFilter(f)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                        grievanceFilter === f
+                          ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
+                          : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      {f.charAt(0).toUpperCase() + f.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {grievancesLoading ? (
+              <div className="text-center text-gray-400 py-12">Loading grievances...</div>
+            ) : grievances.length === 0 ? (
+              <div className="glass-panel rounded-2xl border border-white/5 p-12 text-center">
+                <p className="text-gray-400">No grievances found</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {grievances.map((g) => (
+                  <div key={g.id} className="glass-panel rounded-2xl border border-white/5 p-6 space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-lg font-bold text-white">#{g.id}</span>
+                          <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${
+                            g.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/40' :
+                            g.status === 'reviewed' ? 'bg-blue-500/20 text-blue-300 border border-blue-400/40' :
+                            'bg-green-500/20 text-green-300 border border-green-400/40'
+                          }`}>
+                            {g.status.toUpperCase()}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {new Date(g.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="mb-3">
+                          <p className="text-sm text-gray-400">From: {g.userName} ({g.userEmail})</p>
+                        </div>
+                        <div className="bg-slate-900/60 rounded-xl p-4 border border-white/5">
+                          <p className="text-white whitespace-pre-wrap">{g.message}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-3 border-t border-white/10">
+                      <button
+                        onClick={() => updateGrievanceStatus(g.id, 'reviewed')}
+                        disabled={g.status === 'reviewed'}
+                        className="px-4 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-sm font-semibold border border-blue-400/30 disabled:opacity-50 transition"
+                      >
+                        Mark Reviewed
+                      </button>
+                      <button
+                        onClick={() => updateGrievanceStatus(g.id, 'resolved')}
+                        disabled={g.status === 'resolved'}
+                        className="px-4 py-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 text-sm font-semibold border border-green-400/30 disabled:opacity-50 transition"
+                      >
+                        Mark Resolved
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      }
+
       case 'chat': {
         const recentRooms = Object.keys(chatMessages);
         const openGeneral = () => openChatRoom('general-support', 'General Support', 'Chat with support team', { kind: 'general' });
@@ -1237,7 +1403,7 @@ function App() {
               </div>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="glass-panel rounded-2xl border border-white/5 p-4 space-y-4">
                 <div>
                   <p className="text-sm font-semibold text-white mb-2">Providers</p>
@@ -1338,29 +1504,27 @@ function App() {
                       )}
                     </div>
 
-                    <div className="flex gap-2 mt-3">
-                      <input
-                        type="text"
-                        value={chatInput}
-                        onChange={(e) => {
-                          setChatInput(e.target.value);
-                          emitTyping();
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            sendChatMessage();
-                          }
-                        }}
-                        placeholder="Type a message"
-                        className="flex-1 px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
-                      />
-                      <button
-                        onClick={sendChatMessage}
-                        className="px-4 py-3 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold"
-                      >
-                        Send
-                      </button>
+                    <div className="space-y-3 mt-3">
+                      {/* Message Templates */}
+                      <div className="glass-panel rounded-xl p-3 border border-white/5">
+                        <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                          <LockIcon size={12} /> Select a message template:
+                        </p>
+                        <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+                          {messageTemplates.map((template, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => sendChatMessage(template)}
+                              className="text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-blue-500/20 text-white text-sm border border-white/10 hover:border-blue-400/40 transition-all"
+                            >
+                              {template}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400 text-center">
+                        💡 Predefined messages help maintain platform security and prevent contact sharing
+                      </p>
                     </div>
                   </>
                 ) : (
@@ -1717,50 +1881,48 @@ function App() {
         const conditions = ['all', 'excellent', 'good', 'fair', 'new'];
         return (
           <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-2xl font-bold text-white">Goods (OLX-style)</h3>
-                <p className="text-gray-400 text-sm">Buy & sell items with real-time chat to the seller</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="pill text-sm border-white/10 bg-white/5">{filteredGoods.length} listed</span>
+            {/* Search and Filters */}
+            <div className="glass-panel rounded-2xl border border-white/5 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="pill text-sm border-white/10 bg-white/5">{filteredGoods.length} items</span>
                 {currentUser.role === 'provider' && (
                   <button
                     onClick={() => setShowGoodsModal(true)}
                     className="px-4 py-2 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 text-white font-semibold transition"
                   >
-                    + List Goods
+                    + List Item
                   </button>
                 )}
               </div>
-            </div>
-
-            <div className="glass-panel rounded-2xl border border-white/5 p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="md:col-span-2 relative">
-                <input
-                  type="text"
-                  placeholder="Search items, locations, sellers"
-                  value={goodsSearchTerm}
-                  onChange={(e) => setGoodsSearchTerm(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
-                />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2 relative">
+                  <input
+                    type="text"
+                    placeholder="Search items, locations, sellers"
+                    value={goodsSearchTerm}
+                    onChange={(e) => setGoodsSearchTerm(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <SearchIcon size={20} />
+                  </span>
+                </div>
+                <select
+                  value={goodsConditionFilter}
+                  onChange={(e) => setGoodsConditionFilter(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                >
+                  {conditions.map((c) => (
+                    <option key={c} value={c}>{c === 'all' ? 'All conditions' : c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                  ))}
+                </select>
               </div>
-              <select
-                value={goodsConditionFilter}
-                onChange={(e) => setGoodsConditionFilter(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
-              >
-                {conditions.map((c) => (
-                  <option key={c} value={c}>{c === 'all' ? 'All conditions' : c.charAt(0).toUpperCase() + c.slice(1)}</option>
-                ))}
-              </select>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-3 space-y-4">
+            {/* Items Grid */}
+            <div className="space-y-4">
                 {loadingGoods ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {[...Array(4)].map((_, i) => (
                       <div key={i} className="glass-panel border border-white/5 rounded-2xl p-4 animate-pulse space-y-3">
                         <div className="h-40 bg-white/10 rounded-lg" />
@@ -1773,9 +1935,9 @@ function App() {
                 ) : filteredGoods.length === 0 ? (
                   <div className="glass-panel rounded-2xl border border-dashed border-white/10 p-8 text-center text-gray-400">No goods found</div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {filteredGoods.map((item) => (
-                      <div key={item._id} className="glass-panel rounded-2xl border border-white/5 overflow-hidden card-hover">
+                      <div key={item._id} className="glass-panel rounded-2xl border border-white/5 overflow-hidden card-hover w-full">
                         {item.image ? (
                           <div className="h-40 bg-gray-800/40">
                             <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
@@ -1818,7 +1980,6 @@ function App() {
                     ))}
                   </div>
                 )}
-              </div>
             </div>
           </div>
         );
@@ -1828,14 +1989,11 @@ function App() {
       default:
         return (
           <div>
-            <div className="mb-8 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-2xl font-bold text-white">Marketplace</h3>
-                  <p className="text-gray-400 text-sm">Services offered by providers</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="pill text-sm border-white/10 bg-white/5">{filteredServices.length} shown</span>
+            {/* Search and Filters */}
+            <div className="mb-6 space-y-4">
+              <div className="glass-panel rounded-2xl border border-white/5 p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="pill text-sm border-white/10 bg-white/5">{filteredServices.length} services</span>
                   {currentUser.role === 'provider' && (
                     <button
                       onClick={() => setShowServiceModal(true)}
@@ -1845,9 +2003,7 @@ function App() {
                     </button>
                   )}
                 </div>
-              </div>
-
-              <div className="glass-panel rounded-2xl border border-white/5 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="col-span-1 lg:col-span-2">
                   <div className="relative">
                     <input
@@ -1857,7 +2013,9 @@ function App() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-11 pr-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
                     />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                      <SearchIcon size={20} />
+                    </span>
                   </div>
                 </div>
                 <select
@@ -1881,9 +2039,10 @@ function App() {
                 </select>
               </div>
             </div>
+            </div>
 
             {loadingServices ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="glass-panel border border-white/5 rounded-2xl p-6 animate-pulse space-y-4">
                     <div className="h-4 bg-white/10 rounded w-1/3" />
@@ -1898,7 +2057,7 @@ function App() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 auto-rows-min">
                 {filteredServices.length === 0 ? (
                   <div className="col-span-full text-center py-10 text-gray-400 border border-dashed border-gray-700 rounded-lg">
                     No services found
@@ -1909,10 +2068,10 @@ function App() {
                     const category = service.category || 'General';
                     const price = Number.isFinite(service.price) ? `₹${service.price}` : '—';
                     return (
-                      <div key={service._id} className="glass-panel rounded-2xl border border-white/5 overflow-hidden card-hover">
+                      <div key={service._id} className="glass-panel rounded-2xl border border-white/5 overflow-hidden card-hover w-full">
                         <div className="h-1 bg-linear-to-r from-blue-500 via-cyan-400 to-emerald-400" />
                         {service.image && (
-                          <div className="w-full h-48 bg-gray-700/40">
+                          <div className="w-full h-48 bg-gray-700/40 flex-shrink-0">
                             <img 
                               src={service.image} 
                               alt={service.title}
@@ -1951,9 +2110,9 @@ function App() {
                                 openCheckout(service);
                                 setCheckoutType('buy');
                               }}
-                              className="flex-1 py-2 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 text-white font-semibold transition"
+                              className="flex-1 py-2 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 text-white font-semibold transition flex items-center justify-center gap-1.5"
                             >
-                              🧾 Buy Package
+                              <FileTextIcon size={16} className="text-white" /> Buy Package
                             </button>
                             <button
                               onClick={() => openServiceChat(service)}
@@ -1975,54 +2134,53 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-950 text-slate-50 pb-24 sm:pb-0 page-shell">
+    <div className="w-full h-screen flex flex-col relative overflow-hidden bg-slate-950 text-slate-50 page-shell">
       <div className="floating-blob blue" aria-hidden="true" />
       <div className="floating-blob pink" aria-hidden="true" />
       <div className="noisy-layer" aria-hidden="true" />
 
       {/* Header - Beautiful & Responsive */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-white/10 header-veil">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/90 border-b border-white/10 shadow-lg">
+        <div className="w-full mx-auto px-4 md:px-6 py-3 md:py-4">
           <div className="flex justify-between items-center gap-4">
             {/* Logo - Refined for mobile */}
             <div className="shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-sky-400 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                  <span className="text-white font-bold text-lg sm:text-xl">R</span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-linear-to-br from-sky-400 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                  <span className="text-white font-bold text-xl md:text-2xl">R</span>
                 </div>
                 <div>
-                  <h1 className="text-lg sm:text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-sky-400 via-cyan-300 to-emerald-200 leading-tight">
+                  <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
                     RKserve
                   </h1>
-                  <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-slate-400 -mt-0.5">Marketplace</p>
+                  <p className="text-[10px] md:text-xs uppercase tracking-wider text-slate-400 -mt-0.5">Marketplace</p>
                 </div>
               </div>
             </div>
             
             {/* User Info & Actions - Desktop */}
-            <div className="hidden sm:flex items-center gap-5">
-              <div className="text-right">
-                <p className="text-white font-semibold leading-5 text-sm">{currentUser.username}</p>
-                <p className="text-xs text-gray-400 capitalize">{currentUser.role}</p>
+            <div className="hidden md:flex items-center gap-4">
+              {currentUser && (
+                <div className="glass-panel px-3 py-2 rounded-xl border border-white/10">
+                  <p className="text-white font-semibold text-sm">{currentUser.username}</p>
+                  <p className="text-xs text-gray-400 capitalize">{currentUser.role}</p>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50 animate-pulse" />
+                <span className="text-xs text-emerald-300 font-medium">{serverStatus}</span>
               </div>
               <ThemeToggle />
-              <span
-                className="pill text-xs text-emerald-200 border-emerald-500/30 bg-emerald-500/10"
-                role="status"
-                aria-live="polite"
-              >
-                {serverStatus}
-              </span>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 rounded-xl bg-linear-to-r from-rose-500 to-red-600 hover:shadow-lg hover:shadow-rose-500/25 text-white font-semibold transition text-sm"
+                className="px-5 py-2.5 rounded-xl bg-linear-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-semibold transition-all text-sm shadow-lg hover:shadow-rose-500/30"
               >
                 Logout
               </button>
             </div>
 
             {/* Mobile Actions - Compact & Beautiful */}
-            <div className="sm:hidden flex items-center gap-2">
+            <div className="md:hidden flex items-center gap-2">
               <span
                 className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50 animate-pulse"
                 role="status"
@@ -2034,7 +2192,7 @@ function App() {
                 className="w-9 h-9 rounded-xl bg-linear-to-br from-rose-500 to-red-600 text-white font-bold text-sm flex items-center justify-center shadow-lg shadow-rose-500/20"
                 aria-label="Logout"
               >
-                ↗
+                <ArrowUpRightIcon size={18} />
               </button>
             </div>
           </div>
@@ -2042,23 +2200,24 @@ function App() {
       </header>
 
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-10">
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-          {/* Sidebar - Hidden on mobile, shown on tablet+ */}
-          <aside className="hidden sm:block sm:w-52 glass-panel rounded-2xl p-4 h-fit sticky top-24 border border-white/5 shadow-xl lift-card">
-            <nav className="space-y-1">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 w-full h-full overflow-y-auto">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full w-full">
+          {/* Sidebar - Hidden on mobile, shown on desktop - Mobile Nav Style */}
+          <aside className="hidden lg:block lg:w-64 xl:w-72 glass-panel rounded-2xl p-3 h-fit sticky top-24 border border-white/10 shadow-xl lift-card shrink-0 ml-4 xl:ml-6">
+            <nav className="space-y-2">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition font-semibold border text-sm ${
+                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all font-bold border text-sm ${
                     activeTab === tab.id
-                      ? 'bg-linear-to-r from-sky-500/20 to-emerald-500/10 text-white border-sky-400/40 shadow-lg'
-                      : 'text-gray-300 border-transparent hover:bg-white/5 hover:border-white/5'
+                      ? 'bg-linear-to-r from-blue-500/20 to-indigo-500/10 text-white border-blue-400/40 shadow-lg shadow-blue-500/20'
+                      : 'text-gray-300 border-transparent hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <span className="text-base">{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="text-2xl">{tab.icon}</span>
+                  <span className="text-sm uppercase tracking-wider">{tab.label}</span>
                 </button>
               ))}
             </nav>
@@ -2066,53 +2225,61 @@ function App() {
 
           {/* Main Content */}
           <main 
-            className="flex-1 min-w-0 fade-in content-shell"
+            className="flex-1 min-w-0 fade-in content-shell py-4 md:py-6 lg:py-8 px-4 md:px-6 lg:pr-4 xl:pr-6"
             ref={contentRef}
             onScroll={handleContentScroll}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <div className="mb-6 sm:mb-10 section-hero">
-              <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <span className="badge-soft text-xs accent-dot">{activeTab}</span>
-                <h2 className="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-cyan-300 to-emerald-200">
-                  {activeTab === 'market'
-                    ? 'Market'
-                    : activeTab === 'rps'
-                      ? 'Rock Paper Scissors'
-                      : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                </h2>
+            {/* Enhanced Section Hero */}
+            <div className="mb-6 md:mb-8 section-hero">
+              <div className="glass-panel rounded-2xl border border-white/10 p-6 md:p-8">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <span className="text-white scale-125">{tabs.find(t => t.id === activeTab)?.icon || <SparklesIcon size={24} />}</span>
+                  </div>
+                  <div>
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-cyan-300 to-emerald-200">
+                      {activeTab === 'market'
+                        ? 'Market'
+                        : activeTab === 'rps'
+                          ? 'Rock Paper Scissors'
+                          : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                    </h2>
+                    <p className="text-gray-400 text-sm md:text-base mt-1">
+                      {activeTab === 'market'
+                        ? 'Explore curated services from trusted providers'
+                        : activeTab === 'goods'
+                          ? 'Browse items, chat live with sellers, and make offers'
+                          : activeTab === 'rps'
+                            ? 'Challenge the bot in a fast best-of match'
+                            : activeTab === 'myOrders'
+                              ? 'Track your purchases and manage orders'
+                              : activeTab === 'transactions'
+                                ? 'View your financial records and billing history'
+                                : activeTab === 'notifications'
+                                  ? 'Manage important alerts about your activity'
+                                  : activeTab === 'reviews'
+                                    ? 'Leave reviews for services you purchased'
+                                    : activeTab === 'chat'
+                                      ? 'Keep all your conversations in one place'
+                                      : activeTab === 'providers'
+                                        ? `Discover ${providers.length} providers and their offerings`
+                                        : activeTab === 'settings'
+                                          ? 'Configure your experience and preferences'
+                                          : activeTab === 'customerCare'
+                                            ? 'Get support from our AI assistant'
+                                            : 'Your profile and activity snapshot'}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-gray-300 text-xs sm:text-sm max-w-2xl">
-                {activeTab === 'market'
-                  ? 'Explore curated services from trusted providers, search, filter, and transact in a few clicks.'
-                  : activeTab === 'goods'
-                    ? 'Browse items, chat live with sellers, and make offers on goods.'
-                    : activeTab === 'rps'
-                      ? 'Challenge the bot in a fast best-of match. First to the target wins.'
-                    : activeTab === 'myOrders'
-                      ? 'Track your purchases, manage orders, and handle returns.'
-                      : activeTab === 'transactions'
-                        ? 'View your financial records, invoices, and billing history.'
-                        : activeTab === 'notifications'
-                          ? 'Receive and manage important alerts about your orders and activity.'
-                          : activeTab === 'reviews'
-                            ? 'Leave reviews for services you purchased and see your ratings.'
-                            : activeTab === 'chat'
-                              ? 'Keep all your conversations in one place and reach providers or sellers instantly.'
-                            : activeTab === 'providers'
-                              ? `Discover ${providers.length} providers and review their offerings.`
-                              : activeTab === 'settings'
-                                ? 'Configure your experience and keep your workspace tidy.'
-                                : activeTab === 'customerCare'
-                                  ? 'Get kind, empathetic support from our AI assistant — here to help without hurting feelings.'
-                                  : 'A quick snapshot of your profile and activity.'}
-              </p>
             </div>
 
             {renderContent()}
           </main>
         </div>
+      </div>
       </div>
 
       {/* Floating Action Button (Mobile Only) */}
@@ -2127,15 +2294,15 @@ function App() {
             setShowServiceModal(true);
           }
         }}
-        className="sm:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/40 flex items-center justify-center hover:shadow-xl hover:shadow-blue-500/60 active:scale-95 transition-all animate-bounce border border-blue-400/30"
+        className="md:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/40 flex items-center justify-center hover:shadow-xl hover:shadow-blue-500/60 active:scale-95 transition-all animate-bounce border border-blue-400/30"
         aria-label="Add new item"
         title={activeTab === 'market' ? 'Add Service' : 'Add Goods'}
       >
-        <span className="text-2xl">➕</span>
+        <PlusIcon size={24} className="text-white" />
       </button>
 
       {/* Mobile Bottom Navigation - Improved Design */}
-      <nav className="sm:hidden mobile-nav animate-slide-up">
+      <nav className="md:hidden mobile-nav animate-slide-up">
         <div className="flex justify-around items-stretch px-1 py-0 gap-0.5 w-full">
           {tabs.slice(0, 4).map((tab) => {
             const badgeCount = tab.id === 'notifications' ? (notificationBadges.order + notificationBadges.message) : 0;
@@ -2168,29 +2335,30 @@ function App() {
               }}
               className={`mobile-nav-item w-full relative ${['profile', 'settings', 'customerCare', 'reviews', 'chat', 'notifications', 'providers', 'rps', 'wallet'].includes(activeTab) || showMobileMenu ? 'active' : ''}`}
             >
-              <span className="mobile-nav-icon">⋯</span>
+              <span className="mobile-nav-icon"><MoreIcon size={20} /></span>
               <span className="mobile-nav-label">More</span>
             </button>
             
             {/* Mobile Menu Dropdown */}
             {showMobileMenu && (
-              <div className="absolute bottom-full right-0 mb-2 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
-                <div className="space-y-1">
+              <div className="absolute bottom-full right-0 mb-3 w-56 glass-panel backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl p-3 z-50 animate-scale-in">
+                <div className="space-y-1.5">
                   {tabs.slice(4).map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => {
                         setActiveTab(tab.id);
                         setShowMobileMenu(false);
+                        triggerHaptic(15);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-semibold transition-all ${
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left text-sm font-semibold transition-all ${
                         activeTab === tab.id
-                          ? 'bg-linear-to-r from-blue-500/30 to-indigo-500/20 text-white border border-blue-400/40'
-                          : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                          ? 'bg-linear-to-r from-blue-500/30 to-indigo-500/20 text-white border border-blue-400/50 shadow-lg shadow-blue-500/20'
+                          : 'text-gray-300 hover:bg-white/10 hover:text-white border border-transparent'
                       }`}
                     >
-                      <span className="text-lg">{tab.icon}</span>
-                      <span>{tab.label}</span>
+                      <span className="w-5 h-5 flex items-center justify-center">{tab.icon}</span>
+                      <span className="flex-1">{tab.label}</span>
                     </button>
                   ))}
                 </div>
@@ -2201,15 +2369,15 @@ function App() {
       </nav>
 
       {showServiceModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50" role="presentation">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center z-50" role="presentation">
           <div
-            className="glass-panel w-full sm:max-w-lg sm:mx-4 max-h-[90vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl sm:rounded-2xl animate-[slideUp_0.3s_ease-out]"
+            className="glass-panel w-full md:max-w-lg md:mx-4 max-h-[90vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl md:rounded-2xl animate-[slideUp_0.3s_ease-out]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="service-modal-title"
           >
             {/* Mobile drag handle */}
-            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 md:hidden" />
             
             <button
               onClick={() => setShowServiceModal(false)}
@@ -2218,7 +2386,7 @@ function App() {
             >
               ✕
             </button>
-            <h3 id="service-modal-title" className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2"><SparklesIcon size={24} className="text-primary-400" /> Add Service</h3>
+            <h3 id="service-modal-title" className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center gap-2"><SparklesIcon size={24} className="text-primary-400" /> Add Service</h3>
             <form className="space-y-4" onSubmit={submitService}>
               <div>
                 <label className="block text-sm text-gray-300 mb-2 font-medium">Title</label>
@@ -2287,15 +2455,15 @@ function App() {
       )}
 
       {showGoodsModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50" role="presentation">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center z-50" role="presentation">
           <div
-            className="glass-panel w-full sm:max-w-lg sm:mx-4 max-h-[90vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl sm:rounded-2xl animate-[slideUp_0.3s_ease-out]"
+            className="glass-panel w-full md:max-w-lg md:mx-4 max-h-[90vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl md:rounded-2xl animate-[slideUp_0.3s_ease-out]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="goods-modal-title"
           >
             {/* Mobile drag handle */}
-            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 md:hidden" />
             
             <button
               onClick={() => setShowGoodsModal(false)}
@@ -2304,7 +2472,7 @@ function App() {
             >
               ✕
             </button>
-            <h3 id="goods-modal-title" className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2"><PackageIcon size={24} className="text-primary-400" /> List Goods</h3>
+            <h3 id="goods-modal-title" className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center gap-2"><PackageIcon size={24} className="text-primary-400" /> List Goods</h3>
             <form className="space-y-4" onSubmit={submitGoods}>
               <div>
                 <label className="block text-sm text-gray-300 mb-2 font-medium">Title</label>
@@ -2400,15 +2568,15 @@ function App() {
 
       {/* Checkout Modal */}
       {showCheckout && checkoutService && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50" role="presentation">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center z-50" role="presentation">
           <div
-            className="glass-panel w-full sm:max-w-2xl sm:mx-4 max-h-[95vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl sm:rounded-2xl animate-[slideUp_0.3s_ease-out]"
+            className="glass-panel w-full md:max-w-2xl md:mx-4 max-h-[95vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl md:rounded-2xl animate-[slideUp_0.3s_ease-out]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="checkout-modal-title"
           >
             {/* Mobile drag handle */}
-            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 md:hidden" />
             
             <button
               onClick={() => {
@@ -2431,7 +2599,7 @@ function App() {
 
             {!showPayment && !orderBill ? (
               <>
-                <h3 id="checkout-modal-title" className="text-xl sm:text-2xl font-bold text-white mb-6">{checkoutService.title}</h3>
+                <h3 id="checkout-modal-title" className="text-xl md:text-2xl font-bold text-white mb-6">{checkoutService.title}</h3>
 
                 <div className="space-y-4 mb-6">
                   <div>
@@ -2765,10 +2933,10 @@ function App() {
 
       {/* Global Chat Drawer - Beautiful Mobile Experience */}
       {activeChatRoom && activeTab !== 'chat' && (
-        <div className="fixed inset-x-0 bottom-0 sm:bottom-4 sm:right-4 sm:left-auto w-full sm:max-w-md z-50 animate-[slideUp_0.3s_ease-out]">
-          <div className="glass-panel sm:rounded-2xl rounded-t-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+        <div className="fixed inset-x-0 bottom-0 md:bottom-4 md:right-4 md:left-auto w-full md:max-w-md z-50 animate-[slideUp_0.3s_ease-out]">
+          <div className="glass-panel md:rounded-2xl rounded-t-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
             {/* Mobile drag handle */}
-            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mt-3 sm:hidden" />
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mt-3 md:hidden" />
             
             <div className="flex items-center justify-between px-4 py-4 border-b border-white/5">
               <div className="flex items-center gap-3">
@@ -2829,30 +2997,37 @@ function App() {
               )}
             </div>
 
-            <div className="flex gap-2 p-4 border-t border-white/5 bg-slate-900/80">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => {
-                  setChatInput(e.target.value);
-                  emitTyping();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    sendChatMessage();
-                  }
-                }}
-                placeholder="Type a message..."
-                className="flex-1 px-4 py-3.5 bg-white/10 text-white rounded-2xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
-              />
-              <button
-                onClick={sendChatMessage}
-                disabled={!chatInput.trim()}
-                className="w-12 h-12 flex items-center justify-center rounded-full bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 text-white font-semibold transition-all active:scale-95 disabled:opacity-50"
-              >
-                ➤
-              </button>
+            <div className="border-t border-white/5 bg-slate-900/80">
+              {/* Template Toggle */}
+              <div className="p-3 border-b border-white/5">
+                <button
+                  onClick={() => setShowMessageTemplates(!showMessageTemplates)}
+                  className="w-full px-4 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-sm font-semibold border border-blue-400/30 flex items-center justify-center gap-2"
+                >
+                  {showMessageTemplates ? '▼' : '▶'} Quick Messages
+                </button>
+              </div>
+              
+              {/* Message Templates */}
+              {showMessageTemplates && (
+                <div className="p-3 max-h-64 overflow-y-auto space-y-2 border-b border-white/5">
+                  {messageTemplates.map((template, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => sendChatMessage(template)}
+                      className="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-blue-500/20 text-white text-sm border border-white/10 hover:border-blue-400/40 transition-all"
+                    >
+                      {template}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              <div className="p-3">
+                <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
+                  <LockIcon size={10} /> Secure messaging - Select from templates above
+                </p>
+              </div>
             </div>
           </div>
         </div>

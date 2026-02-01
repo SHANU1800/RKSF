@@ -5,7 +5,7 @@ export const SkeletonLoader = ({ count = 3, type = 'card' }) => {
     return (
       <div className="space-y-4">
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="glass-panel rounded-2xl p-4 sm:p-6 border border-white/5">
+          <div key={i} className="glass-panel rounded-2xl p-4 md:p-6 border border-white/5">
             <div className="flex gap-4">
               <div className="w-16 h-16 rounded-lg skeleton shrink-0" />
               <div className="flex-1 space-y-2">

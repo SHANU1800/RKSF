@@ -23,8 +23,9 @@ export default function SafetyCenter({ currentUser, onClose }) {
       if (verifRes.success) setVerificationStatus(verifRes.data);
     } catch (error) {
       console.error('Failed to load safety data:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [getSafetyPreferences, getVerificationStatus]);
 
   useEffect(() => {
@@ -52,9 +53,9 @@ export default function SafetyCenter({ currentUser, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
-      <div className="glass-panel w-full sm:max-w-2xl sm:mx-4 max-h-[90vh] overflow-hidden rounded-t-3xl sm:rounded-2xl border border-white/10 animate-[slideUp_0.3s_ease-out] flex flex-col">
+      <div className="glass-panel w-full md:max-w-2xl md:mx-4 max-h-[90vh] overflow-hidden rounded-t-3xl md:rounded-2xl border border-white/10 animate-[slideUp_0.3s_ease-out] flex flex-col">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-white/10 shrink-0">
+        <div className="p-4 md:p-6 border-b border-white/10 shrink-0">
           <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -74,22 +75,24 @@ export default function SafetyCenter({ currentUser, onClose }) {
             </button>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex gap-1 mt-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            ))}
+          {/* Tab Navigation - Mobile Nav Style */}
+          <div className="glass-panel rounded-2xl border border-white/10 p-2 mt-4">
+            <div className="flex justify-around items-stretch gap-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl text-sm font-semibold transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-lg'
+                      : 'text-gray-400 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <span className="text-2xl">{tab.icon}</span>
+                  <span className="text-[10px] md:text-xs uppercase tracking-wide font-bold">{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
