@@ -721,6 +721,74 @@ input::placeholder, textarea::placeholder {
 .animate-shake { animation: shake 0.5s; }
 .animate-typewriter { animation: typewriter 0.5s steps(40, end); }
 
+/* ===== BUTTON & SPACING UTILITIES ===== */
+
+/* Button groups with proper gaps */
+.button-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.button-group-sm {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.button-group-lg {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Text wrapping utilities */
+.text-wrap {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.text-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Spacing utilities */
+.space-y-sm > * + * { margin-top: 0.5rem; }
+.space-y-md > * + * { margin-top: 1rem; }
+.space-y-lg > * + * { margin-top: 1.5rem; }
+.space-y-xl > * + * { margin-top: 2rem; }
+
+.space-x-sm > * + * { margin-left: 0.5rem; }
+.space-x-md > * + * { margin-left: 1rem; }
+.space-x-lg > * + * { margin-left: 1.5rem; }
+
+/* Gap utilities */
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.gap-5 { gap: 1.25rem; }
+.gap-6 { gap: 1.5rem; }
+.gap-8 { gap: 2rem; }
+
 /* Smooth transitions */
 .transition-all { transition: all var(--transition-normal); }
 .transition-colors { transition: color, background-color var(--transition-fast); }
@@ -1535,6 +1603,38 @@ button:active {
     margin-left: 0.5rem;
   }
 
+  /* Button groups stack with spacing on mobile */
+  .button-group {
+    gap: 0.625rem;
+  }
+
+  /* Text wrapping for mobile */
+  button,
+  .card-title,
+  .service-title,
+  .item-title {
+    white-space: normal;
+    word-wrap: break-word;
+  }
+
+  /* Card spacing */
+  .glass-panel,
+  .card,
+  .service-card {
+    padding: 1rem !important;
+    margin-bottom: 1rem;
+  }
+
+  /* Form spacing */
+  form > * + * {
+    margin-top: 1rem;
+  }
+
+  /* Grid gaps */
+  .grid {
+    gap: 1rem;
+  }
+
   /* Mobile-optimized card buttons */
   .card-action,
   .list-item-action {
@@ -1564,17 +1664,64 @@ button:active {
   a[role="button"]:not(.icon-only) {
     min-height: 48px;
     padding: 0.75rem 0.875rem;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.4;
   }
 
   /* Stack buttons vertically on very small screens */
   .button-group-vertical {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
 
   .button-group-vertical button {
     width: 100%;
+  }
+
+  /* Auto-stack button groups on small screens */
+  .button-group {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .button-group button,
+  .button-group a[role="button"] {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Form button groups */
+  .form-actions,
+  .modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .form-actions button,
+  .modal-actions button {
+    width: 100%;
+  }
+
+  /* Card padding */
+  .glass-panel,
+  .card {
+    padding: 1rem !important;
+  }
+
+  /* Heading spacing */
+  h1, h2, h3, h4, h5, h6 {
+    margin-bottom: 1rem;
+    line-height: 1.3;
+  }
+
+  /* Paragraph spacing */
+  p {
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
   }
 }
 
