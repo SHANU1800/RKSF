@@ -795,6 +795,65 @@ input::placeholder, textarea::placeholder {
 .transition-transform { transition: transform var(--transition-fast); }
 .transition-opacity { transition: opacity var(--transition-fast); }
 
+/* ===== BUTTON IMPROVEMENTS ===== */
+button {
+  white-space: normal;
+  word-wrap: break-word;
+  text-align: center;
+  line-height: 1.4;
+}
+
+button.icon-only,
+button[aria-label]:not([aria-label=""]):empty {
+  white-space: nowrap;
+}
+
+/* Ensure proper spacing between stacked elements */
+button + button:not(:first-child) {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  button + button:not(:first-child) {
+    margin-top: 0;
+  }
+}
+
+/* ===== CARD & CONTENT SPACING ===== */
+.glass-panel {
+  padding: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .glass-panel {
+    padding: 1.5rem;
+  }
+}
+
+/* Content spacing */
+.space-y-4 > * + * { margin-top: 1rem; }
+.space-y-6 > * + * { margin-top: 1.5rem; }
+
+/* Mobile-optimized spacing */
+@media (max-width: 767px) {
+  .space-y-4 > * + * { margin-top: 0.875rem; }
+  .space-y-6 > * + * { margin-top: 1.25rem; }
+  
+  .grid {
+    gap: 1rem !important;
+  }
+  
+  h1, h2, h3 {
+    line-height: 1.3;
+    word-wrap: break-word;
+  }
+  
+  p, span, div {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
 /* ===== LOADING SKELETON ===== */
 @keyframes shimmer {
   0% { background-position: -200% 0; }

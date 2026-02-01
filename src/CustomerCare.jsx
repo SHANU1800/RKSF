@@ -119,10 +119,10 @@ export default function CustomerCare({ currentUser }) {
           </div>
 
           {/* Mode Toggle */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-3 mb-3 flex-wrap">
             <button
               onClick={() => setGrievanceMode(false)}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
                 !grievanceMode
                   ? 'bg-blue-500/20 text-blue-300 border border-blue-400/40'
                   : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
@@ -132,7 +132,7 @@ export default function CustomerCare({ currentUser }) {
             </button>
             <button
               onClick={() => setGrievanceMode(true)}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
                 grievanceMode
                   ? 'bg-orange-500/20 text-orange-300 border border-orange-400/40'
                   : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
@@ -169,7 +169,7 @@ export default function CustomerCare({ currentUser }) {
                 ⚠️ Free text allowed for grievances. Our admin team will review your message.
               </div>
             )}
-            <div className="flex gap-2 flex-col md:flex-row">
+            <div className="flex gap-3 flex-col md:flex-row">
               {grievanceMode ? (
                 <textarea
                   value={input}
@@ -177,7 +177,7 @@ export default function CustomerCare({ currentUser }) {
                   placeholder="Describe your issue in detail..."
                   disabled={loading}
                   rows={3}
-                  className="flex-1 px-3 py-2.5 bg-slate-900/70 text-white text-xs md:text-sm rounded-xl border border-white/10 focus:border-orange-400 focus:outline-none disabled:opacity-60 resize-none"
+                  className="flex-1 px-4 py-3 bg-slate-900/70 text-white text-sm rounded-xl border border-white/10 focus:border-orange-400 focus:outline-none disabled:opacity-60 resize-none"
                 />
               ) : (
                 <input
@@ -193,7 +193,7 @@ export default function CustomerCare({ currentUser }) {
               <button
                 onClick={grievanceMode ? submitGrievance : sendMessage}
                 disabled={loading || !input.trim()}
-                className={`px-4 py-3 rounded-xl hover:shadow-lg disabled:opacity-60 text-white text-sm font-semibold transition active:scale-95 whitespace-nowrap ${
+                className={`px-5 py-3 rounded-xl hover:shadow-lg disabled:opacity-60 text-white text-sm font-semibold transition active:scale-95 md:whitespace-nowrap ${
                   grievanceMode
                     ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:shadow-orange-500/25'
                     : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-blue-500/25'

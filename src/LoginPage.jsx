@@ -582,7 +582,7 @@ function LoginPage({ onLogin }) {
                 <button
                   type="submit"
                   disabled={otpLoading || otpCode.length !== 6}
-                  className="w-full py-4 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-xl hover:shadow-green-500/25 disabled:opacity-60 text-white font-bold text-base transition-all duration-200 active:scale-[0.98]"
+                  className="w-full py-4 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-xl hover:shadow-green-500/25 disabled:opacity-60 text-white font-bold text-base transition-all duration-200 active:scale-[0.98] mt-2"
                 >
                   {otpLoading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -602,7 +602,7 @@ function LoginPage({ onLogin }) {
                     setOtpErrors({});
                   }}
                   disabled={otpLoading}
-                  className="w-full py-3 text-sm text-gray-400 hover:text-white transition-colors font-semibold"
+                  className="w-full py-3 text-sm text-gray-400 hover:text-white transition-colors font-semibold mt-2"
                 >
                   ← Request new code
                 </button>
@@ -625,12 +625,12 @@ function LoginPage({ onLogin }) {
           {/* Quick Login - Dev Only */}
           <div className="border-t border-white/10 pt-6 mt-8">
             <p className="text-sm font-medium text-gray-400 text-center mb-4">Quick login (development)</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="button-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.75rem' }}>
               <button
                 type="button"
                 onClick={() => quickLogin('customer@test.com')}
                 disabled={loading}
-                className="py-4 px-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all border border-white/10 active:scale-[0.98] hover:scale-[1.02]"
+                className="py-4 px-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all border border-white/10 active:scale-[0.98] hover:scale-[1.02] text-wrap"
               >
                 👤 Customer
               </button>
@@ -638,7 +638,7 @@ function LoginPage({ onLogin }) {
                 type="button"
                 onClick={() => quickLogin('provider@test.com')}
                 disabled={loading}
-                className="py-4 px-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all border border-white/10 active:scale-[0.98] hover:scale-[1.02]"
+                className="py-4 px-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all border border-white/10 active:scale-[0.98] hover:scale-[1.02] text-wrap"
               >
                 🏢 Provider
               </button>
@@ -646,7 +646,7 @@ function LoginPage({ onLogin }) {
                 type="button"
                 onClick={() => quickLogin('admin@test.com')}
                 disabled={loading}
-                className="py-4 px-3 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 hover:shadow-lg hover:shadow-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all border border-purple-400/30 active:scale-[0.98] hover:scale-[1.02]"
+                className="py-4 px-3 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 hover:shadow-lg hover:shadow-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all border border-purple-400/30 active:scale-[0.98] hover:scale-[1.02] text-wrap"
               >
                 ⚡ Admin
               </button>
