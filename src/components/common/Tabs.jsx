@@ -14,7 +14,7 @@ export const Tabs = ({
             px-4 py-2 rounded-lg font-semibold transition text-sm whitespace-nowrap
             ${
               activeTab === tab.id
-                ? 'bg-linear-to-r from-blue-500 to-indigo-600 text-white'
+                ? 'bg-[#F7D047] text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }
           `}
@@ -25,3 +25,15 @@ export const Tabs = ({
     </div>
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+

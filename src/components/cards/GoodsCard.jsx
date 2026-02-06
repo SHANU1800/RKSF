@@ -7,77 +7,119 @@ export const GoodsCard = ({
   onOffer,
 }) => {
   return (
-    <div className="glass-panel rounded-2xl border border-white/8 overflow-hidden card-hover group">
-      {/* Image with beautiful overlay */}
+    <div className="glass-panel card-premium rounded-2xl border border-white/10 overflow-hidden card-hover group relative">
+      {/* Enhanced gradient accent line */}
+      <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#F7D047] opacity-80 shadow-lg z-10" />
+      
+      {/* Image with enhanced overlay */}
       {item.image ? (
-        <div className="h-36 sm:h-44 bg-gray-800/40 relative overflow-hidden">
+        <div className="h-44 sm:h-56 bg-black relative overflow-hidden">
           <img 
             src={item.image} 
             alt={item.title} 
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
           />
-          <div className="absolute inset-0 bg-linear-to-t from-slate-900/70 via-transparent to-transparent" />
-          {/* Price overlay on image */}
-          <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-emerald-500/90 backdrop-blur-sm shadow-lg">
-            <span className="text-white font-bold text-lg">₹{item.price}</span>
+          <div className="absolute inset-0 bg-slate-900/70" />
+          
+          {/* Condition badge on image */}
+          <div className="absolute top-3 left-3">
+            <Badge variant="info" size="md" className="shadow-lg backdrop-blur-sm">
+              {item.condition || 'Good'}
+            </Badge>
+          </div>
+          
+          {/* Enhanced price overlay on image */}
+          <div className="absolute bottom-4 right-4 px-4 py-2.5 rounded-xl bg-black backdrop-blur-sm shadow-2xl border border-[#0a0a0a]/30">
+            <span className="text-white font-bold text-xl sm:text-2xl">₹{item.price}</span>
           </div>
         </div>
       ) : (
-        <div className="h-36 sm:h-44 bg-linear-to-br from-slate-800 to-slate-900 flex items-center justify-center relative">
-          <span className="text-4xl opacity-30">📦</span>
-          <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-emerald-500/90">
-            <span className="text-white font-bold text-lg">₹{item.price}</span>
+        <div className="h-44 sm:h-56 bg-slate-800 flex items-center justify-center relative">
+          <span className="text-7xl opacity-30">📦</span>
+          <div className="absolute top-3 left-3">
+            <Badge variant="info" size="md" className="shadow-lg backdrop-blur-sm">
+              {item.condition || 'Good'}
+            </Badge>
+          </div>
+          <div className="absolute bottom-4 right-4 px-4 py-2.5 rounded-xl bg-black backdrop-blur-sm shadow-2xl border border-[#0a0a0a]/30">
+            <span className="text-white font-bold text-xl sm:text-2xl">₹{item.price}</span>
           </div>
         </div>
       )}
 
-      <div className="p-4 space-y-3">
-        {/* Title and condition */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <Badge variant="info" size="sm" className="mb-2">{item.condition || 'Good'}</Badge>
-            <h4 className="text-base sm:text-lg font-bold text-white leading-tight truncate">{item.title}</h4>
-            <p className="text-gray-300 text-sm mt-1 line-clamp-2">{item.description}</p>
+      <div className="p-5 sm:p-7 space-y-4 relative">
+        {/* Background glow on hover */}
+        <div className="absolute inset-0 bg-[#F7D047]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        
+        <div className="relative z-10 space-y-4">
+          {/* Title and description */}
+          <div>
+            <h4 className="text-xl sm:text-2xl font-bold text-white mb-2 leading-tight line-clamp-2">
+              {item.title}
+            </h4>
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed line-clamp-2">
+              {item.description}
+            </p>
           </div>
-        </div>
 
-        {/* Location and seller */}
-        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-400 pt-2 border-t border-white/5">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            <span className="text-base">📍</span>
-            <span className="truncate">{item.location}</span>
+          {/* Location and date - enhanced */}
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
+            <div className="flex items-center gap-2 min-w-0 flex-1 bg-white/5 rounded-lg px-3 py-2">
+              <span className="text-lg">📍</span>
+              <span className="text-sm text-gray-300 truncate font-medium">{item.location}</span>
+            </div>
+            <div className="text-xs text-gray-400 shrink-0 bg-white/5 rounded-lg px-3 py-2">
+              {new Date(item.createdAt || new Date()).toLocaleDateString('en-IN', { 
+                day: 'numeric', 
+                month: 'short' 
+              })}
+            </div>
           </div>
-          <span className="text-gray-500 shrink-0">{new Date(item.createdAt || new Date()).toLocaleDateString('en-IN')}</span>
-        </div>
 
-        {/* Seller info */}
-        <div className="flex items-center gap-2 text-sm">
-          <div className="w-6 h-6 rounded-full bg-linear-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
-            {(item.sellerName || 'P').charAt(0).toUpperCase()}
+          {/* Seller info - enhanced */}
+          <div className="flex items-center gap-3 pt-2 border-t border-white/10">
+            <div className="w-10 h-10 rounded-xl bg-[#F7D047] flex items-center justify-center text-white text-sm font-bold shadow-lg">
+              {(item.sellerName || 'P').charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-semibold text-sm truncate">{item.sellerName || 'Provider'}</p>
+              <p className="text-xs text-gray-400">Seller</p>
+            </div>
           </div>
-          <span className="text-gray-300 truncate">{item.sellerName || 'Provider'}</span>
-        </div>
 
-        {/* Actions - larger touch targets */}
-        <div className="flex gap-2 pt-1">
-          <Button
-            variant="primary"
-            size="md"
-            onClick={onChat}
-            className="flex-1 py-3 sm:py-2.5 text-sm font-bold"
-          >
-            💬 Chat
-          </Button>
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={onOffer}
-            className="py-3 sm:py-2.5 px-4 text-sm font-bold"
-          >
-            🏷️
-          </Button>
+          {/* Actions - enhanced */}
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={onChat}
+              className="flex-1 font-bold shadow-lg hover:shadow-xl transition-all"
+            >
+              💬 Chat
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={onOffer}
+              className="px-6 font-bold shadow-lg hover:shadow-xl transition-all"
+            >
+              🏷️ Make Offer
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+

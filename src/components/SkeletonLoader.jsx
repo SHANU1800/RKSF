@@ -45,3 +45,15 @@ export const SkeletonLoader = ({ count = 3, type = 'card' }) => {
 };
 
 export default SkeletonLoader;
+
+
+
+
+
+
+
+
+
+
+
+

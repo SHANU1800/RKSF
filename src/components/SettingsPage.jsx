@@ -69,7 +69,7 @@ const Toggle = ({ label, checked, onChange, description }) => (
     <button
       onClick={onChange}
       className={`relative inline-flex h-7 w-12 md:h-6 md:w-11 items-center rounded-full transition-all shrink-0 ${
-        checked ? 'bg-linear-to-r from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30' : 'bg-gray-600'
+        checked ? 'bg-[#F7D047] shadow-lg shadow-black/30' : 'bg-gray-600'
       }`}
     >
       <span
@@ -87,7 +87,7 @@ const Select = ({ label, value, onChange, options }) => (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full md:w-auto px-4 py-3 md:py-2 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm appearance-none cursor-pointer"
+      className="w-full md:w-auto px-4 py-3 md:py-2 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm appearance-none cursor-pointer"
       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
     >
       {options.map((opt) => (
@@ -103,7 +103,7 @@ const Slider = ({ label, value, onChange, min = 0, max = 100 }) => (
   <div className="space-y-3 p-3 sm:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
     <div className="flex justify-between items-center">
       <label className="text-white font-medium text-sm sm:text-base">{label}</label>
-      <span className="text-blue-400 font-bold text-sm bg-blue-500/10 px-2.5 py-1 rounded-lg">{value}%</span>
+      <span className="text-[#F7D047] font-bold text-sm bg-[#0a0a0a]/10 px-2.5 py-1 rounded-lg">{value}%</span>
     </div>
     <input
       type="range"
@@ -152,9 +152,9 @@ const SettingsPage = () => {
   return (
     <div className="space-y-4 sm:space-y-6 pb-24 sm:pb-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-0 -mx-4 md:mx-0 bg-linear-to-r from-slate-900/50 to-transparent md:bg-transparent animate-slide-down">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-0 -mx-4 md:mx-0 bg-slate-900/30 md:bg-transparent animate-slide-down">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-slate-500 to-slate-700 flex items-center justify-center shadow-lg animate-float">
+          <div className="w-14 h-14 rounded-2xl bg-slate-600 flex items-center justify-center shadow-lg animate-float">
             <SettingsIcon size={28} className="text-white" />
           </div>
           <div>
@@ -187,7 +187,7 @@ const SettingsPage = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl font-semibold text-sm transition-all ${
                 activeTab === tab.id
-                  ? 'bg-linear-to-r from-blue-500/20 to-indigo-500/10 text-blue-300 shadow-lg border border-blue-400/40'
+                  ? 'bg-[#F7D047]/20 text-[#F7D047] shadow-lg border border-[#0a0a0a]/40'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
               }`}
             >
@@ -375,7 +375,7 @@ const SettingsPage = () => {
               description="Show suggestions based on activity"
             />
             <div className="p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
-              <button className="text-sm text-blue-400 hover:text-blue-300 font-semibold">
+              <button className="text-sm text-[#F7D047] hover:text-blue-300 font-semibold">
                 📥 Download My Data
               </button>
             </div>
@@ -456,9 +456,9 @@ const SettingsPage = () => {
             <div className="p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-white font-medium">Cache Usage</span>
-                <span className="text-blue-400 font-bold">128 MB</span>
+                <span className="text-[#F7D047] font-bold">128 MB</span>
               </div>
-              <button className="text-sm text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-2">
+              <button className="text-sm text-[#F7D047] hover:text-blue-300 font-semibold flex items-center gap-2">
                 <TrashIcon size={16} /> Clear Cache
               </button>
             </div>
@@ -469,7 +469,7 @@ const SettingsPage = () => {
       {/* App Info */}
       <div className="glass-panel rounded-2xl border border-white/10 p-4 md:p-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+          <div className="w-12 h-12 rounded-xl bg-[#F7D047] flex items-center justify-center shadow-lg">
             <GridIcon size={24} className="text-white" />
           </div>
           <div className="flex-1">
@@ -532,3 +532,15 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
+
+
+
+
+
+
+
+
+
+
+
+

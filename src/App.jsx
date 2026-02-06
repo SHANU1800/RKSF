@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import LoginPage from './LoginPage';
-import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon, SearchIcon, PlusIcon, MoreIcon, ArrowUpRightIcon, UsersIcon, UserIcon, SettingsIcon, SendIcon, BuildingIcon, FileTextIcon } from './components/icons/IconTypes';
+import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon, SearchIcon, PlusIcon, MoreIcon, ArrowUpRightIcon, UsersIcon, UserIcon, SettingsIcon, SendIcon, BuildingIcon, FileTextIcon, RevenueIcon, AnalyticsIcon, ServicesIcon, GoodsIcon, ChartIcon, TrendingUpIcon, TrendingDownIcon, BarChartIcon, PieChartIcon, ActivityIcon, DollarSignIcon, ArchiveIcon, CopyIcon, DownloadIcon, UploadIcon, FilterIcon, EditIcon, TrashIcon, ZapIcon, ShieldIcon, InfoIcon } from './components/icons/IconTypes';
+import SafetyCenter from './components/safety/SafetyCenter';
+import ProviderAnalytics from './components/analytics/ProviderAnalytics';
 import ProviderCards from './ProviderCards';
 import ProvidersMap from './components/ProvidersMap';
 import CustomerCare from './CustomerCare';
@@ -33,7 +35,7 @@ const EmptyState = ({ title, body, actionLabel, onAction, icon }) => (
     {actionLabel && onAction && (
       <button
         onClick={onAction}
-        className="px-4 py-2 rounded-xl bg-linear-to-r from-sky-500 to-indigo-600 text-white font-semibold"
+        className="px-4 py-2 rounded-xl bg-[#F7D047] text-white font-bold shadow-lg hover:shadow-xl transition-all"
       >
         {actionLabel}
       </button>
@@ -50,8 +52,8 @@ const Stepper = ({ steps, current }) => (
         <div key={step} className="flex items-center gap-2">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border ${
-              isDone ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-200'
-                : isActive ? 'bg-sky-500/20 border-sky-400/40 text-white'
+              isDone ? 'bg-[#0a0a0a]/20 border-[#0a0a0a]/40 text-[#0a0a0a]'
+                : isActive ? 'bg-[#F7D047]/20 border-[#F7D047]/40 text-[#F7D047]'
                   : 'bg-white/5 border-white/10 text-gray-400'
             }`}
           >
@@ -83,6 +85,7 @@ function App() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOption, setSortOption] = useState('recent');
   const [showServiceModal, setShowServiceModal] = useState(false);
+  const [selectedServiceDetail, setSelectedServiceDetail] = useState(null);
   const [serviceForm, setServiceForm] = useState({
     title: '',
     description: '',
@@ -158,6 +161,16 @@ function App() {
   ]);
   const [transactionFilter, setTransactionFilter] = useState('all');
   
+  // Provider portal state
+  const [serviceFilter, setServiceFilter] = useState('all');
+  const [serviceSearch, setServiceSearch] = useState('');
+  const [goodsFilter, setGoodsFilter] = useState('all');
+  const [goodsSearch, setGoodsSearch] = useState('');
+  
+  // Safety features
+  const [showSafetyCenter, setShowSafetyCenter] = useState(false);
+  const [safetyFilter, setSafetyFilter] = useState('all'); // 'all', 'verified', 'women_only'
+  
   // Mobile-specific state
   const [touchStart, setTouchStart] = useState(0);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
@@ -172,10 +185,18 @@ function App() {
     notifications: true,
   });
   
+  // Admin provider management state
+  const [providerAction, setProviderAction] = useState(null);
+  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [suspendDays, setSuspendDays] = useState('7');
+  
   const socketRef = useRef(null);
   const typingTimeoutRef = useRef({});
   const lastScrollRef = useRef(0);
   const contentRef = useRef(null);
+  const activeChatRoomRef = useRef(null);
+  const toastRef = useRef({ success, error, warning, info, retry });
+  const currentUserRef = useRef(null);
 
   // Check session on mount and auto-hydrate
   useEffect(() => {
@@ -242,6 +263,18 @@ function App() {
     };
     setNotificationBadges(badges);
   }, [notifications]);
+
+  useEffect(() => {
+    activeChatRoomRef.current = activeChatRoom;
+  }, [activeChatRoom]);
+
+  useEffect(() => {
+    toastRef.current = { success, error, warning, info, retry };
+  }, [success, error, warning, info, retry]);
+
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
 
   const fetchProviders = useCallback(async () => {
     try {
@@ -336,6 +369,15 @@ function App() {
       fetchProviders();
       fetchServices();
       fetchGoods();
+      
+      // Set initial tab based on role
+      if (currentUser.role === 'provider') {
+        setActiveTab('providerDashboard');
+      } else if (currentUser.role === 'admin') {
+        setActiveTab('adminDashboard');
+      } else {
+        setActiveTab('market');
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
@@ -356,14 +398,15 @@ function App() {
 
     socket.on('connect', () => {
       console.log('socket connected');
-      if (currentUser?.role === 'provider' && currentUser?._id) {
-        socket.emit('chat:join', { room: `provider-${currentUser._id}` });
+      const user = currentUserRef.current;
+      if (user?.role === 'provider' && user?._id) {
+        socket.emit('chat:join', { room: `provider-${user._id}` });
       }
     });
 
     socket.on('connect_error', (err) => {
       console.error('socket connect_error', err?.message || err);
-      error('Realtime connection failed. We will retry automatically.');
+      toastRef.current?.error('Realtime connection failed. We will retry automatically.');
     });
 
     socket.on('chat:message', (payload) => {
@@ -371,28 +414,30 @@ function App() {
       const key = roomId || goodsId || serviceId;
       if (!key) return;
       const msg = message || payload;
-      
+      const user = currentUserRef.current;
+      const activeRoom = activeChatRoomRef.current;
+
       // Only add message if it's from someone else (not from current user)
-      if (msg.fromId !== currentUser?._id) {
+      if (msg.fromId !== user?._id) {
         setChatMessages((prev) => ({
           ...prev,
           [key]: [...(prev[key] || []), msg],
         }));
       }
 
-      if (activeChatRoom?.id === key) {
+      if (activeRoom?.id === key) {
         const readAt = new Date().toISOString();
         setLastReadAt((prev) => ({ ...prev, [key]: readAt }));
         socket.emit('chat:read', { roomId: key, at: readAt });
       }
 
-      if (!activeChatRoom || activeChatRoom.id !== key) {
-        info(msg.from ? `${msg.from}: ${msg.text}` : 'New message received');
+      if (!activeRoom || activeRoom.id !== key) {
+        toastRef.current?.info(msg.from ? `${msg.from}: ${msg.text}` : 'New message received');
       }
     });
 
     socket.on('chat:typing', ({ roomId, userId }) => {
-      if (!roomId || userId === currentUser?._id) return;
+      if (!roomId || userId === currentUserRef.current?._id) return;
       setTypingRooms((prev) => ({ ...prev, [roomId]: true }));
       if (typingTimeoutRef.current[roomId]) {
         clearTimeout(typingTimeoutRef.current[roomId]);
@@ -409,26 +454,35 @@ function App() {
 
     socket.on('notification', (payload) => {
       const { type = 'info', message = 'New notification' } = payload || {};
-      if (type === 'success') success(message);
-      else if (type === 'error') error(message);
-      else if (type === 'warning') warning(message);
-      else info(message);
+      const toast = toastRef.current;
+      if (type === 'success') toast?.success(message);
+      else if (type === 'error') toast?.error(message);
+      else if (type === 'warning') toast?.warning(message);
+      else toast?.info(message);
     });
 
     socket.on('disconnect', (reason) => {
       console.warn('socket disconnected', reason);
-      warning(`Realtime disconnected: ${reason || 'unknown'}. Retrying...`);
+      toastRef.current?.warning(`Realtime disconnected: ${reason || 'unknown'}. Retrying...`);
     });
 
     socket.on('error', (err) => {
       console.error('socket error', err);
-      error('Realtime channel error. Check your connection.');
+      toastRef.current?.error('Realtime channel error. Check your connection.');
     });
 
     return () => {
+      socket.off('connect');
+      socket.off('connect_error');
+      socket.off('chat:message');
+      socket.off('chat:typing');
+      socket.off('chat:read');
+      socket.off('notification');
+      socket.off('disconnect');
+      socket.off('error');
       socket.disconnect();
     };
-  }, [currentUser]);
+  }, [currentUser?._id, currentUser?.username]);
 
   useEffect(() => {
     if (!activeChatRoom?.id || !socketRef.current) return;
@@ -622,20 +676,50 @@ function App() {
     // _expandedSections state available for future use
   };
 
-  const tabs = [
-    { id: 'market', label: 'Market', icon: <SparklesIcon size={18} /> },
-    { id: 'goods', label: 'Goods', icon: <PackageIcon size={18} /> },
-    { id: 'myOrders', label: 'Orders', icon: <ClipboardIcon size={18} /> },
-    { id: 'transactions', label: 'Wallet', icon: <CreditCardIcon size={18} /> },
-    { id: 'notifications', label: 'Alerts', icon: <BellIcon size={18} /> },
-    { id: 'reviews', label: 'Reviews', icon: <StarIcon size={18} /> },
-    { id: 'chat', label: 'Chat', icon: <MessageIcon size={18} /> },
-    { id: 'providers', label: 'Providers', icon: <UsersIcon size={18} /> },
-    { id: 'profile', label: 'Profile', icon: <UserIcon size={18} /> },
-    { id: 'settings', label: 'Settings', icon: <SettingsIcon size={18} /> },
-    { id: 'customerCare', label: 'Support', icon: <MessageIcon size={18} /> },
-    ...(currentUser?.role === 'admin' ? [{ id: 'adminGrievances', label: 'Admin Panel', icon: <SettingsIcon size={18} /> }] : []),
-  ];
+  // Role-based navigation tabs
+  const getTabsForRole = () => {
+    const baseProviderTabs = [
+      { id: 'providerDashboard', label: 'Dashboard', icon: <SparklesIcon size={18} /> },
+      { id: 'myServices', label: 'Services', icon: <ServicesIcon size={18} /> },
+      { id: 'myGoods', label: 'Goods', icon: <GoodsIcon size={18} /> },
+      { id: 'providerOrders', label: 'Orders', icon: <ClipboardIcon size={18} /> },
+      { id: 'analytics', label: 'Analytics', icon: <AnalyticsIcon size={18} /> },
+      { id: 'chat', label: 'Messages', icon: <MessageIcon size={18} /> },
+      { id: 'profile', label: 'Profile', icon: <UserIcon size={18} /> },
+      { id: 'settings', label: 'Settings', icon: <SettingsIcon size={18} /> },
+      { id: 'customerCare', label: 'Support', icon: <MessageIcon size={18} /> },
+    ];
+
+    const baseCustomerTabs = [
+      { id: 'market', label: 'Market', icon: <SparklesIcon size={18} /> },
+      { id: 'goods', label: 'Goods', icon: <PackageIcon size={18} /> },
+      { id: 'myOrders', label: 'Orders', icon: <ClipboardIcon size={18} /> },
+      { id: 'transactions', label: 'Wallet', icon: <CreditCardIcon size={18} /> },
+      { id: 'notifications', label: 'Alerts', icon: <BellIcon size={18} /> },
+      { id: 'reviews', label: 'Reviews', icon: <StarIcon size={18} /> },
+      { id: 'chat', label: 'Chat', icon: <MessageIcon size={18} /> },
+      { id: 'providers', label: 'Providers', icon: <UsersIcon size={18} /> },
+      { id: 'profile', label: 'Profile', icon: <UserIcon size={18} /> },
+      { id: 'settings', label: 'Settings', icon: <SettingsIcon size={18} /> },
+      { id: 'customerCare', label: 'Support', icon: <MessageIcon size={18} /> },
+    ];
+
+    const adminTabs = [
+      { id: 'adminDashboard', label: 'Dashboard', icon: <SparklesIcon size={18} /> },
+      { id: 'adminProviders', label: 'Providers', icon: <UsersIcon size={18} /> },
+      { id: 'adminTransactions', label: 'All Orders', icon: <ClipboardIcon size={18} /> },
+      { id: 'adminUsers', label: 'Users', icon: <UserIcon size={18} /> },
+      { id: 'adminGrievances', label: 'Support', icon: <MessageIcon size={18} /> },
+      { id: 'profile', label: 'Profile', icon: <UserIcon size={18} /> },
+      { id: 'settings', label: 'Settings', icon: <SettingsIcon size={18} /> },
+    ];
+
+    if (currentUser?.role === 'admin') return adminTabs;
+    if (currentUser?.role === 'provider') return baseProviderTabs;
+    return baseCustomerTabs;
+  };
+
+  const tabs = getTabsForRole();
 
   const categories = ['all', ...new Set(services.map(s => s.category || 'General'))];
 
@@ -646,8 +730,13 @@ function App() {
         .some((field) => field.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchesCategory = categoryFilter === 'all' || (service.category || 'General') === categoryFilter;
+      
+      // Safety filters
+      const matchesSafety = safetyFilter === 'all' || 
+        (safetyFilter === 'verified' && (service.provider?.isVerified || service.provider?.verificationStatus === 'verified')) ||
+        (safetyFilter === 'women_only' && (service.provider?.preferredProviderGender === 'female_only' || service.provider?.gender === 'female'));
 
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesCategory && matchesSafety;
     })
     .sort((a, b) => {
       if (sortOption === 'price-asc') return (a.price || 0) - (b.price || 0);
@@ -655,16 +744,6 @@ function App() {
       if (sortOption === 'rating') return (Number(b.rating) || 0) - (Number(a.rating) || 0);
       return 0; // recent (as-is order from API)
     });
-
-  const filteredGoods = goods
-    .filter((item) => {
-      const matchesSearch = [item.title, item.description, item.location, item.sellerName]
-        .filter(Boolean)
-        .some((field) => field.toLowerCase().includes(goodsSearchTerm.toLowerCase()));
-      const matchesCondition = goodsConditionFilter === 'all' || (item.condition || '').toLowerCase() === goodsConditionFilter;
-      return matchesSearch && matchesCondition;
-    })
-    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
   const handleServiceField = (field, value) => {
     setServiceForm((prev) => ({ ...prev, [field]: value }));
@@ -835,7 +914,7 @@ function App() {
     info(`Action queued for: ${notif.title}`);
   };
 
-  const emitTyping = () => {
+  const _emitTyping = () => {
     if (!activeChatRoom?.id || !socketRef.current || !currentUser?._id) return;
     socketRef.current.emit('chat:typing', { roomId: activeChatRoom.id, userId: currentUser._id });
   };
@@ -999,11 +1078,11 @@ function App() {
                   <h3 className="text-2xl font-bold text-white">Providers</h3>
                   <p className="text-gray-400 text-sm">Browse trusted service providers</p>
                 </div>
-                <span className="pill text-sm border-white/10 bg-white/5">{providers.length} providers</span>
+                <span className="pill text-sm border-[#0a0a0a] bg-white/5">{providers.length} providers</span>
               </div>
 
               {providers.length > 0 && (
-                <div className="glass-panel rounded-2xl border border-white/10 p-4 md:p-6 space-y-4">
+                <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4 md:p-6 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-white">Provider Map</p>
@@ -1050,40 +1129,40 @@ function App() {
             <div className="glass-panel rounded-2xl p-6 md:p-8 space-y-4 border border-white/5 shadow-lg animate-scale-in">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl font-bold text-white shadow-lg">
+                  <div className="w-16 h-16 rounded-2xl bg-[#F7D047] flex items-center justify-center text-3xl font-bold text-black shadow-lg">
                     {currentUser?.username?.charAt(0).toUpperCase() || <UserIcon size={32} className="text-white" />}
                   </div>
                   <div>
                     <p className="text-white font-bold text-xl">{currentUser?.username}</p>
                     <p className="text-gray-400 text-sm">{currentUser?.email}</p>
                     <div className="flex gap-2 mt-2">
-                      <span className="pill text-emerald-200 border-emerald-500/30 bg-emerald-500/10 flex items-center gap-1.5">
+                      <span className="pill text-[#0a0a0a] border-[#0a0a0a]/30 bg-[#0a0a0a]/10 flex items-center gap-1.5">
                         {currentUser?.role === 'provider' ? (
                           <><BuildingIcon size={14} /> Provider</>
                         ) : (
                           <><UsersIcon size={14} /> Customer</>
                         )}
                       </span>
-                      <span className="pill text-blue-200 border-blue-500/30 bg-blue-500/10">Verified</span>
+                      <span className="pill text-[#F7D047] border-[#F7D047]/30 bg-[#F7D047]/10">Verified</span>
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setProfileEditMode(!profileEditMode)}
-                  className="px-4 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-semibold border border-blue-400/30 transition-all hover:shadow-lg"
+                  className="px-4 py-2 rounded-xl bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-white font-semibold border border-[#0a0a0a]/30 transition-all hover:shadow-lg"
                 >
-                  {profileEditMode ? '✕ Cancel' : '✏️ Edit'}
+                  {profileEditMode ? 'Cancel' : 'Edit'}
                 </button>
               </div>
 
               {/* Account Stats */}
               <div className="grid grid-cols-3 gap-6 pt-4 border-t border-white/10">
-                <div className="text-center p-3 bg-blue-500/5 rounded-xl">
-                  <p className="text-2xl font-bold text-blue-400">12</p>
+                <div className="text-center p-3 bg-[#F7D047]/10 rounded-xl">
+                  <p className="text-2xl font-bold text-[#F7D047]">12</p>
                   <p className="text-xs text-gray-400 mt-1">Orders</p>
                 </div>
-                <div className="text-center p-3 bg-emerald-500/5 rounded-xl">
-                  <p className="text-2xl font-bold text-emerald-400">4.8</p>
+                <div className="text-center p-3 bg-[#0a0a0a]/10 rounded-xl">
+                  <p className="text-2xl font-bold text-[#0a0a0a]">4.8</p>
                   <p className="text-xs text-gray-400 mt-1">Rating</p>
                 </div>
                 <div className="text-center p-3 bg-purple-500/5 rounded-xl">
@@ -1134,7 +1213,10 @@ function App() {
               </div>
             ) : (
               <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4 animate-slide-up">
-                <h4 className="text-lg font-semibold text-white flex items-center gap-2">✏️ Edit Profile</h4>
+                <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <EditIcon size={18} />
+                  Edit Profile
+                </h4>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
@@ -1142,14 +1224,14 @@ function App() {
                       placeholder="First Name"
                       value={profileForm.firstName}
                       onChange={(e) => setProfileForm({...profileForm, firstName: e.target.value})}
-                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm"
                     />
                     <input
                       type="text"
                       placeholder="Last Name"
                       value={profileForm.lastName}
                       onChange={(e) => setProfileForm({...profileForm, lastName: e.target.value})}
-                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm"
                     />
                   </div>
                   <input
@@ -1157,13 +1239,13 @@ function App() {
                     placeholder="Phone Number"
                     value={profileForm.phone}
                     onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm"
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <select
                       value={profileForm.gender}
                       onChange={(e) => setProfileForm({...profileForm, gender: e.target.value})}
-                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm appearance-none cursor-pointer"
+                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm appearance-none cursor-pointer"
                       style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem'}}
                     >
                       <option value="">Select Gender</option>
@@ -1179,28 +1261,28 @@ function App() {
                       max="120"
                       value={profileForm.age}
                       onChange={(e) => setProfileForm({...profileForm, age: e.target.value})}
-                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm"
                     />
                   </div>
                   <input
                     type="date"
                     value={profileForm.dateOfBirth}
                     onChange={(e) => setProfileForm({...profileForm, dateOfBirth: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm"
+                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm"
                   />
                   <textarea
                     placeholder="Bio (optional)"
                     value={profileForm.bio}
                     onChange={(e) => setProfileForm({...profileForm, bio: e.target.value})}
                     rows="3"
-                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-sm resize-none"
+                    className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm resize-none"
                   />
                   <button
                     onClick={() => {
                       success('Profile updated successfully!');
                       setProfileEditMode(false);
                     }}
-                    className="w-full px-4 py-3 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all active:scale-[0.98]"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0a0a0a] text-white font-bold hover:shadow-lg hover:shadow-[#0a0a0a]/50 transition-all active:scale-[0.98]"
                   >
                     💾 Save Changes
                   </button>
@@ -1214,7 +1296,7 @@ function App() {
                 <h4 className="text-lg font-semibold text-white">📍 Delivery Address</h4>
                 <button
                   onClick={() => setShowLocationModal(true)}
-                  className="text-sm px-3 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-semibold border border-blue-400/30 transition-all"
+                  className="text-sm px-3 py-1 rounded-lg bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-black font-semibold border border-[#F7D047]/30 transition-all"
                 >
                   {userLocation ? 'Change' : 'Add'}
                 </button>
@@ -1254,10 +1336,10 @@ function App() {
             <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-3 animate-slide-up">
               <h4 className="text-lg font-semibold text-white flex items-center gap-2">🔒 Account Security</h4>
               <div className="space-y-2">
-                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-blue-400 hover:text-blue-300">
+                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-[#F7D047] hover:text-[#F7D047]/80">
                   🔑 Change Password
                 </button>
-                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-blue-400 hover:text-blue-300">
+                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-[#F7D047] hover:text-[#F7D047]/80">
                   🔐 Two-Factor Authentication
                 </button>
                 <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-red-400 hover:text-red-300">
@@ -1273,6 +1355,389 @@ function App() {
           <CustomerCare currentUser={currentUser} />
         );
 
+      case 'adminDashboard':
+        return (
+          <div className="space-y-6 animate-fade-in">
+            {/* Admin Dashboard Header */}
+            <div className="glass-panel rounded-2xl border border-purple-500/20 p-6 bg-purple-500/10 relative overflow-hidden">
+              {/* SVG Background */}
+              <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none">
+                <circle cx="80%" cy="50%" r="15%" fill="black" />
+                <rect x="10%" y="20%" width="30%" height="60%" fill="black" opacity="0.3" />
+              </svg>
+              <h2 className="text-3xl font-bold text-purple-400 relative z-10">
+                Admin Dashboard
+              </h2>
+              <p className="text-gray-400 text-sm mt-1 relative z-10">Platform overview and management</p>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="glass-panel card-premium rounded-2xl border border-[#F7D047]/20 p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <UsersIcon size={32} className="text-[#F7D047]" />
+                  <span className="text-xs text-[#F7D047]/80 font-semibold">TOTAL</span>
+                </div>
+                <p className="text-3xl font-bold text-white">{providers.length}</p>
+                <p className="text-gray-400 text-sm mt-1">Providers</p>
+              </div>
+
+              <div className="glass-panel card-premium rounded-2xl border border-[#0a0a0a]/20 p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <UserIcon size={32} className="text-[#0a0a0a]" />
+                  <span className="text-xs text-[#F7D047] font-semibold">ACTIVE</span>
+                </div>
+                <p className="text-3xl font-bold text-white">{providers.filter(p => !p.suspended).length}</p>
+                <p className="text-gray-400 text-sm mt-1">Active Users</p>
+              </div>
+
+              <div className="glass-panel card-premium rounded-2xl border border-purple-500/20 p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <ServicesIcon size={32} className="text-purple-400" />
+                  <span className="text-xs text-purple-300 font-semibold">LIVE</span>
+                </div>
+                <p className="text-3xl font-bold text-white">{services.length}</p>
+                <p className="text-gray-400 text-sm mt-1">Services</p>
+              </div>
+
+              <div className="glass-panel card-premium rounded-2xl border border-orange-500/20 p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <PackageIcon size={32} className="text-orange-400" />
+                  <span className="text-xs text-orange-300 font-semibold">LISTED</span>
+                </div>
+                <p className="text-3xl font-bold text-white">{goods.length}</p>
+                <p className="text-gray-400 text-sm mt-1">Goods</p>
+              </div>
+            </div>
+
+            {/* Pending Approvals */}
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <ShieldIcon size={20} className="text-yellow-400" />
+                Pending Provider Approvals
+              </h3>
+              {providers.filter(p => p.verificationStatus === 'pending').length === 0 ? (
+                <p className="text-gray-400 text-center py-8">No pending approvals</p>
+              ) : (
+                <div className="space-y-3">
+                  {providers.filter(p => p.verificationStatus === 'pending').slice(0, 5).map(provider => (
+                    <div key={provider._id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={provider.avatar || `https://ui-avatars.com/api/?name=${provider.name}`}
+                          alt={provider.name}
+                          className="w-12 h-12 rounded-full"
+                        />
+                        <div>
+                          <p className="text-white font-semibold">{provider.name}</p>
+                          <p className="text-gray-400 text-sm">{provider.email}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('adminProviders')}
+                        className="px-4 py-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-semibold border border-purple-400/30 transition"
+                      >
+                        Review
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Activity */}
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Recent Platform Activity</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F7D047]/10 border border-[#F7D047]/20">
+                  <div className="w-2 h-2 rounded-full bg-[#F7D047]" />
+                  <p className="text-gray-300 text-sm">New provider registration</p>
+                  <span className="ml-auto text-xs text-gray-500">2 hours ago</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-[#0a0a0a]/10 border border-[#0a0a0a]/20">
+                  <div className="w-2 h-2 rounded-full bg-[#0a0a0a]" />
+                  <p className="text-gray-300 text-sm">Service approved</p>
+                  <span className="ml-auto text-xs text-gray-500">5 hours ago</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                  <div className="w-2 h-2 rounded-full bg-orange-400" />
+                  <p className="text-gray-300 text-sm">Goods listing created</p>
+                  <span className="ml-auto text-xs text-gray-500">1 day ago</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'adminProviders': {
+        const handleApproveProvider = async (providerId) => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/admin/providers/${providerId}/approve`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+            });
+            if (response.ok) {
+              success('Provider approved successfully');
+              fetchProviders();
+            } else {
+              error('Failed to approve provider');
+            }
+          } catch (err) {
+            console.error('Approve provider error:', err);
+            error('Network error');
+          }
+        };
+
+        const handleSuspendProvider = async (providerId, days) => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/admin/providers/${providerId}/suspend`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ days: parseInt(days) }),
+            });
+            if (response.ok) {
+              success(`Provider suspended for ${days} days`);
+              fetchProviders();
+              setProviderAction(null);
+            } else {
+              error('Failed to suspend provider');
+            }
+          } catch (err) {
+            console.error('Suspend provider error:', err);
+            error('Network error');
+          }
+        };
+
+        const handleBanProvider = async (providerId) => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/admin/providers/${providerId}/ban`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+            });
+            if (response.ok) {
+              success('Provider banned permanently');
+              fetchProviders();
+              setProviderAction(null);
+            } else {
+              error('Failed to ban provider');
+            }
+          } catch (err) {
+            console.error('Ban provider error:', err);
+            error('Network error');
+          }
+        };
+
+        return (
+          <div className="space-y-6 animate-fade-in">
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-[#F7D047]">
+                Provider Management
+              </h2>
+              <p className="text-gray-400 text-sm mt-1">Validate, approve, suspend or ban providers</p>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="glass-panel rounded-2xl border border-white/5 p-2">
+              <div className="flex gap-2">
+                {['all', 'pending', 'verified', 'suspended', 'banned'].map(filter => (
+                  <button
+                    key={filter}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold bg-white/5 hover:bg-white/10 text-gray-300 transition"
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Providers List */}
+            <div className="space-y-4">
+              {providers.map(provider => (
+                <div key={provider._id} className="glass-panel rounded-2xl border border-white/5 p-6">
+                  <div className="flex items-start gap-4">
+                    <img
+                      src={provider.avatar || `https://ui-avatars.com/api/?name=${provider.name}`}
+                      alt={provider.name}
+                      className="w-16 h-16 rounded-full"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="text-xl font-bold text-white">{provider.name}</h3>
+                          <p className="text-gray-400 text-sm">{provider.email}</p>
+                          <p className="text-gray-500 text-xs mt-1">{provider.phone || 'No phone'}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${
+                            provider.verificationStatus === 'verified' ? 'bg-[#0a0a0a]/20 text-[#0a0a0a] border border-[#0a0a0a]/40' :
+                            provider.verificationStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/40' :
+                            provider.banned ? 'bg-red-500/20 text-red-300 border border-red-400/40' :
+                            provider.suspended ? 'bg-orange-500/20 text-orange-300 border border-orange-400/40' :
+                            'bg-gray-500/20 text-gray-300 border border-gray-400/40'
+                          }`}>
+                            {provider.banned ? 'BANNED' : provider.suspended ? 'SUSPENDED' : (provider.verificationStatus || 'UNVERIFIED').toUpperCase()}
+                          </span>
+                          {provider.rating && (
+                            <div className="flex items-center gap-1">
+                              <StarIcon size={14} className="text-yellow-400" />
+                              <span className="text-sm text-gray-300">{provider.rating.toFixed(1)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {provider.bio && (
+                        <p className="text-gray-300 text-sm mb-3">{provider.bio}</p>
+                      )}
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span className="px-2 py-1 rounded bg-[#F7D047]/20 text-black text-xs">
+                          {services.filter(s => s.provider?._id === provider._id).length} Services
+                        </span>
+                        <span className="px-2 py-1 rounded bg-[#0a0a0a]/20 text-white text-xs">
+                          {goods.filter(g => g.sellerId === provider._id).length} Goods
+                        </span>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-2">
+                        {provider.verificationStatus === 'pending' && (
+                          <button
+                            onClick={() => handleApproveProvider(provider._id)}
+                            className="px-4 py-2 rounded-lg bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-white font-semibold border border-[#0a0a0a]/30 transition"
+                          >
+                            Approve Provider
+                          </button>
+                        )}
+                        
+                        {!provider.banned && !provider.suspended && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setSelectedProvider(provider);
+                                setProviderAction('suspend');
+                              }}
+                              className="px-4 py-2 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 font-semibold border border-orange-400/30 transition"
+                            >
+                              Suspend
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedProvider(provider);
+                                setProviderAction('ban');
+                              }}
+                              className="px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 font-semibold border border-red-400/30 transition"
+                            >
+                              Ban Provider
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Suspend/Ban Modal */}
+            {providerAction && selectedProvider && (
+              <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setProviderAction(null)}>
+                <div className="glass-panel rounded-2xl border border-white/10 p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="text-xl font-bold text-white mb-4">
+                    {providerAction === 'suspend' ? 'Suspend Provider' : 'Ban Provider'}
+                  </h3>
+                  <p className="text-gray-300 mb-4">
+                    {providerAction === 'suspend' 
+                      ? `Suspend ${selectedProvider.name} for a specific period?`
+                      : `Permanently ban ${selectedProvider.name} from the platform?`
+                    }
+                  </p>
+                  
+                  {providerAction === 'suspend' && (
+                    <div className="mb-4">
+                      <label className="block text-sm text-gray-400 mb-2">Suspension Duration</label>
+                      <select
+                        value={suspendDays}
+                        onChange={(e) => setSuspendDays(e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:outline-none"
+                      >
+                        <option value="7">1 Week</option>
+                        <option value="14">2 Weeks</option>
+                        <option value="30">1 Month</option>
+                        <option value="90">3 Months</option>
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setProviderAction(null)}
+                      className="flex-1 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => providerAction === 'suspend' 
+                        ? handleSuspendProvider(selectedProvider._id, suspendDays)
+                        : handleBanProvider(selectedProvider._id)
+                      }
+                      className={`flex-1 px-4 py-2 rounded-lg font-semibold transition ${
+                        providerAction === 'suspend'
+                          ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-400/30'
+                          : 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-400/30'
+                      }`}
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      case 'adminTransactions':
+        return (
+          <div className="space-y-6 animate-fade-in">
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-[#F7D047]">
+                All Transactions
+              </h2>
+              <p className="text-gray-400 text-sm mt-1">View all services and goods purchased by customers</p>
+            </div>
+
+            {/* Orders/Transactions List */}
+            <div className="space-y-4">
+              <div className="glass-panel rounded-2xl border border-white/5 p-6 text-center">
+                <ClipboardIcon size={48} className="mx-auto text-gray-500 mb-3" />
+                <p className="text-gray-400">Transaction history will appear here</p>
+                <p className="text-gray-500 text-sm mt-2">Customer orders, service bookings, and goods purchases</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'adminUsers':
+        return (
+          <div className="space-y-6 animate-fade-in">
+            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+              <h2 className="text-3xl font-bold text-purple-400">
+                User Management
+              </h2>
+              <p className="text-gray-400 text-sm mt-1">Manage all platform users</p>
+            </div>
+
+            <div className="glass-panel rounded-2xl border border-white/5 p-6 text-center">
+              <UserIcon size={48} className="mx-auto text-gray-500 mb-3" />
+              <p className="text-gray-400">User management features coming soon</p>
+            </div>
+          </div>
+        );
+
       case 'adminGrievances': {
         const updateGrievanceStatus = async (id, status) => {
           try {
@@ -1284,7 +1749,7 @@ function App() {
             });
             setGrievances(prev => prev.map(g => g.id === id ? { ...g, status } : g));
             success(`Grievance #${id} marked as ${status}`);
-          } catch (_err) {
+          } catch {
             error('Failed to update grievance');
           }
         };
@@ -1294,7 +1759,7 @@ function App() {
             <div className="glass-panel rounded-2xl border border-white/5 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-300">
+                  <h2 className="text-3xl font-bold text-purple-400">
                     Admin Panel - Grievances
                   </h2>
                   <p className="text-gray-400 text-sm mt-1">Review and manage user grievances</p>
@@ -1333,8 +1798,8 @@ function App() {
                           <span className="text-lg font-bold text-white">#{g.id}</span>
                           <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${
                             g.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/40' :
-                            g.status === 'reviewed' ? 'bg-blue-500/20 text-blue-300 border border-blue-400/40' :
-                            'bg-green-500/20 text-green-300 border border-green-400/40'
+                            g.status === 'reviewed' ? 'bg-[#0a0a0a]/20 text-white border border-[#0a0a0a]/40' :
+                            'bg-[#F7D047]/20 text-black border border-[#F7D047]/40'
                           }`}>
                             {g.status.toUpperCase()}
                           </span>
@@ -1354,14 +1819,14 @@ function App() {
                       <button
                         onClick={() => updateGrievanceStatus(g.id, 'reviewed')}
                         disabled={g.status === 'reviewed'}
-                        className="px-4 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-sm font-semibold border border-blue-400/30 disabled:opacity-50 transition"
+                        className="px-4 py-2 rounded-lg bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-white text-sm font-semibold border border-[#0a0a0a]/30 disabled:opacity-50 transition"
                       >
                         Mark Reviewed
                       </button>
                       <button
                         onClick={() => updateGrievanceStatus(g.id, 'resolved')}
                         disabled={g.status === 'resolved'}
-                        className="px-4 py-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 text-sm font-semibold border border-green-400/30 disabled:opacity-50 transition"
+                        className="px-4 py-2 rounded-lg bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-black text-sm font-semibold border border-[#F7D047]/30 disabled:opacity-50 transition"
                       >
                         Mark Resolved
                       </button>
@@ -1425,8 +1890,8 @@ function App() {
                 <div>
                   <p className="text-sm font-semibold text-white mb-2">Goods sellers</p>
                   <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                    {filteredGoods.length === 0 && <p className="text-xs text-gray-500">No goods loaded.</p>}
-                    {filteredGoods.map((g) => (
+                    {goods.length === 0 && <p className="text-xs text-gray-500">No goods loaded.</p>}
+                    {goods.map((g) => (
                       <button
                         key={g._id}
                         onClick={() => openChatRoom(g._id, g.title, `Seller: ${g.sellerName || 'Provider'}`, { kind: 'goods', sellerId: g.sellerId })}
@@ -1486,7 +1951,7 @@ function App() {
                         const isRead = isMine && readAt && new Date(readAt) >= new Date(m.at);
                         return (
                           <div key={idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`px-3 py-2 rounded-xl text-sm max-w-[75%] ${isMine ? 'bg-emerald-500/20 border border-emerald-400/40' : 'bg-white/5 border border-white/10'}`}>
+                            <div className={`px-3 py-2 rounded-xl text-sm max-w-[75%] ${isMine ? 'bg-[#0a0a0a]/20 border border-[#0a0a0a]/40' : 'bg-white/5 border border-white/10'}`}>
                               <p className="text-gray-200 font-semibold">{m.from}</p>
                               <p className="text-white whitespace-pre-wrap wrap-break-word">{m.text}</p>
                               <div className="flex items-center justify-between gap-2 mt-1">
@@ -1515,7 +1980,7 @@ function App() {
                             <button
                               key={idx}
                               onClick={() => sendChatMessage(template)}
-                              className="text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-blue-500/20 text-white text-sm border border-white/10 hover:border-blue-400/40 transition-all"
+                              className="text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-[#0a0a0a]/20 text-white text-sm border border-white/10 hover:border-[#0a0a0a]/40 transition-all"
                             >
                               {template}
                             </button>
@@ -1553,7 +2018,7 @@ function App() {
                 </p>
                 <button
                   onClick={() => setActiveTab('market')}
-                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+                  className="w-full py-4 px-6 rounded-xl bg-black hover:bg-black/90 text-white font-bold shadow-xl hover:shadow-2xl hover:shadow-black/50 transition-all duration-200 active:scale-95"
                 >
                   Browse Marketplace
                 </button>
@@ -1581,14 +2046,14 @@ function App() {
               <p className="text-gray-400 text-sm">Financial records and billing documents</p>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-white/5 p-6">
+            <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-6">
               <div className="flex flex-wrap gap-3 mb-6">
                 <button
                   onClick={() => handleTransactionFilter('all')}
                   className={`px-4 py-2 rounded-xl font-semibold transition ${
                     transactionFilter === 'all'
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-white/10'
+                      ? 'bg-black hover:bg-black/90 text-white shadow-lg hover:shadow-xl'
+                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-black/30'
                   }`}
                 >
                   All Transactions
@@ -1597,8 +2062,8 @@ function App() {
                   onClick={() => handleTransactionFilter('purchases')}
                   className={`px-4 py-2 rounded-xl font-semibold transition ${
                     transactionFilter === 'purchases'
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-white/10'
+                      ? 'bg-black hover:bg-black/90 text-white shadow-lg hover:shadow-xl'
+                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-black/30'
                   }`}
                 >
                   Purchases
@@ -1607,8 +2072,8 @@ function App() {
                   onClick={() => handleTransactionFilter('refunds')}
                   className={`px-4 py-2 rounded-xl font-semibold transition ${
                     transactionFilter === 'refunds'
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-white/10'
+                      ? 'bg-black hover:bg-black/90 text-white shadow-lg hover:shadow-xl'
+                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-black/30'
                   }`}
                 >
                   Refunds
@@ -1616,7 +2081,7 @@ function App() {
               </div>
 
               <div className="space-y-3">
-                <div className="glass-panel border border-white/5 p-4">
+                <div className="glass-panel border border-[#0a0a0a] p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <p className="text-white font-semibold">Order #12345</p>
@@ -1631,20 +2096,20 @@ function App() {
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={() => handleComingSoon('View invoice')}
-                      className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition"
+                      className="flex-1 py-2 rounded-lg bg-black hover:bg-gray-900 text-white text-sm font-semibold border border-[#0a0a0a] transition"
                     >
                       View Invoice
                     </button>
                     <button
                       onClick={() => handleComingSoon('Download PDF')}
-                      className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition"
+                      className="flex-1 py-2 rounded-lg bg-black hover:bg-gray-900 text-white text-sm font-semibold border border-[#0a0a0a] transition"
                     >
                       Download PDF
                     </button>
                   </div>
                 </div>
 
-                <div className="glass-panel border border-white/5 p-4">
+                <div className="glass-panel border border-[#0a0a0a] p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <p className="text-white font-semibold">Order #12344</p>
@@ -1659,13 +2124,13 @@ function App() {
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={() => handleComingSoon('View invoice')}
-                      className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition"
+                      className="flex-1 py-2 rounded-lg bg-black hover:bg-gray-900 text-white text-sm font-semibold border border-[#0a0a0a] transition"
                     >
                       View Invoice
                     </button>
                     <button
                       onClick={() => handleComingSoon('Download PDF')}
-                      className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/10 transition"
+                      className="flex-1 py-2 rounded-lg bg-black hover:bg-gray-900 text-white text-sm font-semibold border border-[#0a0a0a] transition"
                     >
                       Download PDF
                     </button>
@@ -1675,15 +2140,15 @@ function App() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="glass-panel rounded-2xl border border-white/5 p-4">
+              <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4">
                 <p className="text-gray-400 text-sm">Total Spent</p>
                 <p className="text-white text-2xl font-bold mt-2">₹15,750</p>
               </div>
-              <div className="glass-panel rounded-2xl border border-white/5 p-4">
+              <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4">
                 <p className="text-gray-400 text-sm">Total Refunded</p>
                 <p className="text-red-400 text-2xl font-bold mt-2">₹1,200</p>
               </div>
-              <div className="glass-panel rounded-2xl border border-white/5 p-4">
+              <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4">
                 <p className="text-gray-400 text-sm">This Month</p>
                 <p className="text-green-400 text-2xl font-bold mt-2">₹5,300</p>
               </div>
@@ -1718,7 +2183,7 @@ function App() {
                     key={notif.id}
                     onClick={() => markNotificationRead(notif.id)}
                     className={`glass-panel rounded-2xl border p-4 cursor-pointer transition ${
-                      notif.read ? 'border-white/5 bg-white/5' : 'border-blue-400/30 bg-blue-400/10'
+                      notif.read ? 'border-white/5 bg-white/5' : 'border-[#F7D047]/30 bg-[#F7D047]/10'
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -1726,7 +2191,7 @@ function App() {
                         <div className="flex items-center gap-2">
                           <p className="text-white font-semibold">{notif.title}</p>
                           {!notif.read && (
-                            <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                            <div className="w-2 h-2 rounded-full bg-[#F7D047]"></div>
                           )}
                         </div>
                         <p className="text-gray-400 text-sm mt-1">{notif.message}</p>
@@ -1806,7 +2271,7 @@ function App() {
                     </div>
                     <button
                       onClick={() => handleComingSoon('Write review')}
-                      className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+                      className="w-full py-3 px-4 rounded-lg bg-black hover:bg-black/90 text-white text-sm font-semibold shadow-lg hover:shadow-xl hover:shadow-black/40 transition-all duration-200 active:scale-95"
                     >
                       Write Review
                     </button>
@@ -1821,7 +2286,7 @@ function App() {
                     </div>
                     <button
                       onClick={() => handleComingSoon('Write review')}
-                      className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+                      className="w-full py-3 px-4 rounded-lg bg-black hover:bg-black/90 text-white text-sm font-semibold shadow-lg hover:shadow-xl hover:shadow-black/40 transition-all duration-200 active:scale-95"
                     >
                       Write Review
                     </button>
@@ -1879,16 +2344,26 @@ function App() {
 
       case 'goods': {
         const conditions = ['all', 'excellent', 'good', 'fair', 'new'];
+        const filteredGoods = goods
+          .filter((item) => {
+            const matchesSearch = [item.title, item.description, item.location, item.sellerName]
+              .filter(Boolean)
+              .some((field) => field.toLowerCase().includes(goodsSearchTerm.toLowerCase()));
+            const matchesCondition = goodsConditionFilter === 'all' || (item.condition || '').toLowerCase() === goodsConditionFilter;
+            return matchesSearch && matchesCondition;
+          })
+          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        
         return (
           <div className="space-y-6">
             {/* Search and Filters */}
-            <div className="glass-panel rounded-2xl border border-white/5 p-4">
+            <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4">
               <div className="flex items-center justify-between mb-4">
-                <span className="pill text-sm border-white/10 bg-white/5">{filteredGoods.length} items</span>
-                {currentUser.role === 'provider' && (
-                  <button
+                <span className="pill text-sm border-[#0a0a0a] bg-white/5">{filteredGoods.length} items</span>
+{currentUser?.role === 'provider' && (
+                    <button
                     onClick={() => setShowGoodsModal(true)}
-                    className="px-4 py-2 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 text-white font-semibold transition"
+                    className="px-4 py-2 rounded-xl bg-black hover:shadow-lg hover:shadow-black/25 text-white font-semibold transition"
                   >
                     + List Item
                   </button>
@@ -1901,7 +2376,7 @@ function App() {
                     placeholder="Search items, locations, sellers"
                     value={goodsSearchTerm}
                     onChange={(e) => setGoodsSearchTerm(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
                   />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                     <SearchIcon size={20} />
@@ -1910,7 +2385,7 @@ function App() {
                 <select
                   value={goodsConditionFilter}
                   onChange={(e) => setGoodsConditionFilter(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
                 >
                   {conditions.map((c) => (
                     <option key={c} value={c}>{c === 'all' ? 'All conditions' : c.charAt(0).toUpperCase() + c.slice(1)}</option>
@@ -1937,7 +2412,8 @@ function App() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {filteredGoods.map((item) => (
-                      <div key={item._id} className="glass-panel rounded-2xl border border-white/5 overflow-hidden card-hover w-full">
+                      <div key={item._id} className="glass-panel rounded-2xl border border-white/5 overflow-hidden card-hover w-full relative">
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#F7D047] opacity-90 z-10" />
                         {item.image ? (
                           <div className="h-40 bg-gray-800/40">
                             <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
@@ -1948,12 +2424,12 @@ function App() {
                         <div className="p-4 space-y-3">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="text-xs uppercase tracking-wide text-blue-300 font-semibold">{item.condition || 'Good'}</p>
+                              <p className="text-xs uppercase tracking-wide text-[#0a0a0a] font-semibold">{item.condition || 'Good'}</p>
                               <h4 className="text-lg font-bold text-white mt-1">{item.title}</h4>
                               <p className="text-gray-300 text-sm line-clamp-2">{item.description}</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-xl font-bold text-emerald-300">₹{item.price}</p>
+                              <p className="text-xl font-bold text-[#0a0a0a]">₹{item.price}</p>
                               <p className="text-xs text-gray-400">{item.location}</p>
                             </div>
                           </div>
@@ -1962,18 +2438,26 @@ function App() {
                             <span>{new Date(item.createdAt || Date.now()).toLocaleDateString('en-IN')}</span>
                           </div>
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => openGoodsChat(item)}
-                              className="flex-1 py-2 rounded-xl bg-linear-to-r from-sky-500 to-indigo-600 hover:shadow-lg hover:shadow-sky-500/25 text-white font-semibold transition"
-                            >
-                              View & Chat
-                            </button>
-                            <button
-                              onClick={() => openCheckout(item)}
-                              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 font-semibold transition"
-                            >
-                              Make Offer
-                            </button>
+                            {currentUser?.role === 'provider' ? (
+                              <div className="flex-1 py-2 px-4 rounded-xl bg-gray-500/20 text-gray-400 text-center border border-gray-500/30">
+                                <p className="text-sm font-semibold">Providers cannot purchase</p>
+                              </div>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => openGoodsChat(item)}
+                                  className="flex-1 py-3 px-4 rounded-xl bg-black hover:bg-black/90 text-white font-semibold shadow-lg hover:shadow-2xl hover:shadow-black/50 transition-all duration-200 active:scale-95"
+                                >
+                                  View & Chat
+                                </button>
+                                <button
+                                  onClick={() => openCheckout(item)}
+                                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 font-semibold transition"
+                                >
+                                  Make Offer
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1985,25 +2469,612 @@ function App() {
         );
       }
 
+      // Provider-specific pages
+      case 'providerDashboard': {
+        const myServicesCount = services.filter(s => s.provider?._id === currentUser?._id).length;
+        const totalRevenue = 0; // Calculate from orders
+        const avgRating = '4.5';
+        
+        return (
+          <div className="space-y-6 animate-fade-in">
+            {/* Stats Cards with SVG Icons */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { 
+                  label: 'Total Services', 
+                  value: myServicesCount, 
+                  Icon: ServicesIcon, 
+                  color: 'bg-[#F7D047]',
+                  bgColor: 'bg-[#F7D047]/10',
+                  borderColor: 'border-[#F7D047]/20'
+                },
+                { 
+                  label: 'Active Orders', 
+                  value: '0', 
+                  Icon: ClipboardIcon, 
+                  color: 'bg-black',
+                  bgColor: 'bg-[#0a0a0a]/10',
+                  borderColor: 'border-[#0a0a0a]/20'
+                },
+                { 
+                  label: 'Total Revenue', 
+                  value: `₹${totalRevenue.toLocaleString()}`, 
+                  Icon: RevenueIcon, 
+                  color: 'bg-purple-500',
+                  bgColor: 'bg-purple-500/10',
+                  borderColor: 'border-purple-500/20'
+                },
+                { 
+                  label: 'Avg Rating', 
+                  value: `${avgRating}`, 
+                  Icon: StarIcon, 
+                  color: 'bg-orange-500',
+                  bgColor: 'bg-orange-500/10',
+                  borderColor: 'border-orange-500/20'
+                },
+              ].map((stat, idx) => (
+                <div key={idx} className={`glass-panel card-premium rounded-2xl border ${stat.borderColor} p-6 ${stat.bgColor} card-hover group relative overflow-hidden`}>
+                  <div className={`absolute top-0 left-0 right-0 h-1 ${stat.color} opacity-60`} />
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="flex-1">
+                      <p className="text-gray-400 text-sm font-semibold mb-2">{stat.label}</p>
+                      <p className="text-white text-3xl font-bold">{stat.value}</p>
+                    </div>
+                    <div className={`p-4 rounded-xl ${stat.color} opacity-20 group-hover:opacity-30 transition-opacity`}>
+                      <stat.Icon size={32} className="text-white" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Quick Actions Grid */}
+            <div className="glass-panel card-premium rounded-2xl border border-white/10 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Quick Actions</h3>
+                  <p className="text-gray-400 text-sm mt-1">Manage your business efficiently</p>
+                </div>
+                <ZapIcon size={24} className="text-yellow-400" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button
+                  onClick={() => setShowServiceModal(true)}
+                  className="p-5 rounded-xl bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-white font-semibold border border-[#F7D047]/30 text-left transition-all card-hover group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-[#F7D047]/20 group-hover:bg-[#F7D047]/30 transition-colors">
+                      <PlusIcon size={20} className="text-black" />
+                    </div>
+                    <ServicesIcon size={20} className="text-black" />
+                  </div>
+                  <div className="font-bold text-lg mb-1">Add Service</div>
+                  <p className="text-sm text-gray-400">Create a new service offering</p>
+                </button>
+                
+                <button
+                  onClick={() => setShowGoodsModal(true)}
+                  className="p-5 rounded-xl bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-white font-semibold border border-[#0a0a0a]/30 text-left transition-all card-hover group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-[#0a0a0a]/20 group-hover:bg-[#0a0a0a]/30 transition-colors">
+                      <PlusIcon size={20} className="text-[#F7D047]" />
+                    </div>
+                    <GoodsIcon size={20} className="text-[#F7D047]" />
+                  </div>
+                  <div className="font-bold text-lg mb-1">Add Goods</div>
+                  <p className="text-sm text-gray-400">List items for sale</p>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('providerOrders')}
+                  className="p-5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-white font-semibold border border-purple-400/30 text-left transition-all card-hover group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
+                      <ClipboardIcon size={20} className="text-purple-300" />
+                    </div>
+                  </div>
+                  <div className="font-bold text-lg mb-1">View Orders</div>
+                  <p className="text-sm text-gray-400">Manage customer orders</p>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className="p-5 rounded-xl bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-white font-semibold border border-[#0a0a0a]/30 text-left transition-all card-hover group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-[#F7D047]/20 group-hover:bg-[#F7D047]/30 transition-colors">
+                      <AnalyticsIcon size={20} className="text-[#F7D047]" />
+                    </div>
+                  </div>
+                  <div className="font-bold text-lg mb-1">Analytics</div>
+                  <p className="text-sm text-gray-400">View insights & reports</p>
+                </button>
+              </div>
+            </div>
+            
+            {/* Provider Safety Section */}
+            <div className="glass-panel card-premium rounded-2xl border border-[#0a0a0a]/20 p-6 bg-[#0a0a0a]/5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <ShieldIcon size={24} className="text-[#0a0a0a]" />
+                  <div>
+                    <h4 className="text-lg font-bold text-white">Provider Safety Settings</h4>
+                    <p className="text-gray-400 text-sm">Manage your safety preferences</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSafetyCenter(true)}
+                  className="px-4 py-2 rounded-xl bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-white font-semibold text-sm border border-[#0a0a0a]/30 transition-all"
+                >
+                  Manage Safety
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                  <div className="w-10 h-10 rounded-lg bg-[#F7D047]/20 flex items-center justify-center">
+                    <UsersIcon size={20} className="text-black" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">Buddy System</p>
+                    <p className="text-gray-400 text-xs">Require second person</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                  <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">Daytime Only</p>
+                    <p className="text-gray-400 text-xs">8 AM - 6 PM</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                  <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                    <BellIcon size={20} className="text-red-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">Incident Reports</p>
+                    <p className="text-gray-400 text-xs">Report unsafe customers</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Recent Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="glass-panel card-premium rounded-2xl border border-white/10 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                    <ActivityIcon size={20} className="text-[#F7D047]" />
+                    Recent Services
+                  </h4>
+                  <button
+                    onClick={() => setActiveTab('myServices')}
+                    className="text-sm text-[#F7D047] hover:text-[#F7D047]/80 font-semibold"
+                  >
+                    View All
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {services.filter(s => s.provider?._id === currentUser?._id).slice(0, 3).map((service) => (
+                    <div key={service._id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-semibold truncate">{service.title}</p>
+                        <p className="text-gray-400 text-sm">₹{service.price}</p>
+                      </div>
+                      <span className="pill text-xs ml-2">{service.category || 'General'}</span>
+                    </div>
+                  ))}
+                  {myServicesCount === 0 && (
+                    <p className="text-gray-400 text-sm text-center py-4">No services yet. Add your first service!</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="glass-panel card-premium rounded-2xl border border-white/10 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                    <TrendingUpIcon size={20} className="text-[#0a0a0a]" />
+                    Performance
+                  </h4>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-400 text-sm">Service Views</span>
+                      <span className="text-white font-bold">0</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-[#F7D047] rounded-full" style={{ width: '0%' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-400 text-sm">Conversion Rate</span>
+                      <span className="text-white font-bold">0%</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-black rounded-full" style={{ width: '0%' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-400 text-sm">Customer Satisfaction</span>
+                      <span className="text-white font-bold">92%</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-purple-500 rounded-full" style={{ width: '92%' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      }
+
+      case 'myServices': {
+        const myServices = services.filter(s => s.provider?._id === currentUser?._id);
+        
+        // Filter services based on search and filter - RENAMED to avoid shadowing global filteredServices
+        const filteredMyServices = myServices.filter(s => {
+          const matchesFilter = serviceFilter === 'all' || (serviceFilter === 'active' && s.status !== 'inactive') || (serviceFilter === 'inactive' && s.status === 'inactive');
+          const matchesSearch = !serviceSearch || s.title.toLowerCase().includes(serviceSearch.toLowerCase()) || s.description.toLowerCase().includes(serviceSearch.toLowerCase());
+          return matchesFilter && matchesSearch;
+        });
+        
+        return (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-3xl font-bold text-white flex items-center gap-3">
+                  <ServicesIcon size={32} className="text-[#F7D047]" />
+                  My Services
+                </h3>
+                <p className="text-gray-400 text-sm mt-2">Manage and optimize your service offerings</p>
+              </div>
+              <button
+                onClick={() => setShowServiceModal(true)}
+                className="px-8 py-4 rounded-xl bg-black hover:bg-black/90 text-white font-bold shadow-xl hover:shadow-2xl hover:shadow-black/50 transition-all duration-200 active:scale-95 flex items-center gap-2"
+              >
+                <PlusIcon size={20} />
+                Add New Service
+              </button>
+            </div>
+
+            {/* Filters and Search */}
+            <div className="glass-panel card-premium rounded-2xl border border-white/10 p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <SearchIcon size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search services..."
+                    value={serviceSearch}
+                    onChange={(e) => setServiceSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-[#0a0a0a] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#0a0a0a]"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  {['all', 'active', 'inactive'].map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setServiceFilter(filter)}
+                      className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition ${
+                        serviceFilter === filter
+                          ? 'bg-[#0a0a0a]/20 text-[#0a0a0a] border border-[#0a0a0a]/30'
+                          : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {myServices.length === 0 ? (
+              <EmptyState
+                title="No Services Yet"
+                body="Start by creating your first service offering to reach customers"
+                actionLabel="Add Service"
+                onAction={() => setShowServiceModal(true)}
+                icon={<ServicesIcon size={48} className="mx-auto text-[#F7D047]" />}
+              />
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-gray-400 text-sm">
+                    Showing <span className="text-white font-semibold">{filteredMyServices.length}</span> of <span className="text-white font-semibold">{myServices.length}</span> services
+                  </p>
+                  <div className="flex gap-2">
+                    <button className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-semibold border border-white/10 flex items-center gap-2">
+                      <CopyIcon size={16} />
+                      Bulk Actions
+                    </button>
+                    <button className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-semibold border border-white/10 flex items-center gap-2">
+                      <DownloadIcon size={16} />
+                      Export
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredMyServices.map((service) => (
+                    <div key={service._id} className="glass-panel card-premium rounded-2xl border border-white/10 p-6 card-hover group relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-[#F7D047] opacity-60" />
+                      
+                      {service.image && (
+                        <div className="w-full h-32 mb-4 rounded-lg overflow-hidden bg-black">
+                          <img src={service.image} alt={service.title} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <span className="pill text-xs mb-2 bg-[#0a0a0a]/10 border-[#0a0a0a]/20 text-[#0a0a0a]">
+                              {service.category || 'General'}
+                            </span>
+                            <h4 className="text-lg font-bold text-white mt-2 line-clamp-1">{service.title}</h4>
+                            <p className="text-gray-400 text-sm mt-1 line-clamp-2">{service.description}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                          <div>
+                            <span className="text-2xl font-bold text-[#F7D047]">₹{service.price}</span>
+                            <p className="text-xs text-gray-500 mt-0.5">per service</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <StarIcon size={16} className="text-yellow-400" filled />
+                            <span className="text-sm text-white font-semibold">4.5</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 pt-2">
+                          <button className="flex-1 px-3 py-2 rounded-lg bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-[#0a0a0a] text-sm font-semibold border border-[#0a0a0a]/30 flex items-center justify-center gap-2 transition">
+                            <EditIcon size={16} />
+                            Edit
+                          </button>
+                          <button className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-semibold border border-white/10 flex items-center justify-center transition">
+                            <EyeIcon size={16} />
+                          </button>
+                          <button className="px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm font-semibold border border-red-400/30 flex items-center justify-center transition">
+                            <TrashIcon size={16} />
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <EyeIcon size={12} />
+                              0 views
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <ClipboardIcon size={12} />
+                              0 orders
+                            </span>
+                          </div>
+                          <span className="pill text-xs bg-[#0a0a0a]/10 border-[#0a0a0a]/20 text-[#F7D047]">
+                            Active
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        );
+
+      }
+
+      case 'myGoods': {
+        const myGoods = goods.filter(g => g.sellerId === currentUser?._id);
+        
+        const filteredGoods = myGoods.filter(g => {
+          const matchesFilter = goodsFilter === 'all' || (goodsFilter === 'active' && g.status !== 'inactive') || (goodsFilter === 'inactive' && g.status === 'inactive');
+          const matchesSearch = !goodsSearch || g.title.toLowerCase().includes(goodsSearch.toLowerCase()) || g.description.toLowerCase().includes(goodsSearch.toLowerCase());
+          return matchesFilter && matchesSearch;
+        });
+        
+        return (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-3xl font-bold text-white flex items-center gap-3">
+                  <GoodsIcon size={32} className="text-[#0a0a0a]" />
+                  My Goods
+                </h3>
+                <p className="text-gray-400 text-sm mt-2">Manage your product listings and inventory</p>
+              </div>
+              <button
+                onClick={() => setShowGoodsModal(true)}
+                className="px-6 py-3 rounded-xl bg-black hover:shadow-lg hover:shadow-black/25 text-white font-bold transition flex items-center gap-2"
+              >
+                <PlusIcon size={20} />
+                Add New Item
+              </button>
+            </div>
+
+            {/* Filters and Search */}
+            <div className="glass-panel card-premium rounded-2xl border border-white/10 p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <SearchIcon size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search goods..."
+                    value={goodsSearch}
+                    onChange={(e) => setGoodsSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#0a0a0a]"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  {['all', 'active', 'inactive'].map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setGoodsFilter(filter)}
+                      className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition ${
+                        goodsFilter === filter
+                          ? 'bg-emerald-500/20 text-[#F7D047] border border-[#0a0a0a]/30'
+                          : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {myGoods.length === 0 ? (
+              <EmptyState
+                title="No Goods Listed Yet"
+                body="Start selling by listing your first item"
+                actionLabel="Add Item"
+                onAction={() => setShowGoodsModal(true)}
+                icon={<GoodsIcon size={48} className="mx-auto text-[#0a0a0a]" />}
+              />
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-gray-400 text-sm">
+                    Showing <span className="text-white font-semibold">{filteredGoods.length}</span> of <span className="text-white font-semibold">{myGoods.length}</span> items
+                  </p>
+                  <div className="flex gap-2">
+                    <button className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-semibold border border-white/10 flex items-center gap-2">
+                      <CopyIcon size={16} />
+                      Bulk Actions
+                    </button>
+                    <button className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-semibold border border-white/10 flex items-center gap-2">
+                      <DownloadIcon size={16} />
+                      Export
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredGoods.map((item) => (
+                    <div key={item._id} className="glass-panel card-premium rounded-2xl border border-white/10 p-6 card-hover group relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-[#F7D047] opacity-60" />
+                      
+                      {item.image && (
+                        <div className="w-full h-40 mb-4 rounded-lg overflow-hidden bg-black">
+                          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <span className="pill text-xs mb-2 bg-[#0a0a0a]/10 border-[#0a0a0a]/20 text-[#F7D047]">
+                              {item.condition || 'Good'}
+                            </span>
+                            <h4 className="text-lg font-bold text-white mt-2 line-clamp-1">{item.title}</h4>
+                            <p className="text-gray-400 text-sm mt-1 line-clamp-2">{item.description}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                          <div>
+                            <span className="text-2xl font-bold text-[#F7D047]">₹{item.price}</span>
+                            <p className="text-xs text-gray-500 mt-0.5">per item</p>
+                          </div>
+                          {item.location && (
+                            <div className="text-xs text-gray-400 flex items-center gap-1">
+                              <span>📍</span>
+                              <span className="truncate max-w-[100px]">{item.location}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex gap-2 pt-2">
+                          <button className="flex-1 px-3 py-2 rounded-lg bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-[#F7D047] text-sm font-semibold border border-[#0a0a0a]/30 flex items-center justify-center gap-2 transition">
+                            <EditIcon size={16} />
+                            Edit
+                          </button>
+                          <button className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-semibold border border-white/10 flex items-center justify-center transition">
+                            <EyeIcon size={16} />
+                          </button>
+                          <button className="px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm font-semibold border border-red-400/30 flex items-center justify-center transition">
+                            <TrashIcon size={16} />
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <EyeIcon size={12} />
+                              0 views
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <ClipboardIcon size={12} />
+                              0 inquiries
+                            </span>
+                          </div>
+                          <span className="pill text-xs bg-[#0a0a0a]/10 border-[#0a0a0a]/20 text-[#F7D047]">
+                            Active
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      }
+
+      case 'providerOrders':
+        return (
+          <div className="space-y-6 animate-fade-in">
+            <div>
+              <h3 className="text-2xl font-bold text-white">Customer Orders</h3>
+              <p className="text-gray-400 text-sm">Manage and fulfill customer orders</p>
+            </div>
+            <EmptyState
+              title="No Orders Yet"
+              body="Customer orders will appear here when they purchase your services"
+              icon={<ClipboardIcon size={48} className="mx-auto text-[#F7D047]" />}
+            />
+          </div>
+        );
+
+      case 'analytics':
+        return (
+          <div className="space-y-6 animate-fade-in">
+            <ProviderAnalytics currentUser={currentUser} />
+          </div>
+        );
+
       case 'market':
       default:
         return (
           <div>
             {/* Search and Filters */}
             <div className="mb-6 space-y-4">
-              <div className="glass-panel rounded-2xl border border-white/5 p-4">
+              <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="pill text-sm border-white/10 bg-white/5">{filteredServices.length} services</span>
-                  {currentUser.role === 'provider' && (
+                  <span className="pill text-sm border-[#0a0a0a] bg-white/5">{filteredServices.length} services</span>
+                  {currentUser?.role === 'provider' && (
                     <button
                       onClick={() => setShowServiceModal(true)}
-                      className="px-4 py-2 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 text-white font-semibold transition"
+                      className="px-4 py-2 rounded-xl bg-[#F7D047] hover:shadow-lg hover:shadow-black/25 text-white font-semibold transition"
                     >
                       + Add Service
                     </button>
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                 <div className="col-span-1 lg:col-span-2">
                   <div className="relative">
                     <input
@@ -2011,7 +3082,7 @@ function App() {
                       placeholder="Search services or providers"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
                     />
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                       <SearchIcon size={20} />
@@ -2021,16 +3092,25 @@ function App() {
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>{cat === 'all' ? 'All categories' : cat}</option>
                   ))}
                 </select>
                 <select
+                  value={safetyFilter}
+                  onChange={(e) => setSafetyFilter(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
+                >
+                  <option value="all">All Providers</option>
+                  <option value="verified">Verified Only</option>
+                  <option value="women_only">Women Only</option>
+                </select>
+                <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:outline-none"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
                 >
                   <option value="recent">Sort: Recent</option>
                   <option value="price-asc">Price: Low to High</option>
@@ -2057,7 +3137,7 @@ function App() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 auto-rows-min">
+              <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))' }}>
                 {filteredServices.length === 0 ? (
                   <div className="col-span-full text-center py-10 text-gray-400 border border-dashed border-gray-700 rounded-lg">
                     No services found
@@ -2065,62 +3145,99 @@ function App() {
                 ) : (
                   filteredServices.map((service) => {
                     const providerName = service.provider?.name || 'Unknown Provider';
+                    const providerEmail = service.provider?.email || '';
                     const category = service.category || 'General';
                     const price = Number.isFinite(service.price) ? `₹${service.price}` : '—';
+                    const isVerified = service.provider?.isVerified || service.provider?.verificationStatus === 'verified';
+                    
                     return (
-                      <div key={service._id} className="glass-panel rounded-2xl border border-white/5 overflow-hidden card-hover w-full">
-                        <div className="h-1 bg-linear-to-r from-blue-500 via-cyan-400 to-emerald-400" />
-                        {service.image && (
-                          <div className="w-full h-48 bg-gray-700/40 flex-shrink-0">
-                            <img 
-                              src={service.image} 
-                              alt={service.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
-                            />
+                      <div key={service._id} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 flex flex-col max-w-sm">
+                        {/* Image Section */}
+                        <div className="relative h-48 overflow-hidden bg-gray-100">
+                          {service.image ? (
+                            <img src={service.image} alt={service.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
+                          ) : null}
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center" style={{ display: service.image ? 'none' : 'flex' }}>
+                            <span className="text-5xl opacity-40">🔧</span>
                           </div>
-                        )}
-                        <div className="p-6 flex flex-col gap-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="text-xs uppercase tracking-wide text-blue-300 font-semibold">{category}</p>
-                              <h4 className="text-xl font-bold text-white mt-1">{service.title}</h4>
-                              <p className="text-gray-300 text-sm mt-2 line-clamp-3">{service.description}</p>
+                          
+                          {/* Category Badge */}
+                          <div className="absolute top-3 left-3">
+                            <span className="inline-block text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-black text-[#F7D047] shadow-lg">
+                              {category}
+                            </span>
+                          </div>
+
+                          {/* Rating Badge */}
+                          {service.rating !== undefined && (
+                            <div className="absolute top-3 right-3">
+                              <span className="px-2.5 py-1.5 rounded-lg bg-black/90 backdrop-blur-sm text-white font-bold text-xs flex items-center gap-1 shadow-lg">
+                                <StarIcon size={12} filled className="text-[#F7D047]" /> {Number(service.rating).toFixed(1)}
+                              </span>
                             </div>
-                            {service.rating !== undefined && (
-                              <div className="pill text-xs bg-white/5 border-white/10 text-yellow-200 flex items-center gap-1"><StarIcon size={12} filled /> {Number(service.rating).toFixed(1)}</div>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between text-sm text-gray-400">
-                            <div>
-                              <p className="text-white font-semibold">{providerName}</p>
-                              {service.provider?.email && (
-                                <p className="text-xs text-gray-500">{service.provider.email}</p>
-                              )}
+                          )}
+                        </div>
+
+                        {/* Content Section */}
+                        <div className="flex-1 flex flex-col p-6">
+                          {/* Title */}
+                          <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight">
+                            {service.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3 flex-1">
+                            {service.description}
+                          </p>
+
+                          {/* Provider Info */}
+                          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+                            <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-[#F7D047] font-bold text-lg shadow-md flex-shrink-0">
+                              {(providerName || 'P').charAt(0).toUpperCase()}
                             </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-green-300">{price}</p>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-gray-900 font-semibold text-sm truncate">{providerName}</p>
+                                {isVerified && <CheckCircleIcon size={14} className="text-green-600 flex-shrink-0" />}
+                              </div>
+                              {providerEmail && <p className="text-gray-500 text-xs truncate">{providerEmail}</p>}
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                openCheckout(service);
-                                setCheckoutType('buy');
-                              }}
-                              className="flex-1 py-2 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-lg hover:shadow-emerald-500/25 text-white font-semibold transition flex items-center justify-center gap-1.5"
-                            >
-                              <FileTextIcon size={16} className="text-white" /> Buy Package
-                            </button>
-                            <button
-                              onClick={() => openServiceChat(service)}
-                              className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 font-semibold transition flex items-center gap-1"
-                            >
-                              <MessageIcon size={14} /> Chat
-                            </button>
+
+                          {/* Price */}
+                          <div className="mb-4">
+                            <p className="text-3xl font-extrabold text-black">{price}</p>
                           </div>
+
+                          {/* Action Buttons */}
+                          {currentUser?.role === 'provider' ? (
+                            <div className="py-3 px-4 rounded-xl bg-gray-100 text-gray-500 text-sm font-semibold text-center">
+                              Can't buy your own services
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex gap-2 mb-2">
+                                <button 
+                                  onClick={() => setSelectedServiceDetail(service)} 
+                                  className="flex-1 font-semibold py-3 px-4 rounded-xl bg-white hover:bg-gray-50 text-black border-2 border-black transition-all hover:shadow-lg flex items-center justify-center gap-2"
+                                >
+                                  <InfoIcon size={16} /> Details
+                                </button>
+                                <button 
+                                  onClick={() => { openCheckout(service); setCheckoutType('buy'); }} 
+                                  className="flex-1 font-semibold py-3 px-4 rounded-xl bg-black hover:bg-gray-900 text-white transition-all hover:shadow-xl flex items-center justify-center gap-2"
+                                >
+                                  Buy
+                                </button>
+                              </div>
+                              <button 
+                                onClick={() => openServiceChat(service)} 
+                                className="w-full font-semibold py-3 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300 transition-all flex items-center justify-center gap-2"
+                              >
+                                <MessageIcon size={16} /> Chat
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     );
@@ -2146,8 +3263,8 @@ function App() {
             {/* Logo - Refined for mobile */}
             <div className="shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-linear-to-br from-sky-400 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                  <span className="text-white font-bold text-xl md:text-2xl">R</span>
+                <div className="logo-box w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-theme-yellow flex items-center justify-center shadow-lg shadow-theme-yellow/50" style={{ backgroundColor: '#F7D047' }}>
+                  <span className="text-black font-bold text-xl md:text-2xl">R</span>
                 </div>
                 <div>
                   <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
@@ -2161,19 +3278,30 @@ function App() {
             {/* User Info & Actions - Desktop */}
             <div className="hidden md:flex items-center gap-4">
               {currentUser && (
-                <div className="glass-panel px-3 py-2 rounded-xl border border-white/10">
-                  <p className="text-white font-semibold text-sm">{currentUser.username}</p>
-                  <p className="text-xs text-gray-400 capitalize">{currentUser.role}</p>
-                </div>
+                <>
+                  <div className="glass-panel px-3 py-2 rounded-xl border border-white/10">
+                    <p className="text-white font-semibold text-sm">{currentUser.username}</p>
+                    <p className="text-xs text-gray-400 capitalize">{currentUser?.role}</p>
+                  </div>
+                  {/* Safety Center Button - Prominent for all users */}
+                  <button
+                    onClick={() => setShowSafetyCenter(true)}
+                    className="px-4 py-2.5 rounded-xl bg-theme-black hover:bg-black text-white font-semibold transition-all text-sm shadow-lg hover:shadow-theme-black/30 flex items-center gap-2"
+                    title="Safety Center"
+                  >
+                    <ShieldIcon size={18} />
+                    <span>Safety</span>
+                  </button>
+                </>
               )}
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50 animate-pulse" />
-                <span className="text-xs text-emerald-300 font-medium">{serverStatus}</span>
+                <div className="w-2 h-2 rounded-full bg-theme-black shadow-lg shadow-theme-black/50 animate-pulse" />
+                <span className="text-xs text-theme-yellow font-medium">{serverStatus}</span>
               </div>
               <ThemeToggle />
               <button
                 onClick={handleLogout}
-                className="px-5 py-2.5 rounded-xl bg-linear-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-semibold transition-all text-sm shadow-lg hover:shadow-rose-500/30"
+                className="theme-keep px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold transition-all text-sm shadow-lg hover:shadow-rose-500/30"
               >
                 Logout
               </button>
@@ -2181,15 +3309,25 @@ function App() {
 
             {/* Mobile Actions - Compact & Beautiful */}
             <div className="md:hidden flex items-center gap-2">
+              {currentUser && (
+                <button
+                  onClick={() => setShowSafetyCenter(true)}
+                  className="w-9 h-9 rounded-xl bg-theme-black text-white font-bold text-sm flex items-center justify-center shadow-lg shadow-theme-black/20"
+                  aria-label="Safety Center"
+                  title="Safety Center"
+                >
+                  <ShieldIcon size={18} />
+                </button>
+              )}
               <span
-                className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50 animate-pulse"
+                className="w-2 h-2 rounded-full bg-theme-black shadow-lg shadow-theme-black/50 animate-pulse"
                 role="status"
                 aria-label={serverStatus}
               />
               <ThemeToggle />
               <button
                 onClick={handleLogout}
-                className="w-9 h-9 rounded-xl bg-linear-to-br from-rose-500 to-red-600 text-white font-bold text-sm flex items-center justify-center shadow-lg shadow-rose-500/20"
+                className="theme-keep w-9 h-9 rounded-xl bg-rose-500 text-white font-bold text-sm flex items-center justify-center shadow-lg shadow-rose-500/20"
                 aria-label="Logout"
               >
                 <ArrowUpRightIcon size={18} />
@@ -2212,7 +3350,7 @@ function App() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all font-bold border text-sm ${
                     activeTab === tab.id
-                      ? 'bg-linear-to-r from-blue-500/20 to-indigo-500/10 text-white border-blue-400/40 shadow-lg shadow-blue-500/20'
+                      ? 'bg-theme-yellow/20 text-white border-theme-black/40 shadow-lg shadow-theme-black/20'
                       : 'text-gray-300 border-transparent hover:bg-white/10 hover:text-white'
                   }`}
                 >
@@ -2235,11 +3373,11 @@ function App() {
             <div className="mb-6 md:mb-8 section-hero">
               <div className="glass-panel rounded-2xl border border-white/10 p-6 md:p-8">
                 <div className="flex items-center gap-4 mb-3">
-                  <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <div className="w-14 h-14 rounded-2xl bg-theme-yellow flex items-center justify-center shadow-lg shadow-theme-black/30">
                     <span className="text-white scale-125">{tabs.find(t => t.id === activeTab)?.icon || <SparklesIcon size={24} />}</span>
                   </div>
                   <div>
-                    <h2 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-cyan-300 to-emerald-200">
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-theme-yellow">
                       {activeTab === 'market'
                         ? 'Market'
                         : activeTab === 'rps'
@@ -2282,6 +3420,14 @@ function App() {
       </div>
       </div>
 
+      {/* Safety Center Modal */}
+      {showSafetyCenter && currentUser && (
+        <SafetyCenter
+          currentUser={currentUser}
+          onClose={() => setShowSafetyCenter(false)}
+        />
+      )}
+
       {/* Floating Action Button (Mobile Only) */}
       <button
         onClick={() => {
@@ -2294,7 +3440,7 @@ function App() {
             setShowServiceModal(true);
           }
         }}
-        className="md:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/40 flex items-center justify-center hover:shadow-xl hover:shadow-blue-500/60 active:scale-95 transition-all animate-bounce border border-blue-400/30"
+        className="md:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-theme-yellow text-white shadow-lg shadow-theme-black/40 flex items-center justify-center hover:shadow-xl hover:shadow-theme-black/60 active:scale-95 transition-all animate-bounce border border-theme-black/30"
         aria-label="Add new item"
         title={activeTab === 'market' ? 'Add Service' : 'Add Goods'}
       >
@@ -2353,7 +3499,7 @@ function App() {
                       }}
                       className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left text-sm font-semibold transition-all ${
                         activeTab === tab.id
-                          ? 'bg-linear-to-r from-blue-500/30 to-indigo-500/20 text-white border border-blue-400/50 shadow-lg shadow-blue-500/20'
+                          ? 'bg-theme-yellow/30 text-white border border-theme-black/50 shadow-lg shadow-theme-black/20'
                           : 'text-gray-300 hover:bg-white/10 hover:text-white border border-transparent'
                       }`}
                     >
@@ -2367,6 +3513,74 @@ function App() {
           </div>
         </div>
       </nav>
+
+      {selectedServiceDetail && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center z-50" role="presentation">
+          <div
+            className="glass-panel w-full md:max-w-xl md:mx-4 max-h-[90vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl md:rounded-2xl animate-[slideUp_0.3s_ease-out]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="service-detail-title"
+          >
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 md:hidden" />
+            <button
+              onClick={() => setSelectedServiceDetail(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+              aria-label="Close service details"
+            >
+              ✕
+            </button>
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              {selectedServiceDetail.image && (
+                <div className="w-full sm:w-48 h-36 rounded-xl overflow-hidden flex-shrink-0 bg-gray-700/40">
+                  <img src={selectedServiceDetail.image} alt={selectedServiceDetail.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wide text-[#F7D047] font-semibold">{selectedServiceDetail.category || 'General'}</p>
+                <h3 id="service-detail-title" className="text-xl font-bold text-white mt-1">{selectedServiceDetail.title}</h3>
+                {selectedServiceDetail.rating !== undefined && (
+                  <span className="inline-flex items-center gap-1 mt-2 pill text-xs bg-[#F7D047]/20 border-[#0a0a0a]/30 text-[#0a0a0a]">
+                    <StarIcon size={12} filled /> {Number(selectedServiceDetail.rating).toFixed(1)}
+                  </span>
+                )}
+                <p className="text-white font-semibold text-sm mt-2">{selectedServiceDetail.provider?.name || 'Unknown Provider'}</p>
+                {selectedServiceDetail.provider?.email && (
+                  <p className="text-gray-400 text-xs">{selectedServiceDetail.provider.email}</p>
+                )}
+                <p className="text-lg font-bold text-[#F7D047] mt-2">
+                  {Number.isFinite(selectedServiceDetail.price) ? `₹${selectedServiceDetail.price}` : '—'}
+                </p>
+              </div>
+            </div>
+            <p className="text-gray-300 text-sm leading-relaxed mb-6">{selectedServiceDetail.description}</p>
+            <div className="flex gap-2 flex-wrap">
+              {currentUser?.role !== 'provider' && (
+                <>
+                  <button
+                    onClick={() => { openCheckout(selectedServiceDetail); setCheckoutType('buy'); setSelectedServiceDetail(null); }}
+                    className="py-3 px-6 rounded-xl bg-black hover:bg-black/90 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-black/40 transition-all duration-200 active:scale-95 flex items-center gap-2"
+                  >
+                    <FileTextIcon size={16} /> Buy Package
+                  </button>
+                  <button
+                    onClick={() => { openServiceChat(selectedServiceDetail); setSelectedServiceDetail(null); }}
+                    className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 font-semibold flex items-center gap-2"
+                  >
+                    <MessageIcon size={16} /> Chat
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => setSelectedServiceDetail(null)}
+                className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-semibold"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showServiceModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center z-50" role="presentation">
@@ -2394,7 +3608,7 @@ function App() {
                   type="text"
                   value={serviceForm.title}
                   onChange={(e) => handleServiceField('title', e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-base"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base"
                   placeholder="e.g., Premium Web Design"
                   required
                 />
@@ -2404,7 +3618,7 @@ function App() {
                 <textarea
                   value={serviceForm.description}
                   onChange={(e) => handleServiceField('description', e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-base resize-none"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base resize-none"
                   rows="3"
                   placeholder="Describe your service..."
                   required
@@ -2419,7 +3633,7 @@ function App() {
                     step="0.01"
                     value={serviceForm.price}
                     onChange={(e) => handleServiceField('price', e.target.value)}
-                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-base"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base"
                     placeholder="999"
                     required
                   />
@@ -2430,7 +3644,7 @@ function App() {
                     type="text"
                     value={serviceForm.category}
                     onChange={(e) => handleServiceField('category', e.target.value)}
-                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-base"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base"
                     placeholder="General"
                   />
                 </div>
@@ -2438,7 +3652,7 @@ function App() {
               <button
                 type="submit"
                 disabled={serviceSubmitting}
-                className="w-full py-4 rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-xl hover:shadow-blue-500/25 disabled:opacity-60 text-white font-bold transition-all text-base active:scale-[0.98]"
+                className="w-full py-4 rounded-xl bg-[#F7D047] hover:shadow-xl hover:shadow-black/25 disabled:opacity-60 text-white font-bold transition-all text-base active:scale-[0.98]"
               >
                 {serviceSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -2480,7 +3694,7 @@ function App() {
                   type="text"
                   value={goodsForm.title}
                   onChange={(e) => handleGoodsField('title', e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base"
                   placeholder="e.g., MacBook Pro 14"
                   required
                 />
@@ -2490,7 +3704,7 @@ function App() {
                 <textarea
                   value={goodsForm.description}
                   onChange={(e) => handleGoodsField('description', e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base resize-none"
+                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base resize-none"
                   rows="3"
                   placeholder="Describe your item..."
                   required
@@ -2505,7 +3719,7 @@ function App() {
                     step="0.01"
                     value={goodsForm.price}
                     onChange={(e) => handleGoodsField('price', e.target.value)}
-                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base"
                     placeholder="15000"
                     required
                   />
@@ -2515,7 +3729,7 @@ function App() {
                   <select
                     value={goodsForm.condition}
                     onChange={(e) => handleGoodsField('condition', e.target.value)}
-                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base"
                   >
                     <option>New</option>
                     <option>Excellent</option>
@@ -2531,18 +3745,18 @@ function App() {
                     type="text"
                     value={goodsForm.location}
                     onChange={(e) => handleGoodsField('location', e.target.value)}
-                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base"
                     placeholder="Mumbai"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2 font-medium">🖼️ Image URL</label>
+                  <label className="block text-sm text-gray-300 mb-2 font-medium">Image URL</label>
                   <input
                     type="url"
                     value={goodsForm.image}
                     onChange={(e) => handleGoodsField('image', e.target.value)}
-                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none text-base"
+                    className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-base"
                     placeholder="Optional"
                   />
                 </div>
@@ -2550,7 +3764,7 @@ function App() {
               <button
                 type="submit"
                 disabled={goodsSubmitting}
-                className="w-full py-4 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-xl hover:shadow-emerald-500/25 disabled:opacity-60 text-white font-bold transition-all text-base active:scale-[0.98]"
+                className="w-full py-4 rounded-xl bg-black hover:shadow-xl hover:shadow-black/25 disabled:opacity-60 text-white font-bold transition-all text-base active:scale-[0.98]"
               >
                 {goodsSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -2628,7 +3842,7 @@ function App() {
                         const val = parseInt(e.target.value) || 1;
                         setCheckoutQuantity(Math.min(100, Math.max(1, val)));
                       }}
-                      className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-blue-400"
+                      className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a]"
                     />
                   </div>
 
@@ -2655,7 +3869,7 @@ function App() {
                     type="button"
                     onClick={submitOrder}
                     disabled={checkoutSubmitting}
-                    className="w-full py-3 rounded-xl bg-linear-to-r from-sky-500 to-indigo-600 hover:shadow-lg hover:shadow-sky-500/25 disabled:opacity-60 text-white font-bold transition"
+                    className="w-full py-3 rounded-xl bg-[#F7D047] hover:shadow-lg hover:shadow-black/25 disabled:opacity-60 text-white font-bold transition"
                   >
                     {checkoutSubmitting ? 'Processing...' : 'Proceed to Payment'}
                   </button>
@@ -2695,7 +3909,7 @@ function App() {
                     </div>
                     <div className="flex justify-between pt-2 border-t border-white/10 text-base font-bold">
                       <span className="text-white">Total</span>
-                      <span className="text-emerald-400">{formatCurrency(Math.round(checkoutService.price * checkoutQuantity * 1.18))}</span>
+                      <span className="text-[#0a0a0a]">{formatCurrency(Math.round(checkoutService.price * checkoutQuantity * 1.18))}</span>
                     </div>
                   </div>
                 </div>
@@ -2759,7 +3973,7 @@ function App() {
                 <div className="border-b-2 border-gray-600 pb-6 mb-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-400">RKserve</h1>
+                      <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-[#F7D047]">RKserve</h1>
                       <p className="text-gray-500 text-sm">B2B Service Marketplace</p>
                     </div>
                     <div className="text-right">
@@ -2794,7 +4008,7 @@ function App() {
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Order Status</p>
-                    <p className="text-blue-400 font-semibold mt-1 capitalize">{orderBill.status}</p>
+                    <p className="text-[#F7D047] font-semibold mt-1 capitalize">{orderBill.status}</p>
                   </div>
                 </div>
 
@@ -2905,7 +4119,7 @@ function App() {
                   </button>
                   <button
                     onClick={() => window.print()}
-                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition flex items-center justify-center gap-2"
+                    className="flex-1 py-4 px-6 bg-black hover:bg-black/90 text-white font-bold rounded-lg shadow-xl hover:shadow-2xl hover:shadow-black/50 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -2940,7 +4154,7 @@ function App() {
             
             <div className="flex items-center justify-between px-4 py-4 border-b border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-10 h-10 rounded-full bg-[#F7D047] flex items-center justify-center text-white font-bold text-sm">
                   💬
                 </div>
                 <div>
@@ -2972,8 +4186,8 @@ function App() {
                 const isRead = isMine && readAt && new Date(readAt) >= new Date(m.at);
                 return (
                   <div key={idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`px-4 py-3 rounded-2xl text-sm max-w-[85%] shadow-lg ${isMine ? 'bg-linear-to-r from-emerald-500 to-green-600 text-white rounded-br-md' : 'bg-white/10 border border-white/10 rounded-bl-md'}`}>
-                      {!isMine && <p className="text-emerald-400 font-semibold text-xs mb-1">{m.from}</p>}
+                    <div className={`px-4 py-3 rounded-2xl text-sm max-w-[85%] shadow-lg ${isMine ? 'bg-black text-white rounded-br-md' : 'bg-white/10 border border-white/10 rounded-bl-md'}`}>
+                      {!isMine && <p className="text-[#0a0a0a] font-semibold text-xs mb-1">{m.from}</p>}
                       <p className="text-white whitespace-pre-wrap wrap-break-word">{m.text}</p>
                       <div className="flex items-center justify-end gap-2 mt-1.5">
                         <p className="text-[10px] opacity-70">{formatTime(m.at)}</p>
@@ -3002,7 +4216,7 @@ function App() {
               <div className="p-3 border-b border-white/5">
                 <button
                   onClick={() => setShowMessageTemplates(!showMessageTemplates)}
-                  className="w-full px-4 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-sm font-semibold border border-blue-400/30 flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2 rounded-xl bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-[#0a0a0a] text-sm font-semibold border border-[#0a0a0a]/30 flex items-center justify-center gap-2"
                 >
                   {showMessageTemplates ? '▼' : '▶'} Quick Messages
                 </button>
@@ -3015,7 +4229,7 @@ function App() {
                     <button
                       key={idx}
                       onClick={() => sendChatMessage(template)}
-                      className="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-blue-500/20 text-white text-sm border border-white/10 hover:border-blue-400/40 transition-all"
+                      className="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-[#0a0a0a]/20 text-white text-sm border border-white/10 hover:border-[#0a0a0a]/40 transition-all"
                     >
                       {template}
                     </button>
@@ -3040,3 +4254,15 @@ function App() {
 }
 
 export default App;
+
+
+
+
+
+
+
+
+
+
+
+

@@ -123,3 +123,15 @@ const MobileTabNav = ({ tabs, activeTab, onTabChange }) => {
 };
 
 export default MobileTabNav;
+
+
+
+
+
+
+
+
+
+
+
+

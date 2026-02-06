@@ -6,9 +6,9 @@ export const Alert = ({
   action,
 }) => {
   const typeStyles = {
-    info: 'bg-blue-500/10 border-blue-500/30 text-blue-200',
-    success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200',
-    warning: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-200',
+    info: 'bg-[#0a0a0a]/20 border-[#0a0a0a]/30 text-white',
+    success: 'bg-[#0a0a0a]/20 border-[#0a0a0a]/30 text-white',
+    warning: 'bg-[#F7D047]/20 border-[#F7D047]/30 text-black',
     error: 'bg-red-500/10 border-red-500/30 text-red-200',
   };
 
@@ -51,3 +51,15 @@ export const Alert = ({
     </div>
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+

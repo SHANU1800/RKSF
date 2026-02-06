@@ -35,3 +35,15 @@ export const Modal = ({
     </div>
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+

@@ -76,7 +76,7 @@ export default function ProviderMatchingFilter({ serviceType, onProvidersLoaded 
                 <p className="text-gray-400 text-xs">Only show female service providers</p>
               </div>
             </div>
-            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${filters.preferWomen ? 'bg-emerald-500' : 'bg-gray-600'}`}>
+            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${filters.preferWomen ? 'bg-[#0a0a0a]' : 'bg-gray-600'}`}>
               <input
                 type="checkbox"
                 checked={filters.preferWomen}
@@ -96,7 +96,7 @@ export default function ProviderMatchingFilter({ serviceType, onProvidersLoaded 
                 <p className="text-gray-400 text-xs">Schedule during daylight hours</p>
               </div>
             </div>
-            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${filters.daytimeOnly ? 'bg-emerald-500' : 'bg-gray-600'}`}>
+            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${filters.daytimeOnly ? 'bg-[#0a0a0a]' : 'bg-gray-600'}`}>
               <input
                 type="checkbox"
                 checked={filters.daytimeOnly}
@@ -110,13 +110,13 @@ export default function ProviderMatchingFilter({ serviceType, onProvidersLoaded 
           {/* Buddy Visit */}
           <label className="flex items-center justify-between bg-white/5 rounded-xl p-3 cursor-pointer hover:bg-white/10 transition-all">
             <div className="flex items-center gap-3">
-              <span className="text-blue-400">👥</span>
+              <span className="text-[#F7D047]">👥</span>
               <div>
                 <span className="text-white font-medium">Buddy Visit Available</span>
                 <p className="text-gray-400 text-xs">Provider who can bring a colleague</p>
               </div>
             </div>
-            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${filters.buddyRequired ? 'bg-emerald-500' : 'bg-gray-600'}`}>
+            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${filters.buddyRequired ? 'bg-[#0a0a0a]' : 'bg-gray-600'}`}>
               <input
                 type="checkbox"
                 checked={filters.buddyRequired}
@@ -130,7 +130,7 @@ export default function ProviderMatchingFilter({ serviceType, onProvidersLoaded 
           {/* Minimum Safety Score */}
           <div className="bg-white/5 rounded-xl p-3">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-emerald-400">⭐</span>
+              <span className="text-[#0a0a0a]">⭐</span>
               <div>
                 <span className="text-white font-medium">Minimum Safety Score</span>
                 <p className="text-gray-400 text-xs">Only show highly-rated providers</p>
@@ -168,7 +168,7 @@ export default function ProviderMatchingFilter({ serviceType, onProvidersLoaded 
                 buddyRequired: false,
                 minSafetyScore: 0,
               })}
-              className="text-emerald-400 text-sm font-medium hover:underline"
+              className="text-[#0a0a0a] text-sm font-medium hover:underline"
             >
               Clear All
             </button>
@@ -202,18 +202,18 @@ export default function ProviderMatchingFilter({ serviceType, onProvidersLoaded 
             </span>
           )}
           {filters.buddyRequired && (
-            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs flex items-center gap-1">
+            <span className="px-3 py-1 bg-[#0a0a0a]/20 text-[#F7D047] rounded-full text-xs flex items-center gap-1">
               👥 Buddy
               <button
                 onClick={() => setFilters({ ...filters, buddyRequired: false })}
-                className="ml-1 hover:text-blue-300"
+                className="ml-1 hover:text-[#F7D047]"
               >
                 ✕
               </button>
             </span>
           )}
           {filters.minSafetyScore > 0 && (
-            <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs flex items-center gap-1">
+            <span className="px-3 py-1 bg-[#0a0a0a]/20 text-[#0a0a0a] rounded-full text-xs flex items-center gap-1">
               🛡️ {filters.minSafetyScore}+ Score
               <button
                 onClick={() => setFilters({ ...filters, minSafetyScore: 0 })}
@@ -258,7 +258,7 @@ export function ProviderSafetyCard({ provider, onSelect }) {
             />
           </div>
           {provider.verificationLevel === 'verified' || provider.verificationLevel === 'premium' ? (
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-slate-900">
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#0a0a0a] rounded-full flex items-center justify-center text-white text-xs border-2 border-slate-900">
               ✓
             </div>
           ) : null}
@@ -287,7 +287,7 @@ export function ProviderSafetyCard({ provider, onSelect }) {
               </span>
             )}
             {provider.trainingCompleted && (
-              <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-xs">
+              <span className="px-2 py-0.5 bg-[#0a0a0a]/20 text-[#F7D047] rounded text-xs">
                 📚 Trained
               </span>
             )}
@@ -302,7 +302,7 @@ export function ProviderSafetyCard({ provider, onSelect }) {
               </span>
             )}
             {provider.feltSafePercent >= 95 && (
-              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-xs">
+              <span className="px-2 py-0.5 bg-[#0a0a0a]/20 text-[#0a0a0a] rounded text-xs">
                 💚 {Math.round(provider.feltSafePercent)}% Safe
               </span>
             )}
@@ -312,3 +312,15 @@ export function ProviderSafetyCard({ provider, onSelect }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

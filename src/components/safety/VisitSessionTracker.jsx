@@ -393,7 +393,7 @@ export default function VisitSessionTracker({
 
       {/* Bottom Actions */}
       {isActive && (
-        <div className="fixed bottom-0 left-0 right-0 bg-linear-to-t from-slate-900 via-slate-900/95 to-transparent pt-8 pb-4 px-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 pt-8 pb-4 px-4">
           <div className="max-w-md mx-auto flex gap-3">
             <button
               onClick={handleCheckIn}
@@ -543,3 +543,15 @@ export function PreBookingSafetyCheck({ provider, onConfirm, onCancel }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

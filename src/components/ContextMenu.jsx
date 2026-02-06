@@ -47,3 +47,15 @@ export const ContextMenu = ({ isOpen, x, y, actions, onClose }) => {
 };
 
 export default ContextMenu;
+
+
+
+
+
+
+
+
+
+
+
+

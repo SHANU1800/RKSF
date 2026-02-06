@@ -10,9 +10,12 @@ export const Badge = ({
   icon,
 }) => {
   const baseStyles = `
-    inline-flex items-center gap-1
-    rounded-full font-medium
+    inline-flex items-center gap-1.5
+    rounded-full font-semibold
     border whitespace-nowrap
+    backdrop-blur-sm
+    shadow-sm
+    transition-all duration-200
   `;
 
   const variants = {
@@ -49,9 +52,9 @@ export const Badge = ({
   };
 
   const sizes = {
-    sm: 'px-2 py-0.5 text-[10px]',
-    md: 'px-2.5 py-1 text-xs',
-    lg: 'px-3 py-1.5 text-sm',
+    sm: 'px-2.5 py-1 text-[11px] leading-tight',
+    md: 'px-3 py-1.5 text-xs leading-tight',
+    lg: 'px-4 py-2 text-sm leading-tight',
   };
 
   return (
@@ -61,3 +64,15 @@ export const Badge = ({
     </span>
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+

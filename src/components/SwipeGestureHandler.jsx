@@ -59,3 +59,15 @@ const SwipeGestureHandler = ({
 };
 
 export default SwipeGestureHandler;
+
+
+
+
+
+
+
+
+
+
+
+

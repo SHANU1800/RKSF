@@ -75,3 +75,15 @@ export const SwipeCard = ({ cards = [], onSwipeLeft, onSwipeRight, onTap, render
 };
 
 export default SwipeCard;
+
+
+
+
+
+
+
+
+
+
+
+

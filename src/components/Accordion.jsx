@@ -20,7 +20,7 @@ export const AccordionItem = ({ id, title, icon, children, isExpanded, onToggle,
       </button>
 
       {isExpanded && (
-        <div className="px-4 py-4 sm:py-3 bg-linear-to-b from-white/5 to-transparent border-t border-white/10 animate-slide-down">
+        <div className="px-4 py-4 sm:py-3 bg-white/5 border-t border-white/10 animate-slide-down">
           {children}
         </div>
       )}
@@ -49,3 +49,15 @@ export const Accordion = ({ items, expandedSections, onToggle, triggerHaptic }) 
 };
 
 export default Accordion;
+
+
+
+
+
+
+
+
+
+
+
+

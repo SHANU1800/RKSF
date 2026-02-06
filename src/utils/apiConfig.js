@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE = 'http://localhost:5000/api';
+const DEFAULT_API_BASE = import.meta.env.DEV ? '/api' : 'http://localhost:5000/api';
 
 const normalizeApiBase = (value) => {
   if (!value) return DEFAULT_API_BASE;
@@ -6,8 +6,21 @@ const normalizeApiBase = (value) => {
   return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
 };
 
-export const API_BASE_URL = normalizeApiBase(
-  import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || ''
-);
+// Get API base URL from environment or use default
+const envApiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
+export const API_BASE_URL = normalizeApiBase(envApiUrl);
 
+// Get Socket URL from environment or use default
 export const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000').replace(/\/+$/, '');
+
+// Log API configuration in development (helps with debugging)
+if (import.meta.env.DEV) {
+  console.log('🔧 API Configuration:');
+  console.log('  API_BASE_URL:', API_BASE_URL);
+  console.log('  SOCKET_URL:', SOCKET_URL);
+  console.log('  Environment:', {
+    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+    VITE_API_URL: import.meta.env.VITE_API_URL,
+    VITE_SOCKET_URL: import.meta.env.VITE_SOCKET_URL,
+  });
+}

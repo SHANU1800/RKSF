@@ -97,7 +97,7 @@ export default function CustomerCare({ currentUser }) {
       <div className="glass-panel rounded-2xl border border-white/10 p-6 md:p-8 shadow-lg">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
           <div className="space-y-2">
-            <p className="text-xs uppercase tracking-[0.25em] text-blue-400 font-semibold">Support Center</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-[#F7D047] font-semibold">Support Center</p>
             <h3 className="text-2xl md:text-3xl font-bold text-white">Customer Care</h3>
             <p className="text-gray-300 text-sm md:text-base">Get instant help from our AI assistant or submit a detailed grievance to our team.</p>
           </div>
@@ -110,10 +110,18 @@ export default function CustomerCare({ currentUser }) {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass-panel rounded-2xl border border-white/10 p-6 md:p-8 flex flex-col shadow-lg" style={{ minHeight: '600px' }}>
-          <div className="flex items-center justify-between pb-5 border-b border-white/10 mb-6">
+        <div className="lg:col-span-2 glass-panel rounded-2xl border border-white/10 p-6 md:p-8 flex flex-col shadow-lg relative overflow-hidden" style={{ minHeight: '600px' }}>
+          {/* SVG Background */}
+          <svg className="absolute inset-0 w-full h-full opacity-5 pointer-events-none">
+            <circle cx="10%" cy="20%" r="8%" fill="black" />
+            <circle cx="90%" cy="80%" r="10%" fill="black" />
+            <rect x="70%" y="10%" width="20%" height="15%" fill="black" />
+            <polygon points="100,50 150,150 50,150" fill="black" opacity="0.5" />
+          </svg>
+          
+          <div className="flex items-center justify-between pb-5 border-b border-white/10 mb-6 relative z-10">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-2xl shadow-lg">
+              <div className="w-12 h-12 rounded-xl bg-[#F7D047] flex items-center justify-center text-2xl shadow-lg">
                 🤖
               </div>
               <div>
@@ -135,7 +143,7 @@ export default function CustomerCare({ currentUser }) {
               onClick={() => setGrievanceMode(false)}
               className={`flex-1 py-3.5 px-5 rounded-xl text-base font-bold transition-all duration-200 ${
                 !grievanceMode
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 scale-105'
+                  ? 'bg-[#F7D047] text-white shadow-lg shadow-[#0a0a0a]/25 scale-105'
                   : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:border-white/20'
               }`}
             >
@@ -147,7 +155,7 @@ export default function CustomerCare({ currentUser }) {
               onClick={() => setGrievanceMode(true)}
               className={`flex-1 py-3.5 px-5 rounded-xl text-base font-bold transition-all duration-200 ${
                 grievanceMode
-                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/25 scale-105'
+                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25 scale-105'
                   : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:border-white/20'
               }`}
             >
@@ -157,10 +165,10 @@ export default function CustomerCare({ currentUser }) {
             </button>
           </div>
 
-          <div ref={listRef} className="flex-1 bg-gradient-to-br from-slate-900/80 to-slate-900/60 rounded-2xl border border-white/10 p-5 overflow-y-auto space-y-4 shadow-inner" style={{ minHeight: '350px' }}>
+          <div ref={listRef} className="flex-1 bg-slate-900/70 rounded-2xl border border-white/10 p-5 overflow-y-auto space-y-4 shadow-inner" style={{ minHeight: '350px' }}>
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-600/20 flex items-center justify-center text-4xl border border-blue-500/30">
+                <div className="w-20 h-20 rounded-full bg-blue-500/20 flex items-center justify-center text-4xl border border-[#0a0a0a]/30">
                   {grievanceMode ? '📝' : '💬'}
                 </div>
                 <p className="text-gray-300 text-base md:text-lg font-medium max-w-md">
@@ -173,7 +181,7 @@ export default function CustomerCare({ currentUser }) {
             ) : (
               messages.map((m, idx) => (
                 <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                  <div className={`px-4 py-3 rounded-2xl text-sm md:text-base max-w-[85%] md:max-w-[75%] shadow-md ${m.role === 'user' ? 'bg-gradient-to-br from-emerald-500/30 to-green-600/30 border border-emerald-400/50' : 'bg-white/10 border border-white/20'}`}>
+                  <div className={`px-4 py-3 rounded-2xl text-sm md:text-base max-w-[85%] md:max-w-[75%] shadow-md ${m.role === 'user' ? 'bg-emerald-500/30 border border-emerald-400/50' : 'bg-white/10 border border-white/20'}`}>
                     <p className="text-gray-300 font-bold text-xs mb-1.5">{m.role === 'user' ? currentUser?.username || 'You' : 'RKserve Care'}</p>
                     <p className="text-white whitespace-pre-wrap leading-relaxed">{m.content}</p>
                   </div>
@@ -184,7 +192,7 @@ export default function CustomerCare({ currentUser }) {
 
           <div className="space-y-4 mt-6">
             {grievanceMode && (
-              <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-400/40 rounded-xl p-4 flex items-start gap-3">
+              <div className="bg-orange-500/10 border border-orange-400/40 rounded-xl p-4 flex items-start gap-3">
                 <span className="text-2xl">⚠️</span>
                 <div>
                   <p className="text-orange-300 font-semibold text-sm">Grievance Submission</p>
@@ -218,8 +226,8 @@ export default function CustomerCare({ currentUser }) {
                 disabled={loading || !input.trim()}
                 className={`px-8 py-4 rounded-xl font-bold text-base transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg min-w-[160px] ${
                   grievanceMode
-                    ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:shadow-orange-500/30 text-white'
-                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-blue-500/30 text-white'
+                    ? 'bg-orange-500 hover:shadow-orange-500/20 text-white'
+                    : 'bg-[#F7D047] hover:shadow-black/30 text-white'
                 }`}
               >
                 {loading ? (
@@ -233,7 +241,7 @@ export default function CustomerCare({ currentUser }) {
           </div>
 
           {error && (
-            <div className="mt-4 bg-gradient-to-r from-rose-900/40 to-red-900/40 border border-rose-500/50 text-rose-200 text-sm rounded-xl p-4 flex items-start gap-3 shadow-lg">
+            <div className="mt-4 bg-rose-900/40 border border-rose-500/50 text-rose-200 text-sm rounded-xl p-4 flex items-start gap-3 shadow-lg">
               <span className="text-xl">❌</span>
               <div>
                 <p className="font-semibold">Error</p>
@@ -250,28 +258,40 @@ export default function CustomerCare({ currentUser }) {
           </div>
           <ul className="space-y-3 text-sm text-gray-300">
             <li className="flex items-start gap-3">
-              <span className="text-blue-400 font-bold mt-0.5">•</span>
+              <span className="text-[#F7D047] font-bold mt-0.5">•</span>
               <span>Our AI assistant is empathetic and designed to help you kindly and efficiently.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-blue-400 font-bold mt-0.5">•</span>
+              <span className="text-[#F7D047] font-bold mt-0.5">•</span>
               <span>For sensitive or complex issues, we may suggest contacting a human agent.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-blue-400 font-bold mt-0.5">•</span>
+              <span className="text-[#F7D047] font-bold mt-0.5">•</span>
               <span>We maintain a safe environment and politely decline harmful requests.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-blue-400 font-bold mt-0.5">•</span>
+              <span className="text-[#F7D047] font-bold mt-0.5">•</span>
               <span>Share details like order ID or email for faster, more accurate support.</span>
             </li>
           </ul>
-          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-            <p className="text-xs text-blue-300 font-semibold mb-1">💡 Pro Tip</p>
-            <p className="text-xs text-blue-200/80">Be specific with your questions to get the most helpful responses!</p>
+          <div className="mt-6 p-4 bg-[#0a0a0a]/10 border border-[#0a0a0a]/30 rounded-xl">
+            <p className="text-xs text-[#F7D047] font-semibold mb-1">💡 Pro Tip</p>
+            <p className="text-xs text-[#F7D047]/80/80">Be specific with your questions to get the most helpful responses!</p>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

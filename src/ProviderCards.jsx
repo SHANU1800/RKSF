@@ -9,11 +9,15 @@ function ProviderCards({ providers }) {
         providers.map((provider) => (
           <div key={provider._id} className="glass-panel rounded-xl md:rounded-2xl overflow-hidden card-hover border border-white/5 flex flex-col">
             {/* Provider Avatar */}
-            <div className="bg-linear-to-br from-blue-600 via-indigo-600 to-sky-500 h-24 md:h-32 flex items-center justify-center relative">
+            <div className="bg-black h-24 md:h-32 flex items-center justify-center relative">
+              <svg className="absolute inset-0 w-full h-full opacity-10">
+                <circle cx="50%" cy="50%" r="40%" fill="black" />
+                <rect x="25%" y="25%" width="50%" height="50%" fill="black" />
+              </svg>
               {provider.avatar ? (
                 <img 
                   src={provider.avatar} 
-                  alt={provider.name}
+                  alt={provider.name || 'Provider Avatar'}
                   className="w-16 md:w-20 h-16 md:h-20 rounded-full border-4 border-white shadow-xl object-cover"
                   onError={(e) => {
                     e.target.style.display = 'none';
@@ -21,7 +25,7 @@ function ProviderCards({ providers }) {
                   }}
                 />
               ) : null}
-              <div className="w-16 md:w-20 h-16 md:h-20 bg-white rounded-full border-4 border-white shadow-xl items-center justify-center text-2xl md:text-3xl font-bold text-blue-700" style={{ display: provider.avatar ? 'none' : 'flex' }}>
+              <div className="w-16 md:w-20 h-16 md:h-20 bg-white rounded-full border-4 border-white shadow-xl items-center justify-center text-2xl md:text-3xl font-bold text-[#0a0a0a]" style={{ display: provider.avatar ? 'none' : 'flex' }}>
                 {provider.name?.charAt(0).toUpperCase() || '?'}
               </div>
             </div>
@@ -49,7 +53,7 @@ function ProviderCards({ providers }) {
                 );
               })()}
 
-              <div className="text-xs text-emerald-200">
+              <div className="text-xs text-[#F7D047]">
                 {provider.distanceKm != null && provider.etaMinutes != null
                   ? `${provider.distanceKm.toFixed(1)} km | ${provider.etaMinutes} min`
                   : provider.location?.latitude && provider.location?.longitude
@@ -66,7 +70,7 @@ function ProviderCards({ providers }) {
               <div className="flex gap-2 mt-auto pt-2">
                 <button
                   onClick={() => provider.onViewServices?.(provider)}
-                  className="flex-1 py-2 md:py-2.5 rounded-lg md:rounded-xl bg-linear-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/20 text-white font-semibold transition text-sm active:opacity-90"
+                  className="flex-1 py-2 md:py-2.5 rounded-lg md:rounded-xl bg-[#F7D047] hover:shadow-lg hover:shadow-[#0a0a0a]/20 text-white font-semibold transition text-sm active:opacity-90"
                 >
                   View Services
                 </button>
@@ -86,3 +90,15 @@ function ProviderCards({ providers }) {
 }
 
 export default ProviderCards;
+
+
+
+
+
+
+
+
+
+
+
+

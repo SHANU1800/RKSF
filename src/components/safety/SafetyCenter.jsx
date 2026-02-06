@@ -4,6 +4,19 @@ import { useSafetyAPI } from '../../hooks/useSafety';
 // ============================================
 // SAFETY CENTER - Main Component
 // ============================================
+
+// Icon Component Helper
+const IconSVG = ({ type, className = "w-6 h-6" }) => {
+  const icons = {
+    shield: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+    check: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+    settings: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+    users: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+    book: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+  };
+  return icons[type] || null;
+};
+
 export default function SafetyCenter({ currentUser, onClose }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [preferences, setPreferences] = useState(null);
@@ -33,18 +46,18 @@ export default function SafetyCenter({ currentUser, onClose }) {
   }, [loadSafetyData]);
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: '🛡️' },
-    { id: 'verification', label: 'Verification', icon: '✓' },
-    { id: 'preferences', label: 'Preferences', icon: '⚙️' },
-    { id: 'contacts', label: 'Trusted Contacts', icon: '👥' },
-    { id: 'training', label: 'Training', icon: '📚' },
+    { id: 'overview', label: 'Overview', icon: 'shield' },
+    { id: 'verification', label: 'Verification', icon: 'check' },
+    { id: 'preferences', label: 'Preferences', icon: 'settings' },
+    { id: 'contacts', label: 'Trusted Contacts', icon: 'users' },
+    { id: 'training', label: 'Training', icon: 'book' },
   ];
 
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="glass-panel rounded-2xl p-8 text-center">
-          <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-[#0a0a0a]/30 border-t-[#0a0a0a] rounded-full animate-spin mx-auto mb-4" />
           <p className="text-white">Loading Safety Center...</p>
         </div>
       </div>
@@ -59,8 +72,10 @@ export default function SafetyCenter({ currentUser, onClose }) {
           <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                <span className="text-2xl">🛡️</span>
+              <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center shadow-lg shadow-black/30">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Safety Center</h2>
@@ -71,7 +86,9 @@ export default function SafetyCenter({ currentUser, onClose }) {
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white transition-all"
             >
-              ✕
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
@@ -84,11 +101,11 @@ export default function SafetyCenter({ currentUser, onClose }) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl text-sm font-semibold transition-all ${
                     activeTab === tab.id
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-lg'
+                      ? 'bg-[#0a0a0a]/20 text-[#0a0a0a] border border-[#0a0a0a]/40 shadow-lg'
                       : 'text-gray-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <span className="text-2xl">{tab.icon}</span>
+                  <IconSVG type={tab.icon} className="w-5 h-5" />
                   <span className="text-[10px] md:text-xs uppercase tracking-wide font-bold">{tab.label}</span>
                 </button>
               ))}
@@ -168,7 +185,7 @@ function SafetyOverview({ preferences, verificationStatus, currentUser }) {
               fill="none"
               strokeDasharray={`${safetyScore * 3.51} 351`}
               strokeLinecap="round"
-              className="text-emerald-500"
+              className="text-[#0a0a0a]"
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -209,6 +226,22 @@ function SafetyOverview({ preferences, verificationStatus, currentUser }) {
           status={preferences?.emergencySettings?.autoShareLocationDuringVisit}
           statusText={preferences?.emergencySettings?.autoShareLocationDuringVisit ? 'Active' : 'Disabled'}
         />
+        {isProvider && (
+          <>
+            <QuickActionCard
+              icon="👥"
+              title="Buddy System"
+              status={preferences?.providerSettings?.optOutSoloVisits}
+              statusText={preferences?.providerSettings?.optOutSoloVisits ? 'Enabled' : 'Disabled'}
+            />
+            <QuickActionCard
+              icon="☀️"
+              title="Daytime Only"
+              status={preferences?.providerSettings?.daytimeOnlyAvailability}
+              statusText={preferences?.providerSettings?.daytimeOnlyAvailability ? 'Active' : 'Disabled'}
+            />
+          </>
+        )}
       </div>
 
       {/* Safety Tips */}
@@ -220,38 +253,38 @@ function SafetyOverview({ preferences, verificationStatus, currentUser }) {
           {isProvider ? (
             <>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-400">✓</span>
+                <span className="text-[#0a0a0a]">✓</span>
                 Always verify the check-in code before entering
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-400">✓</span>
+                <span className="text-[#0a0a0a]">✓</span>
                 Keep location sharing enabled during visits
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-400">✓</span>
+                <span className="text-[#0a0a0a]">✓</span>
                 Use daytime-only settings if you prefer
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-400">✓</span>
+                <span className="text-[#0a0a0a]">✓</span>
                 Request a buddy for any visit you're unsure about
               </li>
             </>
           ) : (
             <>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-400">✓</span>
+                <span className="text-[#0a0a0a]">✓</span>
                 Only share check-in code after verifying provider's photo & badge
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-400">✓</span>
+                <span className="text-[#0a0a0a]">✓</span>
                 Add a trusted contact who can see visit ETA
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-400">✓</span>
+                <span className="text-[#0a0a0a]">✓</span>
                 Book verified providers only for added safety
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-400">✓</span>
+                <span className="text-[#0a0a0a]">✓</span>
                 Never pay in cash - use in-app payments only
               </li>
             </>
@@ -269,7 +302,7 @@ function QuickActionCard({ icon, title, status, statusText }) {
         <span className="text-2xl">{icon}</span>
         <span className="text-white font-medium text-sm">{title}</span>
       </div>
-      <div className={`text-sm font-bold ${status ? 'text-emerald-400' : 'text-amber-400'}`}>
+      <div className={`text-sm font-bold ${status ? 'text-[#0a0a0a]' : 'text-[#F7D047]'}`}>
         {status ? '✓' : '○'} {statusText}
       </div>
     </div>
@@ -354,7 +387,7 @@ function VerificationSection({ verificationStatus, onRefresh }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 mb-4">
-        <div className={`w-3 h-3 rounded-full ${verificationStatus?.isFullyVerified ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`} />
+        <div className={`w-3 h-3 rounded-full ${verificationStatus?.isFullyVerified ? 'bg-[#0a0a0a]' : 'bg-[#F7D047]'} animate-pulse`} />
         <span className="text-white font-medium">
           {verificationStatus?.isFullyVerified ? 'Fully Verified' : 'Verification Required'}
         </span>
@@ -372,7 +405,7 @@ function VerificationSection({ verificationStatus, onRefresh }) {
               
               {v.data ? (
                 <div className={`mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${
-                  v.data.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' :
+                  v.data.status === 'approved' ? 'bg-[#0a0a0a]/20 text-[#0a0a0a]' :
                   v.data.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
                   v.data.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
                   'bg-gray-500/20 text-gray-400'
@@ -386,7 +419,7 @@ function VerificationSection({ verificationStatus, onRefresh }) {
                 <button
                   onClick={() => handleUpload(v.type, 'aadhaar')}
                   disabled={uploading}
-                  className="mt-3 px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-sm font-medium transition-all"
+                  className="mt-3 px-4 py-2 bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-white rounded-lg text-sm font-medium transition-all"
                 >
                   {uploading ? 'Uploading...' : 'Upload Document'}
                 </button>
@@ -480,6 +513,54 @@ function SafetyPreferencesSection({ preferences = {}, currentUser, onUpdate }) {
               checked={preferences.providerSettings?.requireBuddyForFirstVisit}
               onChange={(v) => handleToggle('providerSettings.requireBuddyForFirstVisit', v)}
             />
+            
+            {/* Area Management */}
+            <div className="pt-4 border-t border-white/10">
+              <h5 className="text-white font-semibold mb-3 flex items-center gap-2">
+                <span>📍</span> Area Management
+              </h5>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-gray-300 text-sm mb-2 block">Accepted Areas (Pincodes)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., 110001, 110002, 110003"
+                    value={(preferences.providerSettings?.acceptedAreas || []).join(', ')}
+                    onChange={(e) => {
+                      const areas = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
+                      handleToggle('providerSettings.acceptedAreas', areas);
+                    }}
+                    className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-lg border border-white/10 focus:border-[#0a0a0a] focus:outline-none text-sm"
+                  />
+                  <p className="text-gray-500 text-xs mt-1">Comma-separated list of pincodes you accept</p>
+                </div>
+                <div>
+                  <label className="text-gray-300 text-sm mb-2 block">Blocked Areas (Pincodes)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., 110010, 110011"
+                    value={(preferences.providerSettings?.blockedAreas || []).join(', ')}
+                    onChange={(e) => {
+                      const areas = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
+                      handleToggle('providerSettings.blockedAreas', areas);
+                    }}
+                    className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-lg border border-white/10 focus:border-red-400 focus:outline-none text-sm"
+                  />
+                  <p className="text-gray-500 text-xs mt-1">Comma-separated list of pincodes to avoid</p>
+                </div>
+                <div>
+                  <label className="text-gray-300 text-sm mb-2 block">Maximum Distance (km)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={preferences.providerSettings?.maxDistanceKm || 50}
+                    onChange={(e) => handleToggle('providerSettings.maxDistanceKm', parseInt(e.target.value) || 50)}
+                    className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-lg border border-white/10 focus:border-[#0a0a0a] focus:outline-none text-sm"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -570,7 +651,7 @@ function ToggleSetting({ label, description, checked, onChange }) {
       <button
         onClick={() => onChange(!checked)}
         className={`relative w-12 h-7 rounded-full transition-all shrink-0 ${
-          checked ? 'bg-emerald-500' : 'bg-gray-600'
+          checked ? 'bg-[#0a0a0a]' : 'bg-gray-600'
         }`}
       >
         <span
@@ -632,7 +713,7 @@ function TrustedContactsSection({ contacts, onUpdate }) {
         </p>
         <button
           onClick={() => setShowAdd(true)}
-          className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-sm font-medium transition-all"
+          className="px-4 py-2 bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-[#0a0a0a] rounded-lg text-sm font-medium transition-all"
         >
           + Add Contact
         </button>
@@ -696,7 +777,7 @@ function TrustedContactsSection({ contacts, onUpdate }) {
               <button
                 onClick={handleAdd}
                 disabled={saving || !newContact.name || !newContact.phone}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl font-medium"
+                className="flex-1 py-3 bg-[#0a0a0a] hover:bg-[#000000] disabled:opacity-50 text-white rounded-xl font-medium"
               >
                 {saving ? 'Adding...' : 'Add Contact'}
               </button>
@@ -716,7 +797,7 @@ function TrustedContactsSection({ contacts, onUpdate }) {
         <div className="space-y-3">
           {contacts.map((contact) => (
             <div key={contact._id} className="glass-panel rounded-xl p-4 border border-white/10 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+              <div className="w-12 h-12 rounded-full bg-[#0a0a0a] flex items-center justify-center text-white font-bold">
                 {contact.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -724,7 +805,7 @@ function TrustedContactsSection({ contacts, onUpdate }) {
                 <p className="text-gray-400 text-sm">{contact.phone}</p>
                 <div className="flex gap-2 mt-1">
                   {contact.shareETA && (
-                    <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">ETA</span>
+                    <span className="text-xs px-2 py-0.5 bg-[#F7D047]/20 text-black rounded">ETA</span>
                   )}
                   {contact.emergencyContact && (
                     <span className="text-xs px-2 py-0.5 bg-red-500/20 text-red-400 rounded">SOS</span>
@@ -779,7 +860,7 @@ function TrainingSection({ conductAgreement, onUpdate }) {
             </p>
             
             {conductAgreement?.agreedAt ? (
-              <div className="mt-3 flex items-center gap-2 text-emerald-400 text-sm">
+              <div className="mt-3 flex items-center gap-2 text-[#0a0a0a] text-sm">
                 <span>✓</span>
                 <span>Accepted on {new Date(conductAgreement.agreedAt).toLocaleDateString()}</span>
               </div>
@@ -809,7 +890,7 @@ function TrainingSection({ conductAgreement, onUpdate }) {
             </p>
             
             {conductAgreement?.antiHarassmentCompleted ? (
-              <div className="mt-3 flex items-center gap-2 text-emerald-400 text-sm">
+              <div className="mt-3 flex items-center gap-2 text-[#0a0a0a] text-sm">
                 <span>✓</span>
                 <span>Completed</span>
               </div>
@@ -828,7 +909,7 @@ function TrainingSection({ conductAgreement, onUpdate }) {
       {/* Safety Training */}
       <div className="glass-panel rounded-xl p-4 border border-white/10">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-2xl shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#0a0a0a]/20 flex items-center justify-center text-2xl shrink-0">
             🛡️
           </div>
           <div className="flex-1">
@@ -838,14 +919,14 @@ function TrainingSection({ conductAgreement, onUpdate }) {
             </p>
             
             {conductAgreement?.safetyTrainingCompleted ? (
-              <div className="mt-3 flex items-center gap-2 text-emerald-400 text-sm">
+              <div className="mt-3 flex items-center gap-2 text-[#0a0a0a] text-sm">
                 <span>✓</span>
                 <span>Completed on {new Date(conductAgreement.lastTrainingDate).toLocaleDateString()}</span>
               </div>
             ) : (
               <button
                 onClick={() => handleCompleteTraining('safety')}
-                className="mt-3 px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-sm font-medium"
+                className="mt-3 px-4 py-2 bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-[#0a0a0a] rounded-lg text-sm font-medium"
               >
                 Start Training (~15 min)
               </button>
@@ -855,8 +936,8 @@ function TrainingSection({ conductAgreement, onUpdate }) {
       </div>
 
       {/* Training Benefits */}
-      <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-        <h4 className="text-blue-400 font-medium mb-2">🎖️ Training Benefits</h4>
+      <div className="bg-[#F7D047]/10 border border-[#F7D047]/30 rounded-xl p-4">
+        <h4 className="text-black font-medium mb-2">🎖️ Training Benefits</h4>
         <ul className="text-gray-300 text-sm space-y-1">
           <li>• Earn "Safety Trained" badge on your profile</li>
           <li>• Higher visibility in search results</li>
@@ -867,3 +948,15 @@ function TrainingSection({ conductAgreement, onUpdate }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

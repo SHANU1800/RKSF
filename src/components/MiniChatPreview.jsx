@@ -10,7 +10,7 @@ export const MiniChatPreview = ({ message, isVisible, onExpand, onDismiss }) => 
 
   return (
     <div className="fixed bottom-24 left-2 right-2 sm:hidden z-40 animate-slide-up">
-      <div className="bg-linear-to-r from-blue-600 to-indigo-600 rounded-xl p-3 shadow-lg border border-blue-400/30">
+      <div className="bg-[#F7D047] rounded-xl p-3 shadow-lg border border-[#0a0a0a]/30">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold shrink-0">
@@ -18,12 +18,12 @@ export const MiniChatPreview = ({ message, isVisible, onExpand, onDismiss }) => 
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-white truncate">{message.from}</p>
-              <p className="text-xs text-blue-100 truncate">{message.text}</p>
+              <p className="text-xs text-white/90 truncate">{message.text}</p>
             </div>
           </div>
           <button
             onClick={onDismiss}
-            className="text-blue-200 hover:text-white shrink-0"
+            className="text-[#F7D047] hover:text-white shrink-0"
           >
             ✕
           </button>
@@ -40,3 +40,15 @@ export const MiniChatPreview = ({ message, isVisible, onExpand, onDismiss }) => 
 };
 
 export default MiniChatPreview;
+
+
+
+
+
+
+
+
+
+
+
+

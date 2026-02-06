@@ -15,6 +15,11 @@ export function SOSButton({ sessionId, enabled = true, size = 'normal' }) {
   const { location } = useLocationTracking(sessionId, enabled);
 
   const handlePress = () => {
+    // Haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate([100, 50, 100]);
+    }
+    
     setShowConfirm(true);
     setCountdown(3);
     
@@ -24,6 +29,10 @@ export function SOSButton({ sessionId, enabled = true, size = 'normal' }) {
           clearInterval(countdownRef.current);
           executeSOS();
           return 0;
+        }
+        // Haptic feedback on countdown
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
         }
         return prev - 1;
       });
@@ -37,6 +46,11 @@ export function SOSButton({ sessionId, enabled = true, size = 'normal' }) {
   };
 
   const executeSOS = async () => {
+    // Strong haptic feedback on SOS activation
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200, 100, 200]);
+    }
+    
     setTriggering(true);
     try {
       await triggerSOS(sessionId, {
@@ -90,7 +104,7 @@ export function SOSButton({ sessionId, enabled = true, size = 'normal' }) {
       <button
         onClick={handlePress}
         disabled={triggering}
-        className={`fixed bottom-24 right-4 z-50 ${sizeClasses[size]} rounded-full bg-linear-to-br from-red-500 to-red-700 shadow-lg shadow-red-500/50 flex items-center justify-center text-white font-bold hover:scale-105 active:scale-95 transition-transform border-4 border-red-400/50`}
+        className={`fixed bottom-24 right-4 z-50 ${sizeClasses[size]} rounded-full bg-red-600 shadow-lg shadow-red-500/50 flex items-center justify-center text-white font-bold hover:scale-105 active:scale-95 transition-transform border-4 border-red-400/50`}
         aria-label="SOS Emergency Button"
       >
         {triggering ? (
@@ -152,7 +166,7 @@ export function CheckInCodeDisplay({ code, isProvider }) {
       
       <div className="flex items-center gap-3">
         <div className="flex-1 bg-slate-900/70 rounded-xl px-4 py-3 text-center">
-          <span className="text-3xl font-mono font-bold text-emerald-400 tracking-[0.3em]">
+          <span className="text-3xl font-mono font-bold text-[#0a0a0a] tracking-[0.3em]">
             {code}
           </span>
         </div>
@@ -226,14 +240,14 @@ export function CheckInCodeInput({ sessionId, onVerified }) {
         value={code}
         onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
         placeholder="XXXXXX"
-        className="w-full px-4 py-4 bg-slate-900/70 text-white text-center text-2xl font-mono tracking-[0.3em] rounded-xl border border-white/10 focus:border-emerald-400 focus:outline-none mb-4"
+        className="w-full px-4 py-4 bg-slate-900/70 text-white text-center text-2xl font-mono tracking-[0.3em] rounded-xl border border-white/10 focus:border-[#0a0a0a] focus:outline-none mb-4"
         maxLength={6}
       />
 
       <button
         onClick={handleVerify}
         disabled={code.length !== 6 || verifying}
-        className="w-full py-4 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-xl hover:shadow-emerald-500/25 disabled:opacity-50 text-white font-bold transition-all"
+        className="w-full py-4 rounded-xl bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/20 disabled:opacity-50 text-white font-bold transition-all"
       >
         {verifying ? (
           <span className="flex items-center justify-center gap-2">
@@ -285,7 +299,7 @@ export function CheckInTimer({ nextCheckIn, onCheckIn }) {
     <div className={`glass-panel rounded-xl p-4 border ${isOverdue ? 'border-red-500/50 bg-red-900/20' : 'border-white/10'}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isOverdue ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-emerald-500/20 text-emerald-400'}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isOverdue ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-[#0a0a0a]/20 text-[#0a0a0a]'}`}>
             {isOverdue ? '⚠️' : '⏱️'}
           </div>
           <div>
@@ -302,7 +316,7 @@ export function CheckInTimer({ nextCheckIn, onCheckIn }) {
           className={`px-4 py-2 rounded-xl font-bold transition-all ${
             isOverdue
               ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
-              : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400'
+              : 'bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-white'
           }`}
         >
           ✓ Check In
@@ -331,7 +345,7 @@ export function ProviderBadge({ provider, size = 'normal' }) {
   return (
     <div className="glass-panel rounded-2xl p-4 border border-white/10 text-center">
       <div className="flex flex-col items-center">
-        <div className={`${sizeClasses[size]} rounded-2xl overflow-hidden border-4 border-emerald-500/50 mb-3`}>
+        <div className={`${sizeClasses[size]} rounded-2xl overflow-hidden border-4 border-[#0a0a0a]/50 mb-3`}>
           <img
             src={provider.avatar || 'https://via.placeholder.com/150'}
             alt={provider.name}
@@ -343,12 +357,12 @@ export function ProviderBadge({ provider, size = 'normal' }) {
         
         <div className="flex items-center gap-2 mt-2">
           {provider.isVerified && (
-            <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-medium flex items-center gap-1">
+            <span className="px-2 py-1 bg-[#0a0a0a]/20 text-[#0a0a0a] rounded-lg text-xs font-medium flex items-center gap-1">
               ✓ Verified
             </span>
           )}
           {provider.safetyScore >= 4 && (
-            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-xs font-medium flex items-center gap-1">
+            <span className="px-2 py-1 bg-[#F7D047]/20 text-black rounded-lg text-xs font-medium flex items-center gap-1">
               ⭐ Top Rated
             </span>
           )}
@@ -403,7 +417,7 @@ export function ScopeChangeRequest({ change, onConsent }) {
                 Approve Change
               </button>
             ) : (
-              <span className="text-emerald-400 text-sm font-medium">✓ Approved</span>
+              <span className="text-[#0a0a0a] text-sm font-medium">✓ Approved</span>
             )}
           </div>
         </div>
@@ -472,7 +486,7 @@ export function SafetyRatingForm({ orderId, ratedUserId, onSubmit }) {
             <button
               onClick={() => setFeltSafe(true)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                feltSafe ? 'bg-emerald-500 text-white' : 'bg-white/10 text-gray-400'
+                feltSafe ? 'bg-[#0a0a0a] text-white' : 'bg-white/10 text-gray-400'
               }`}
             >
               Yes 👍
@@ -494,7 +508,7 @@ export function SafetyRatingForm({ orderId, ratedUserId, onSubmit }) {
             <button
               onClick={() => setWouldRecommend(true)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                wouldRecommend ? 'bg-emerald-500 text-white' : 'bg-white/10 text-gray-400'
+                wouldRecommend ? 'bg-[#0a0a0a] text-white' : 'bg-white/10 text-gray-400'
               }`}
             >
               Yes 👍
@@ -542,14 +556,14 @@ export function SafetyRatingForm({ orderId, ratedUserId, onSubmit }) {
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="Share your experience (optional)..."
-        className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-emerald-400 focus:outline-none resize-none h-24"
+        className="w-full px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-[#0a0a0a] focus:outline-none resize-none h-24"
       />
 
       {/* Submit */}
       <button
         onClick={handleSubmit}
         disabled={submitting}
-        className="w-full py-4 rounded-xl bg-linear-to-r from-emerald-500 to-green-600 hover:shadow-xl hover:shadow-emerald-500/25 disabled:opacity-50 text-white font-bold transition-all"
+        className="w-full py-4 rounded-xl bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/20 disabled:opacity-50 text-white font-bold transition-all"
       >
         {submitting ? 'Submitting...' : 'Submit Safety Rating'}
       </button>
@@ -653,7 +667,7 @@ export function ReportIncidentButton({ orderId, reportedAgainst, onReported }) {
                           ? s === 'critical' ? 'bg-red-500 text-white' :
                             s === 'high' ? 'bg-orange-500 text-white' :
                             s === 'medium' ? 'bg-amber-500 text-white' :
-                            'bg-blue-500 text-white'
+                            'bg-[#0a0a0a] text-white'
                           : 'bg-white/10 text-gray-400'
                       }`}
                     >
@@ -687,3 +701,15 @@ export function ReportIncidentButton({ orderId, reportedAgainst, onReported }) {
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
