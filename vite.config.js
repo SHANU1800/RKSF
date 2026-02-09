@@ -10,7 +10,7 @@ export default defineConfig({
     proxy: {
       // Proxy API requests to backend during development
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://rksb.onrender.com',
         changeOrigin: true,
         secure: false,
       },

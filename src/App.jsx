@@ -2041,96 +2041,175 @@ function App() {
       case 'transactions':
         return (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-2xl font-bold text-white">Transactions & Invoices</h3>
-              <p className="text-gray-400 text-sm">Financial records and billing documents</p>
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-6 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-3xl font-bold text-white">Wallet</h3>
+                  <p className="text-blue-100 text-sm mt-1">Manage your transactions and balance</p>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-6">
+            {/* Wallet Balance Card */}
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="md:col-span-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-700">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-slate-300 text-sm font-medium uppercase tracking-wide">Available Balance</p>
+                    <h2 className="text-white text-5xl font-bold mt-3 tracking-tight">₹12,450</h2>
+                  </div>
+                  <div className="bg-blue-500/30 rounded-2xl p-4 backdrop-blur-sm">
+                    <svg className="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => handleComingSoon('Add money to wallet')}
+                    className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Money
+                  </button>
+                  <button
+                    onClick={() => handleComingSoon('Send money')}
+                    className="flex-1 py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/20 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    Send
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-3 shadow-md">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Money In</p>
+                      <p className="text-green-600 font-bold text-xl mt-0.5">₹18,200</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-br from-red-400 to-red-600 rounded-xl p-3 shadow-md">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Money Out</p>
+                      <p className="text-red-600 font-bold text-xl mt-0.5">₹5,750</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-6 shadow-lg">
+              <div className="mb-6">
+                <h4 className="text-2xl font-bold text-gray-900 mb-1">Recent Transactions</h4>
+                <p className="text-sm text-gray-600">View and manage your transaction history</p>
+              </div>
               <div className="flex flex-wrap gap-3 mb-6">
                 <button
                   onClick={() => handleTransactionFilter('all')}
-                  className={`px-4 py-2 rounded-xl font-semibold transition ${
+                  className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     transactionFilter === 'all'
-                      ? 'bg-black hover:bg-black/90 text-white shadow-lg hover:shadow-xl'
-                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-black/30'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
                   }`}
                 >
                   All Transactions
                 </button>
                 <button
                   onClick={() => handleTransactionFilter('purchases')}
-                  className={`px-4 py-2 rounded-xl font-semibold transition ${
+                  className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     transactionFilter === 'purchases'
-                      ? 'bg-black hover:bg-black/90 text-white shadow-lg hover:shadow-xl'
-                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-black/30'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
                   }`}
                 >
                   Purchases
                 </button>
                 <button
                   onClick={() => handleTransactionFilter('refunds')}
-                  className={`px-4 py-2 rounded-xl font-semibold transition ${
+                  className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     transactionFilter === 'refunds'
-                      ? 'bg-black hover:bg-black/90 text-white shadow-lg hover:shadow-xl'
-                      : 'bg-white/10 hover:bg-white/15 text-gray-300 border border-black/30'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
                   }`}
                 >
                   Refunds
                 </button>
               </div>
 
-              <div className="space-y-3">
-                <div className="glass-panel border border-[#0a0a0a] p-4">
+              <div className="space-y-4">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-md hover:shadow-xl transition-all duration-300">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-white font-semibold">Order #12345</p>
-                      <p className="text-gray-400 text-sm">Premium Cleaning Service</p>
-                      <p className="text-xs text-gray-500 mt-1">Jan 25, 2026</p>
+                      <p className="text-gray-900 font-semibold text-lg">Order #12345</p>
+                      <p className="text-gray-600 text-sm mt-0.5">Premium Cleaning Service</p>
+                      <p className="text-xs text-gray-500 mt-2">Jan 25, 2026</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-green-400 font-bold text-lg">+2,500</p>
-                      <p className="text-gray-400 text-sm">Paid</p>
+                      <p className="text-green-600 font-bold text-xl">+₹2,500</p>
+                      <span className="inline-block mt-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold border border-green-200">Paid</span>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-3 mt-4">
                     <button
                       onClick={() => handleComingSoon('View invoice')}
-                      className="flex-1 py-2 rounded-lg bg-black hover:bg-gray-900 text-white text-sm font-semibold border border-[#0a0a0a] transition"
+                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                     >
                       View Invoice
                     </button>
                     <button
                       onClick={() => handleComingSoon('Download PDF')}
-                      className="flex-1 py-2 rounded-lg bg-black hover:bg-gray-900 text-white text-sm font-semibold border border-[#0a0a0a] transition"
+                      className="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold border border-slate-600 transition-all duration-300 hover:scale-105 shadow-md"
                     >
                       Download PDF
                     </button>
                   </div>
                 </div>
 
-                <div className="glass-panel border border-[#0a0a0a] p-4">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-md hover:shadow-xl transition-all duration-300">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-white font-semibold">Order #12344</p>
-                      <p className="text-gray-400 text-sm">Garden Tool Set</p>
-                      <p className="text-xs text-gray-500 mt-1">Jan 22, 2026</p>
+                      <p className="text-gray-900 font-semibold text-lg">Order #12344</p>
+                      <p className="text-gray-600 text-sm mt-0.5">Garden Tool Set</p>
+                      <p className="text-xs text-gray-500 mt-2">Jan 22, 2026</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-red-400 font-bold text-lg">-1,200</p>
-                      <p className="text-gray-400 text-sm">Refunded</p>
+                      <p className="text-red-600 font-bold text-xl">-₹1,200</p>
+                      <span className="inline-block mt-1 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold border border-red-200">Refunded</span>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-3 mt-4">
                     <button
                       onClick={() => handleComingSoon('View invoice')}
-                      className="flex-1 py-2 rounded-lg bg-black hover:bg-gray-900 text-white text-sm font-semibold border border-[#0a0a0a] transition"
+                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                     >
                       View Invoice
                     </button>
                     <button
                       onClick={() => handleComingSoon('Download PDF')}
-                      className="flex-1 py-2 rounded-lg bg-black hover:bg-gray-900 text-white text-sm font-semibold border border-[#0a0a0a] transition"
+                      className="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold border border-slate-600 transition-all duration-300 hover:scale-105 shadow-md"
                     >
                       Download PDF
                     </button>
@@ -2139,18 +2218,39 @@ function App() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4">
-                <p className="text-gray-400 text-sm">Total Spent</p>
-                <p className="text-white text-2xl font-bold mt-2">₹15,750</p>
-              </div>
-              <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4">
-                <p className="text-gray-400 text-sm">Total Refunded</p>
-                <p className="text-red-400 text-2xl font-bold mt-2">₹1,200</p>
-              </div>
-              <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4">
-                <p className="text-gray-400 text-sm">This Month</p>
-                <p className="text-green-400 text-2xl font-bold mt-2">₹5,300</p>
+            <div>
+              <h4 className="text-2xl font-bold text-gray-900 mb-4">Overview</h4>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Spent</p>
+                  <p className="text-gray-900 text-4xl font-bold mt-3">₹15,750</p>
+                  <div className="mt-4 flex items-center text-xs text-gray-500">
+                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    All time
+                  </div>
+                </div>
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Refunded</p>
+                  <p className="text-red-600 text-4xl font-bold mt-3">₹1,200</p>
+                  <div className="mt-4 flex items-center text-xs text-gray-500">
+                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    All time
+                  </div>
+                </div>
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">This Month</p>
+                  <p className="text-green-600 text-4xl font-bold mt-3">₹5,300</p>
+                  <div className="mt-4 flex items-center text-xs text-gray-500">
+                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    February 2026
+                  </div>
+                </div>
               </div>
             </div>
           </div>
