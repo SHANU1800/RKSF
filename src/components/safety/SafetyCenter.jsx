@@ -56,8 +56,8 @@ export default function SafetyCenter({ currentUser, onClose }) {
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="glass-panel rounded-2xl p-8 text-center">
-          <div className="w-12 h-12 border-4 border-[#0a0a0a]/30 border-t-[#0a0a0a] rounded-full animate-spin mx-auto mb-4" />
+        <div className="glass-panel rounded-2xl p-8 text-center border-2 border-[#00f0ff]/20">
+          <div className="w-12 h-12 border-4 border-[#00f0ff]/30 border-t-[#00f0ff] rounded-full animate-spin mx-auto mb-4" />
           <p className="text-white">Loading Safety Center...</p>
         </div>
       </div>
@@ -66,14 +66,14 @@ export default function SafetyCenter({ currentUser, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
-      <div className="glass-panel w-full md:max-w-2xl md:mx-4 max-h-[90vh] overflow-hidden rounded-t-3xl md:rounded-2xl border border-white/10 animate-[slideUp_0.3s_ease-out] flex flex-col">
+      <div className="glass-panel w-full md:max-w-2xl md:mx-4 max-h-[90vh] overflow-hidden rounded-t-3xl md:rounded-2xl border-2 border-[#00f0ff]/20 animate-[slideUp_0.3s_ease-out] flex flex-col">
         {/* Header */}
         <div className="p-4 md:p-6 border-b border-white/10 shrink-0">
           <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center shadow-lg shadow-black/30">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center shadow-lg shadow-[#00f0ff]/30">
+                <svg className="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
@@ -93,7 +93,7 @@ export default function SafetyCenter({ currentUser, onClose }) {
           </div>
 
           {/* Tab Navigation - Mobile Nav Style */}
-          <div className="glass-panel rounded-2xl border border-white/10 p-2 mt-4">
+          <div className="glass-panel rounded-2xl border-2 border-[#00f0ff]/20 p-2 mt-4">
             <div className="flex justify-around items-stretch gap-1">
               {tabs.map((tab) => (
                 <button
@@ -101,7 +101,7 @@ export default function SafetyCenter({ currentUser, onClose }) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl text-sm font-semibold transition-all ${
                     activeTab === tab.id
-                      ? 'bg-[#0a0a0a]/20 text-[#0a0a0a] border border-[#0a0a0a]/40 shadow-lg'
+                      ? 'bg-gradient-to-r from-[#00f0ff]/20 to-[#33f3ff]/20 text-[#00f0ff] border-2 border-[#00f0ff]/40 shadow-lg'
                       : 'text-gray-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
@@ -164,7 +164,7 @@ function SafetyOverview({ preferences, verificationStatus, currentUser }) {
   return (
     <div className="space-y-6">
       {/* Safety Score */}
-      <div className="glass-panel rounded-2xl p-6 border border-white/10 text-center">
+      <div className="glass-panel rounded-2xl p-6 border-2 border-[#00f0ff]/20 text-center">
         <div className="relative w-32 h-32 mx-auto mb-4">
           <svg className="w-full h-full -rotate-90">
             <circle
@@ -185,7 +185,7 @@ function SafetyOverview({ preferences, verificationStatus, currentUser }) {
               fill="none"
               strokeDasharray={`${safetyScore * 3.51} 351`}
               strokeLinecap="round"
-              className="text-[#0a0a0a]"
+              className="text-[#00f0ff]"
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -245,7 +245,7 @@ function SafetyOverview({ preferences, verificationStatus, currentUser }) {
       </div>
 
       {/* Safety Tips */}
-      <div className="glass-panel rounded-2xl p-4 border border-white/10">
+      <div className="glass-panel rounded-2xl p-4 border-2 border-[#00f0ff]/20">
         <h4 className="font-bold text-white mb-3 flex items-center gap-2">
           <span>💡</span> Safety Tips
         </h4>
@@ -253,38 +253,38 @@ function SafetyOverview({ preferences, verificationStatus, currentUser }) {
           {isProvider ? (
             <>
               <li className="flex items-start gap-2">
-                <span className="text-[#0a0a0a]">✓</span>
+                <span className="text-[#00f0ff]">✓</span>
                 Always verify the check-in code before entering
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#0a0a0a]">✓</span>
+                <span className="text-[#00f0ff]">✓</span>
                 Keep location sharing enabled during visits
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#0a0a0a]">✓</span>
+                <span className="text-[#00f0ff]">✓</span>
                 Use daytime-only settings if you prefer
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#0a0a0a]">✓</span>
+                <span className="text-[#00f0ff]">✓</span>
                 Request a buddy for any visit you're unsure about
               </li>
             </>
           ) : (
             <>
               <li className="flex items-start gap-2">
-                <span className="text-[#0a0a0a]">✓</span>
+                <span className="text-[#00f0ff]">✓</span>
                 Only share check-in code after verifying provider's photo & badge
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#0a0a0a]">✓</span>
+                <span className="text-[#00f0ff]">✓</span>
                 Add a trusted contact who can see visit ETA
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#0a0a0a]">✓</span>
+                <span className="text-[#00f0ff]">✓</span>
                 Book verified providers only for added safety
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#0a0a0a]">✓</span>
+                <span className="text-[#00f0ff]">✓</span>
                 Never pay in cash - use in-app payments only
               </li>
             </>
@@ -302,7 +302,7 @@ function QuickActionCard({ icon, title, status, statusText }) {
         <span className="text-2xl">{icon}</span>
         <span className="text-white font-medium text-sm">{title}</span>
       </div>
-      <div className={`text-sm font-bold ${status ? 'text-[#0a0a0a]' : 'text-[#F7D047]'}`}>
+      <div className={`text-sm font-bold ${status ? 'text-[#00f0ff]' : 'text-amber-400'}`}>
         {status ? '✓' : '○'} {statusText}
       </div>
     </div>
@@ -387,7 +387,7 @@ function VerificationSection({ verificationStatus, onRefresh }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 mb-4">
-        <div className={`w-3 h-3 rounded-full ${verificationStatus?.isFullyVerified ? 'bg-[#0a0a0a]' : 'bg-[#F7D047]'} animate-pulse`} />
+        <div className={`w-3 h-3 rounded-full ${verificationStatus?.isFullyVerified ? 'bg-[#00f0ff]' : 'bg-amber-400'} animate-pulse`} />
         <span className="text-white font-medium">
           {verificationStatus?.isFullyVerified ? 'Fully Verified' : 'Verification Required'}
         </span>
@@ -405,7 +405,7 @@ function VerificationSection({ verificationStatus, onRefresh }) {
               
               {v.data ? (
                 <div className={`mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${
-                  v.data.status === 'approved' ? 'bg-[#0a0a0a]/20 text-[#0a0a0a]' :
+                  v.data.status === 'approved' ? 'bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/30' :
                   v.data.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
                   v.data.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
                   'bg-gray-500/20 text-gray-400'
@@ -419,7 +419,7 @@ function VerificationSection({ verificationStatus, onRefresh }) {
                 <button
                   onClick={() => handleUpload(v.type, 'aadhaar')}
                   disabled={uploading}
-                  className="mt-3 px-4 py-2 bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-white rounded-lg text-sm font-medium transition-all"
+                  className="mt-3 px-4 py-2 bg-gradient-to-r from-[#00f0ff]/20 to-[#33f3ff]/20 hover:from-[#00f0ff]/30 hover:to-[#33f3ff]/30 text-[#00f0ff] rounded-lg text-sm font-medium transition-all border border-[#00f0ff]/30"
                 >
                   {uploading ? 'Uploading...' : 'Upload Document'}
                 </button>
@@ -530,7 +530,7 @@ function SafetyPreferencesSection({ preferences = {}, currentUser, onUpdate }) {
                       const areas = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
                       handleToggle('providerSettings.acceptedAreas', areas);
                     }}
-                    className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-lg border border-white/10 focus:border-[#0a0a0a] focus:outline-none text-sm"
+                    className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-lg border-2 border-[#00f0ff]/30 focus:border-[#00f0ff] focus:outline-none text-sm"
                   />
                   <p className="text-gray-500 text-xs mt-1">Comma-separated list of pincodes you accept</p>
                 </div>
@@ -544,7 +544,7 @@ function SafetyPreferencesSection({ preferences = {}, currentUser, onUpdate }) {
                       const areas = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
                       handleToggle('providerSettings.blockedAreas', areas);
                     }}
-                    className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-lg border border-white/10 focus:border-red-400 focus:outline-none text-sm"
+                    className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-lg border-2 border-red-400/30 focus:border-red-400 focus:outline-none text-sm"
                   />
                   <p className="text-gray-500 text-xs mt-1">Comma-separated list of pincodes to avoid</p>
                 </div>
@@ -556,7 +556,7 @@ function SafetyPreferencesSection({ preferences = {}, currentUser, onUpdate }) {
                     max="100"
                     value={preferences.providerSettings?.maxDistanceKm || 50}
                     onChange={(e) => handleToggle('providerSettings.maxDistanceKm', parseInt(e.target.value) || 50)}
-                    className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-lg border border-white/10 focus:border-[#0a0a0a] focus:outline-none text-sm"
+                    className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-lg border-2 border-[#00f0ff]/30 focus:border-[#00f0ff] focus:outline-none text-sm"
                   />
                 </div>
               </div>
@@ -651,7 +651,7 @@ function ToggleSetting({ label, description, checked, onChange }) {
       <button
         onClick={() => onChange(!checked)}
         className={`relative w-12 h-7 rounded-full transition-all shrink-0 ${
-          checked ? 'bg-[#0a0a0a]' : 'bg-gray-600'
+          checked ? 'bg-gradient-to-r from-[#00f0ff] to-[#33f3ff]' : 'bg-gray-600'
         }`}
       >
         <span
@@ -713,7 +713,7 @@ function TrustedContactsSection({ contacts, onUpdate }) {
         </p>
         <button
           onClick={() => setShowAdd(true)}
-          className="px-4 py-2 bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-[#0a0a0a] rounded-lg text-sm font-medium transition-all"
+          className="px-4 py-2 bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black rounded-lg text-sm font-medium transition-all"
         >
           + Add Contact
         </button>
@@ -777,7 +777,7 @@ function TrustedContactsSection({ contacts, onUpdate }) {
               <button
                 onClick={handleAdd}
                 disabled={saving || !newContact.name || !newContact.phone}
-                className="flex-1 py-3 bg-[#0a0a0a] hover:bg-[#000000] disabled:opacity-50 text-white rounded-xl font-medium"
+                className="flex-1 py-3 bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] disabled:opacity-50 text-black rounded-xl font-medium"
               >
                 {saving ? 'Adding...' : 'Add Contact'}
               </button>
@@ -797,7 +797,7 @@ function TrustedContactsSection({ contacts, onUpdate }) {
         <div className="space-y-3">
           {contacts.map((contact) => (
             <div key={contact._id} className="glass-panel rounded-xl p-4 border border-white/10 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#0a0a0a] flex items-center justify-center text-white font-bold">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center text-black font-bold">
                 {contact.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -805,7 +805,7 @@ function TrustedContactsSection({ contacts, onUpdate }) {
                 <p className="text-gray-400 text-sm">{contact.phone}</p>
                 <div className="flex gap-2 mt-1">
                   {contact.shareETA && (
-                    <span className="text-xs px-2 py-0.5 bg-[#F7D047]/20 text-black rounded">ETA</span>
+                    <span className="text-xs px-2 py-0.5 bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/30 rounded">ETA</span>
                   )}
                   {contact.emergencyContact && (
                     <span className="text-xs px-2 py-0.5 bg-red-500/20 text-red-400 rounded">SOS</span>
@@ -851,7 +851,9 @@ function TrainingSection({ conductAgreement, onUpdate }) {
       <div className="glass-panel rounded-xl p-4 border border-white/10">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-2xl shrink-0">
-            📜
+            <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
           </div>
           <div className="flex-1">
             <h4 className="text-white font-bold">Code of Conduct</h4>
@@ -860,7 +862,7 @@ function TrainingSection({ conductAgreement, onUpdate }) {
             </p>
             
             {conductAgreement?.agreedAt ? (
-              <div className="mt-3 flex items-center gap-2 text-[#0a0a0a] text-sm">
+              <div className="mt-3 flex items-center gap-2 text-[#00f0ff] text-sm">
                 <span>✓</span>
                 <span>Accepted on {new Date(conductAgreement.agreedAt).toLocaleDateString()}</span>
               </div>
@@ -881,7 +883,9 @@ function TrainingSection({ conductAgreement, onUpdate }) {
       <div className="glass-panel rounded-xl p-4 border border-white/10">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-rose-500/20 flex items-center justify-center text-2xl shrink-0">
-            🛑
+            <svg className="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
           </div>
           <div className="flex-1">
             <h4 className="text-white font-bold">Anti-Harassment Training</h4>
@@ -890,7 +894,7 @@ function TrainingSection({ conductAgreement, onUpdate }) {
             </p>
             
             {conductAgreement?.antiHarassmentCompleted ? (
-              <div className="mt-3 flex items-center gap-2 text-[#0a0a0a] text-sm">
+              <div className="mt-3 flex items-center gap-2 text-[#00f0ff] text-sm">
                 <span>✓</span>
                 <span>Completed</span>
               </div>
@@ -909,8 +913,10 @@ function TrainingSection({ conductAgreement, onUpdate }) {
       {/* Safety Training */}
       <div className="glass-panel rounded-xl p-4 border border-white/10">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#0a0a0a]/20 flex items-center justify-center text-2xl shrink-0">
-            🛡️
+          <div className="w-12 h-12 rounded-xl bg-[#00f0ff]/20 flex items-center justify-center text-2xl shrink-0">
+            <svg className="w-6 h-6 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
           </div>
           <div className="flex-1">
             <h4 className="text-white font-bold">Safety Best Practices</h4>
@@ -919,14 +925,14 @@ function TrainingSection({ conductAgreement, onUpdate }) {
             </p>
             
             {conductAgreement?.safetyTrainingCompleted ? (
-              <div className="mt-3 flex items-center gap-2 text-[#0a0a0a] text-sm">
+              <div className="mt-3 flex items-center gap-2 text-[#00f0ff] text-sm">
                 <span>✓</span>
                 <span>Completed on {new Date(conductAgreement.lastTrainingDate).toLocaleDateString()}</span>
               </div>
             ) : (
               <button
                 onClick={() => handleCompleteTraining('safety')}
-                className="mt-3 px-4 py-2 bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-[#0a0a0a] rounded-lg text-sm font-medium"
+                className="mt-3 px-4 py-2 bg-[#00f0ff]/20 hover:bg-[#00f0ff]/30 text-[#00f0ff] border border-[#00f0ff]/30 rounded-lg text-sm font-medium"
               >
                 Start Training (~15 min)
               </button>
@@ -936,8 +942,13 @@ function TrainingSection({ conductAgreement, onUpdate }) {
       </div>
 
       {/* Training Benefits */}
-      <div className="bg-[#F7D047]/10 border border-[#F7D047]/30 rounded-xl p-4">
-        <h4 className="text-black font-medium mb-2">🎖️ Training Benefits</h4>
+      <div className="bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-xl p-4">
+        <h4 className="text-[#00f0ff] font-medium mb-2 flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+          </svg>
+          Training Benefits
+        </h4>
         <ul className="text-gray-300 text-sm space-y-1">
           <li>• Earn "Safety Trained" badge on your profile</li>
           <li>• Higher visibility in search results</li>

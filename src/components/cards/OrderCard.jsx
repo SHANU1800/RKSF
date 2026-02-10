@@ -24,7 +24,7 @@ export const OrderCard = ({
   };
 
   return (
-    <div className="glass-panel card-premium rounded-2xl border border-white/10 overflow-hidden card-hover group relative">
+    <div className="glass-panel card-premium rounded-2xl border border-white/10 overflow-hidden card-hover group relative lg:aspect-[4/3] flex flex-col">
       {/* Enhanced gradient accent line */}
       <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#F7D047] opacity-80 shadow-lg" />
       

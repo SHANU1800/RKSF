@@ -11,7 +11,7 @@ export const ProviderCard = ({
   const isWomenOnly = provider.preferredProviderGender === 'female_only' || provider.gender === 'female';
   const safetyScore = provider.safetyScore || (isVerified ? 4.5 : 3.5);
   return (
-    <div className="glass-panel card-premium rounded-2xl border border-white/10 p-6 sm:p-8 space-y-5 card-hover group relative overflow-hidden">
+    <div className="glass-panel card-premium rounded-2xl border border-white/10 p-6 sm:p-8 space-y-5 card-hover group relative overflow-hidden lg:aspect-[4/3] flex flex-col">
       {/* Gradient accent line */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-[#F7D047] opacity-60" />
       

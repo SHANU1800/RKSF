@@ -1,5 +1,6 @@
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
+import { PackageIcon, MessageIcon, SparklesIcon, AlertCircleIcon } from '../icons/IconTypes';
 
 export const NotificationCard = ({
   notification,
@@ -34,10 +35,10 @@ export const NotificationCard = ({
   };
 
   const icons = {
-    order: '📦',
-    message: '💬',
-    promo: '🎉',
-    alert: '⚠️',
+    order: <PackageIcon size={22} />,
+    message: <MessageIcon size={22} />,
+    promo: <SparklesIcon size={22} />,
+    alert: <AlertCircleIcon size={22} />,
   };
 
   const style = typeStyles[notification.type] || typeStyles.order;
@@ -45,7 +46,7 @@ export const NotificationCard = ({
 
   return (
     <div
-      className={`glass-panel card-premium rounded-2xl border p-5 sm:p-6 cursor-pointer transition-all card-hover group relative overflow-hidden ${
+      className={`glass-panel card-premium rounded-2xl border p-5 sm:p-6 cursor-pointer transition-all card-hover group relative overflow-hidden lg:aspect-[4/3] flex flex-col ${
         isRead ? 'border-white/10 bg-white/5' : `${style.border} ${style.bg}`
       }`}
     >
@@ -62,7 +63,9 @@ export const NotificationCard = ({
       <div className="relative z-10">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4 flex-1 min-w-0">
-            <div className="text-3xl sm:text-4xl shrink-0">{icons[notification.type]}</div>
+            <div className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-black/50 border border-white/10 text-[#00f0ff] shrink-0">
+              {icons[notification.type]}
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
                 <h4 className="text-lg sm:text-xl font-bold text-white leading-tight">

@@ -525,8 +525,99 @@ export const ZapIcon = ({ size = 20, className = '' }) => (
   </svg>
 );
 
+/* ========== Decorative SVG Illustrations ========== */
+
+/** Empty box / inbox placeholder */
+export const EmptyBoxSvg = ({ size = 80, className = '' }) => (
+  <svg viewBox="0 0 120 120" width={size} height={size} className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="35" width="80" height="65" rx="4" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.3" strokeDasharray="6 4" />
+    <path d="M20 45 L60 25 L100 45" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.5" />
+    <circle cx="60" cy="67" r="12" stroke="currentColor" strokeWidth="2" strokeOpacity="0.4" fill="none" />
+  </svg>
+);
+
+/** Wallet illustration */
+export const WalletIllustrationSvg = ({ size = 64, className = '' }) => (
+  <svg viewBox="0 0 64 64" width={size} height={size} className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="12" width="56" height="40" rx="4" stroke="currentColor" strokeWidth="2" strokeOpacity="0.4" />
+    <path d="M4 24h56" stroke="currentColor" strokeWidth="2" strokeOpacity="0.4" />
+    <rect x="36" y="32" width="20" height="12" rx="2" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.1" />
+    <path d="M12 8h12a4 4 0 0 1 4 4v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.5" />
+  </svg>
+);
+
+/** Chart / analytics illustration */
+export const ChartIllustrationSvg = ({ size = 64, className = '' }) => (
+  <svg viewBox="0 0 64 64" width={size} height={size} className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 48V32" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.4" />
+    <path d="M24 48V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.5" />
+    <path d="M40 48V28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.6" />
+    <path d="M56 48V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.8" />
+    <path d="M8 48h48" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.3" />
+  </svg>
+);
+
+/** Service / wrench illustration */
+export const ServiceWrenchSvg = ({ size = 64, className = '' }) => (
+  <svg viewBox="0 0 64 64" width={size} height={size} className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M42 22l-4 4 8 8 4-4-8-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.5" />
+    <path d="M28 36L12 52a4 4 0 0 1-5.66-5.66L22 34" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" />
+  </svg>
+);
+
+/** Order / package illustration */
+export const PackageIllustrationSvg = ({ size = 64, className = '' }) => (
+  <svg viewBox="0 0 64 64" width={size} height={size} className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 22l24 12 24-12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.4" />
+    <path d="M56 22v20L32 54 8 42V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.5" />
+    <path d="M32 34V54" stroke="currentColor" strokeWidth="2" strokeOpacity="0.4" />
+    <path d="M8 22l24 12 24-12" stroke="currentColor" strokeWidth="1" strokeDasharray="4 2" strokeOpacity="0.2" />
+  </svg>
+);
+
+/** Grid pattern background */
+export const GridPatternSvg = ({ className = '', opacity = 0.1 }) => (
+  <svg className={`absolute inset-0 w-full h-full pointer-events-none ${className}`} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="grid-dots" width="24" height="24" patternUnits="userSpaceOnUse">
+        <circle cx="2" cy="2" r="0.5" fill="currentColor" fillOpacity={opacity} />
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#grid-dots)" />
+  </svg>
+);
+
+/** Wave divider */
+export const WaveDividerSvg = ({ className = '', color = 'currentColor' }) => (
+  <svg viewBox="0 0 1440 60" className={`w-full h-auto ${className}`} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 30 Q 360 0, 720 30 T 1440 30 L1440 60 L0 60 Z" fill={color} fillOpacity="0.05" />
+    <path d="M0 35 Q 360 5, 720 35 T 1440 35" stroke={color} strokeWidth="1" strokeOpacity="0.2" fill="none" />
+  </svg>
+);
+
+/** Cyan gradient orb decorative */
+export const CyanOrbSvg = ({ size = 200, className = '' }) => (
+  <svg viewBox="0 0 200 200" width={size} height={size} className={className} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="orbGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#00f0ff" stopOpacity="0" />
+      </radialGradient>
+    </defs>
+    <circle cx="100" cy="100" r="80" fill="url(#orbGlow)" />
+  </svg>
+);
+
+/** Sparkle accent (multi-point) */
+export const SparkleAccentSvg = ({ size = 48, className = '' }) => (
+  <svg viewBox="0 0 48 48" width={size} height={size} className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M24 4l3 9 9 3-9 3-3 9-3-9-9-3 9-3 3-9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" />
+    <path d="M36 28l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5 1.5-4.5z" stroke="currentColor" strokeWidth="1" strokeOpacity="0.4" />
+    <path d="M12 36l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" stroke="currentColor" strokeWidth="1" strokeOpacity="0.3" />
+  </svg>
+);
+
 // Legacy export for backwards compatibility
-// Icon exports handled by component exports above
 
 
 

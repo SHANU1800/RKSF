@@ -22,7 +22,7 @@ export const Toast = ({ message, type = 'info', onClose }) => {
 
   return (
     <div
-      className={`fixed bottom-4 right-4 p-4 rounded-xl border ${bgColor[type] || bgColor.info} shadow-xl backdrop-blur-lg z-999 max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-300`}
+      className={`fixed bottom-4 right-4 p-4 rounded-xl border ${bgColor[type] || bgColor.info} shadow-xl backdrop-blur-lg z-[999] max-w-sm animate-slide-up`}
       role="alert"
       aria-live="assertive"
     >

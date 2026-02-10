@@ -15,8 +15,8 @@ export const Modal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className={`glass-panel rounded-xl sm:rounded-2xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto p-5 sm:p-6 relative border border-white/10 shadow-2xl`}>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div className={`glass-panel rounded-xl sm:rounded-2xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto p-5 sm:p-6 relative border border-white/10 shadow-2xl animate-scale-in`}>
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-400 hover:text-white shrink-0 w-8 h-8 flex items-center justify-center"

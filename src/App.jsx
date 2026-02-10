@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import './App.css';
 import LoginPage from './LoginPage';
-import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon, SearchIcon, PlusIcon, MoreIcon, ArrowUpRightIcon, UsersIcon, UserIcon, SettingsIcon, SendIcon, BuildingIcon, FileTextIcon, RevenueIcon, AnalyticsIcon, ServicesIcon, GoodsIcon, ChartIcon, TrendingUpIcon, TrendingDownIcon, BarChartIcon, PieChartIcon, ActivityIcon, DollarSignIcon, ArchiveIcon, CopyIcon, DownloadIcon, UploadIcon, FilterIcon, EditIcon, TrashIcon, ZapIcon, ShieldIcon, InfoIcon } from './components/icons/IconTypes';
+import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon, SearchIcon, PlusIcon, MoreIcon, ArrowUpRightIcon, UsersIcon, UserIcon, SettingsIcon, SendIcon, BuildingIcon, FileTextIcon, RevenueIcon, AnalyticsIcon, ServicesIcon, GoodsIcon, ChartIcon, TrendingUpIcon, TrendingDownIcon, BarChartIcon, PieChartIcon, ActivityIcon, DollarSignIcon, ArchiveIcon, CopyIcon, DownloadIcon, UploadIcon, FilterIcon, EditIcon, TrashIcon, ZapIcon, ShieldIcon, InfoIcon, WalletIllustrationSvg, SparkleAccentSvg, LogoutIcon } from './components/icons/IconTypes';
 import SafetyCenter from './components/safety/SafetyCenter';
 import ProviderAnalytics from './components/analytics/ProviderAnalytics';
 import ProviderCards from './ProviderCards';
@@ -28,14 +27,16 @@ import SwipeCard from './components/SwipeCard';
 import MiniChatPreview from './components/MiniChatPreview';
 
 const EmptyState = ({ title, body, actionLabel, onAction, icon }) => (
-  <div className="glass-panel rounded-2xl border border-dashed border-white/10 p-8 text-center text-gray-400">
-    <div className="text-3xl mb-3" aria-hidden="true">{icon || <SparklesIcon size={32} className="mx-auto text-primary-400" />}</div>
-    <h4 className="text-white font-semibold text-lg mb-2">{title}</h4>
+  <div className="glass-panel rounded-2xl border-2 border-dashed border-[#00f0ff]/20 p-8 text-center text-gray-400 animate-scale-in hover:border-[#00f0ff]/30 transition-colors duration-300">
+    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#00f0ff]/10 text-[#00f0ff] mb-4 animate-bounce-in" aria-hidden="true">
+      {icon || <SparklesIcon size={32} className="animate-float" />}
+    </div>
+    <h4 className="text-white font-semibold text-lg mb-2 animate-fade-in">{title}</h4>
     <p className="text-gray-400 text-sm mb-4">{body}</p>
     {actionLabel && onAction && (
       <button
         onClick={onAction}
-        className="px-4 py-2 rounded-xl bg-[#F7D047] text-white font-bold shadow-lg hover:shadow-xl transition-all"
+        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black font-bold shadow-lg hover:shadow-xl hover:shadow-[#00f0ff]/30 transition-all duration-300 hover:scale-105"
       >
         {actionLabel}
       </button>
@@ -49,11 +50,11 @@ const Stepper = ({ steps, current }) => (
       const isActive = idx + 1 === current;
       const isDone = idx + 1 < current;
       return (
-        <div key={step} className="flex items-center gap-2">
+        <div key={step} className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: `${idx * 80}ms` }}>
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border ${
-              isDone ? 'bg-[#0a0a0a]/20 border-[#0a0a0a]/40 text-[#0a0a0a]'
-                : isActive ? 'bg-[#F7D047]/20 border-[#F7D047]/40 text-[#F7D047]'
+              isDone ? 'bg-[#00f0ff]/20 border-[#00f0ff]/40 text-[#00f0ff]'
+                : isActive ? 'bg-gradient-to-r from-[#00f0ff]/20 to-[#33f3ff]/20 border-[#00f0ff]/40 text-[#00f0ff]'
                   : 'bg-white/5 border-white/10 text-gray-400'
             }`}
           >
@@ -1078,11 +1079,11 @@ function App() {
                   <h3 className="text-2xl font-bold text-white">Providers</h3>
                   <p className="text-gray-400 text-sm">Browse trusted service providers</p>
                 </div>
-                <span className="pill text-sm border-[#0a0a0a] bg-white/5">{providers.length} providers</span>
+                <span className="pill text-sm border-[#00f0ff] bg-[#00f0ff]/10 text-white">{providers.length} providers</span>
               </div>
 
               {providers.length > 0 && (
-                <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4 md:p-6 space-y-4">
+                <div className="glass-panel rounded-2xl border-2 border-[#00f0ff]/20 p-4 md:p-6 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-white">Provider Map</p>
@@ -1090,7 +1091,7 @@ function App() {
                     </div>
                     <button
                       onClick={() => setShowLocationModal(true)}
-                      className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold border border-white/10"
+                      className="px-3 py-2 rounded-lg bg-gradient-to-r from-[#00f0ff]/20 to-[#33f3ff]/20 hover:from-[#00f0ff]/30 hover:to-[#33f3ff]/30 text-[#00f0ff] text-xs font-semibold border border-[#00f0ff]/30 transition-all"
                     >
                       {userLocation ? 'Update location' : 'Add location'}
                     </button>
@@ -1126,30 +1127,30 @@ function App() {
         return (
           <div className="text-gray-300 space-y-6 animate-fade-in">
             {/* User Header Card */}
-            <div className="glass-panel rounded-2xl p-6 md:p-8 space-y-4 border border-white/5 shadow-lg animate-scale-in">
+            <div className="glass-panel rounded-2xl p-6 md:p-8 space-y-4 border-2 border-[#00f0ff]/20 shadow-lg animate-scale-in">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-[#F7D047] flex items-center justify-center text-3xl font-bold text-black shadow-lg">
-                    {currentUser?.username?.charAt(0).toUpperCase() || <UserIcon size={32} className="text-white" />}
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center text-3xl font-bold text-black shadow-lg">
+                    {currentUser?.username?.charAt(0).toUpperCase() || <UserIcon size={32} className="text-black" />}
                   </div>
                   <div>
                     <p className="text-white font-bold text-xl">{currentUser?.username}</p>
                     <p className="text-gray-400 text-sm">{currentUser?.email}</p>
                     <div className="flex gap-2 mt-2">
-                      <span className="pill text-[#0a0a0a] border-[#0a0a0a]/30 bg-[#0a0a0a]/10 flex items-center gap-1.5">
+                      <span className="pill text-[#00f0ff] border-[#00f0ff]/30 bg-[#00f0ff]/10 flex items-center gap-1.5">
                         {currentUser?.role === 'provider' ? (
                           <><BuildingIcon size={14} /> Provider</>
                         ) : (
                           <><UsersIcon size={14} /> Customer</>
                         )}
                       </span>
-                      <span className="pill text-[#F7D047] border-[#F7D047]/30 bg-[#F7D047]/10">Verified</span>
+                      <span className="pill text-green-400 border-green-400/30 bg-green-400/10">Verified</span>
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setProfileEditMode(!profileEditMode)}
-                  className="px-4 py-2 rounded-xl bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-white font-semibold border border-[#0a0a0a]/30 transition-all hover:shadow-lg"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#00f0ff]/20 to-[#33f3ff]/20 hover:from-[#00f0ff]/30 hover:to-[#33f3ff]/30 text-[#00f0ff] font-semibold border-2 border-[#00f0ff]/30 transition-all hover:shadow-lg hover:shadow-[#00f0ff]/20"
                 >
                   {profileEditMode ? 'Cancel' : 'Edit'}
                 </button>
@@ -1157,15 +1158,15 @@ function App() {
 
               {/* Account Stats */}
               <div className="grid grid-cols-3 gap-6 pt-4 border-t border-white/10">
-                <div className="text-center p-3 bg-[#F7D047]/10 rounded-xl">
-                  <p className="text-2xl font-bold text-[#F7D047]">12</p>
+                <div className="text-center p-3 bg-[#00f0ff]/10 rounded-xl border border-[#00f0ff]/20">
+                  <p className="text-2xl font-bold text-[#00f0ff]">12</p>
                   <p className="text-xs text-gray-400 mt-1">Orders</p>
                 </div>
-                <div className="text-center p-3 bg-[#0a0a0a]/10 rounded-xl">
-                  <p className="text-2xl font-bold text-[#0a0a0a]">4.8</p>
+                <div className="text-center p-3 bg-green-500/10 rounded-xl border border-green-500/20">
+                  <p className="text-2xl font-bold text-green-400">4.8</p>
                   <p className="text-xs text-gray-400 mt-1">Rating</p>
                 </div>
-                <div className="text-center p-3 bg-purple-500/5 rounded-xl">
+                <div className="text-center p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
                   <p className="text-2xl font-bold text-purple-400">₹2.4k</p>
                   <p className="text-xs text-gray-400 mt-1">Spent</p>
                 </div>
@@ -1245,7 +1246,7 @@ function App() {
                     <select
                       value={profileForm.gender}
                       onChange={(e) => setProfileForm({...profileForm, gender: e.target.value})}
-                      className="px-4 py-3 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm appearance-none cursor-pointer"
+                      className="px-4 py-3 bg-zinc-900/70 text-white rounded-xl border-2 border-[#00f0ff]/30 focus:border-[#00f0ff] focus:ring-2 focus:ring-[#00f0ff]/40 focus:outline-none text-sm appearance-none cursor-pointer"
                       style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem'}}
                     >
                       <option value="">Select Gender</option>
@@ -1296,7 +1297,7 @@ function App() {
                 <h4 className="text-lg font-semibold text-white">📍 Delivery Address</h4>
                 <button
                   onClick={() => setShowLocationModal(true)}
-                  className="text-sm px-3 py-1 rounded-lg bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-black font-semibold border border-[#F7D047]/30 transition-all"
+                  className="text-sm px-3 py-1 rounded-lg bg-[#00f0ff]/20 hover:bg-[#00f0ff]/30 text-[#00f0ff] font-semibold border border-[#00f0ff]/30 transition-all"
                 >
                   {userLocation ? 'Change' : 'Add'}
                 </button>
@@ -1334,16 +1335,30 @@ function App() {
 
             {/* Account Security */}
             <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-3 animate-slide-up">
-              <h4 className="text-lg font-semibold text-white flex items-center gap-2">🔒 Account Security</h4>
+              <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Account Security
+              </h4>
               <div className="space-y-2">
-                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-[#F7D047] hover:text-[#F7D047]/80">
-                  🔑 Change Password
+                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-[#00f0ff] hover:text-[#33f3ff] flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                  Change Password
                 </button>
-                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-[#F7D047] hover:text-[#F7D047]/80">
-                  🔐 Two-Factor Authentication
+                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-[#00f0ff] hover:text-[#33f3ff] flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Two-Factor Authentication
                 </button>
-                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-red-400 hover:text-red-300">
-                  🚪 Logout from All Devices
+                <button className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left text-sm font-semibold text-red-400 hover:text-red-300 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Logout from All Devices
                 </button>
               </div>
             </div>
@@ -1373,37 +1388,37 @@ function App() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="glass-panel card-premium rounded-2xl border border-[#F7D047]/20 p-6">
+              <div className="glass-panel card-premium rounded-2xl border border-[#00f0ff]/20 p-6 lg:aspect-[4/3] flex flex-col justify-center">
                 <div className="flex items-center justify-between mb-3">
-                  <UsersIcon size={32} className="text-[#F7D047]" />
-                  <span className="text-xs text-[#F7D047]/80 font-semibold">TOTAL</span>
+                  <UsersIcon size={32} className="text-[#00f0ff]" />
+                  <span className="text-xs text-[#00f0ff]/80 font-semibold">TOTAL</span>
                 </div>
                 <p className="text-3xl font-bold text-white">{providers.length}</p>
                 <p className="text-gray-400 text-sm mt-1">Providers</p>
               </div>
 
-              <div className="glass-panel card-premium rounded-2xl border border-[#0a0a0a]/20 p-6">
+              <div className="glass-panel card-premium rounded-2xl border border-[#33f3ff]/20 p-6 lg:aspect-[4/3] flex flex-col justify-center">
                 <div className="flex items-center justify-between mb-3">
-                  <UserIcon size={32} className="text-[#0a0a0a]" />
-                  <span className="text-xs text-[#F7D047] font-semibold">ACTIVE</span>
+                  <UserIcon size={32} className="text-[#33f3ff]" />
+                  <span className="text-xs text-[#00f0ff] font-semibold">ACTIVE</span>
                 </div>
                 <p className="text-3xl font-bold text-white">{providers.filter(p => !p.suspended).length}</p>
                 <p className="text-gray-400 text-sm mt-1">Active Users</p>
               </div>
 
-              <div className="glass-panel card-premium rounded-2xl border border-purple-500/20 p-6">
+              <div className="glass-panel card-premium rounded-2xl border border-[#00f0ff]/20 p-6 lg:aspect-[4/3] flex flex-col justify-center">
                 <div className="flex items-center justify-between mb-3">
-                  <ServicesIcon size={32} className="text-purple-400" />
-                  <span className="text-xs text-purple-300 font-semibold">LIVE</span>
+                  <ServicesIcon size={32} className="text-[#00f0ff]" />
+                  <span className="text-xs text-[#33f3ff] font-semibold">LIVE</span>
                 </div>
                 <p className="text-3xl font-bold text-white">{services.length}</p>
                 <p className="text-gray-400 text-sm mt-1">Services</p>
               </div>
 
-              <div className="glass-panel card-premium rounded-2xl border border-orange-500/20 p-6">
+              <div className="glass-panel card-premium rounded-2xl border border-[#33f3ff]/20 p-6 lg:aspect-[4/3] flex flex-col justify-center">
                 <div className="flex items-center justify-between mb-3">
-                  <PackageIcon size={32} className="text-orange-400" />
-                  <span className="text-xs text-orange-300 font-semibold">LISTED</span>
+                  <PackageIcon size={32} className="text-[#33f3ff]" />
+                  <span className="text-xs text-[#00f0ff] font-semibold">LISTED</span>
                 </div>
                 <p className="text-3xl font-bold text-white">{goods.length}</p>
                 <p className="text-gray-400 text-sm mt-1">Goods</p>
@@ -1449,8 +1464,8 @@ function App() {
             <div className="glass-panel rounded-2xl border border-white/5 p-6">
               <h3 className="text-xl font-bold text-white mb-4">Recent Platform Activity</h3>
               <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F7D047]/10 border border-[#F7D047]/20">
-                  <div className="w-2 h-2 rounded-full bg-[#F7D047]" />
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-[#00f0ff]/10 border border-[#00f0ff]/20">
+                  <div className="w-2 h-2 rounded-full bg-[#00f0ff]" />
                   <p className="text-gray-300 text-sm">New provider registration</p>
                   <span className="ml-auto text-xs text-gray-500">2 hours ago</span>
                 </div>
@@ -1533,7 +1548,7 @@ function App() {
         return (
           <div className="space-y-6 animate-fade-in">
             <div className="glass-panel rounded-2xl border border-white/5 p-6">
-              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-[#F7D047]">
+              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] to-[#33f3ff]">
                 Provider Management
               </h2>
               <p className="text-gray-400 text-sm mt-1">Validate, approve, suspend or ban providers</p>
@@ -1594,7 +1609,7 @@ function App() {
                       )}
 
                       <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="px-2 py-1 rounded bg-[#F7D047]/20 text-black text-xs">
+                        <span className="px-2 py-1 rounded bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/30 text-xs">
                           {services.filter(s => s.provider?._id === provider._id).length} Services
                         </span>
                         <span className="px-2 py-1 rounded bg-[#0a0a0a]/20 text-white text-xs">
@@ -1704,7 +1719,7 @@ function App() {
         return (
           <div className="space-y-6 animate-fade-in">
             <div className="glass-panel rounded-2xl border border-white/5 p-6">
-              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-[#F7D047]">
+              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] to-[#33f3ff]">
                 All Transactions
               </h2>
               <p className="text-gray-400 text-sm mt-1">View all services and goods purchased by customers</p>
@@ -1799,7 +1814,7 @@ function App() {
                           <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${
                             g.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/40' :
                             g.status === 'reviewed' ? 'bg-[#0a0a0a]/20 text-white border border-[#0a0a0a]/40' :
-                            'bg-[#F7D047]/20 text-black border border-[#F7D047]/40'
+                            'bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/40'
                           }`}>
                             {g.status.toUpperCase()}
                           </span>
@@ -1826,7 +1841,7 @@ function App() {
                       <button
                         onClick={() => updateGrievanceStatus(g.id, 'resolved')}
                         disabled={g.status === 'resolved'}
-                        className="px-4 py-2 rounded-lg bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-black text-sm font-semibold border border-[#F7D047]/30 disabled:opacity-50 transition"
+                        className="px-4 py-2 rounded-lg bg-[#00f0ff]/20 hover:bg-[#00f0ff]/30 text-[#00f0ff] text-sm font-semibold border border-[#00f0ff]/30 disabled:opacity-50 transition"
                       >
                         Mark Resolved
                       </button>
@@ -2040,39 +2055,46 @@ function App() {
 
       case 'transactions':
         return (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center justify-between">
+          <div className="space-y-6 animate-slide-up">
+            {/* Wallet Header */}
+            <div className="glass-panel rounded-2xl p-6 border border-[#00f0ff]/20 overflow-hidden relative group animate-fade-in">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00f0ff]/5 via-transparent to-transparent" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#00f0ff]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#00f0ff]/15 transition-colors duration-500" />
+              <div className="flex items-center justify-between relative z-10">
                 <div>
                   <h3 className="text-3xl font-bold text-white">Wallet</h3>
-                  <p className="text-blue-100 text-sm mt-1">Manage your transactions and balance</p>
+                  <p className="text-gray-400 text-sm mt-1">Manage your balance and transactions</p>
                 </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00f0ff] to-[#00b8cc] flex items-center justify-center shadow-lg shadow-[#00f0ff]/25 group-hover:shadow-[#00f0ff]/40 transition-shadow duration-300 group-hover:scale-105 transition-transform">
+                  <WalletIllustrationSvg size={28} className="text-black" />
                 </div>
               </div>
             </div>
 
-            {/* Wallet Balance Card */}
+            {/* Wallet Balance Card - Modern Design */}
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="md:col-span-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-700">
-                <div className="flex items-center justify-between mb-4">
+              <div className="md:col-span-2 glass-panel rounded-2xl p-6 border border-[#00f0ff]/20 overflow-hidden relative group animate-scale-in hover:border-[#00f0ff]/30 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00f0ff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 relative z-10">
                   <div>
-                    <p className="text-slate-300 text-sm font-medium uppercase tracking-wide">Available Balance</p>
-                    <h2 className="text-white text-5xl font-bold mt-3 tracking-tight">₹12,450</h2>
+                    <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Available Balance</p>
+                    <h2 className="text-white text-4xl sm:text-5xl font-bold mt-2 tracking-tight tabular-nums">₹12,450</h2>
+                    <div className="flex items-center gap-1.5 mt-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#00f0ff]/10 text-[#00f0ff] text-xs font-medium border border-[#00f0ff]/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00f0ff] animate-pulse" /> Active
+                      </span>
+                    </div>
                   </div>
-                  <div className="bg-blue-500/30 rounded-2xl p-4 backdrop-blur-sm">
-                    <svg className="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00f0ff]/20 to-[#00b8cc]/20 backdrop-blur-sm border border-[#00f0ff]/30 flex items-center justify-center group-hover:border-[#00f0ff]/50 transition-colors">
+                    <svg className="w-8 h-8 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
                 </div>
-                <div className="flex gap-3 mt-6">
+                <div className="flex gap-3 mt-6 relative z-10">
                   <button
                     onClick={() => handleComingSoon('Add money to wallet')}
-                    className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black font-bold shadow-lg shadow-[#00f0ff]/25 hover:shadow-[#00f0ff]/40 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -2081,9 +2103,9 @@ function App() {
                   </button>
                   <button
                     onClick={() => handleComingSoon('Send money')}
-                    className="flex-1 py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/20 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white font-semibold border border-[#00f0ff]/20 hover:border-[#00f0ff]/40 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                     Send
@@ -2092,47 +2114,47 @@ function App() {
               </div>
               
               <div className="space-y-4">
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="glass-panel rounded-2xl border border-[#00f0ff]/10 p-5 animate-scale-in hover:border-[#10b981]/30 hover:shadow-lg hover:shadow-[#10b981]/5 transition-all duration-300 group" style={{ animationDelay: '50ms' }}>
                   <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-3 shadow-md">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#10b981] to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform duration-300">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Money In</p>
-                      <p className="text-green-600 font-bold text-xl mt-0.5">₹18,200</p>
+                      <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Money In</p>
+                      <p className="text-[#10b981] font-bold text-xl mt-0.5 tabular-nums">₹18,200</p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="glass-panel rounded-2xl border border-[#00f0ff]/10 p-5 animate-scale-in hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/5 transition-all duration-300 group" style={{ animationDelay: '100ms' }}>
                   <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-br from-red-400 to-red-600 rounded-xl p-3 shadow-md">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform duration-300">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Money Out</p>
-                      <p className="text-red-600 font-bold text-xl mt-0.5">₹5,750</p>
+                      <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Money Out</p>
+                      <p className="text-red-400 font-bold text-xl mt-0.5 tabular-nums">₹5,750</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-6 shadow-lg">
+            <div className="glass-panel rounded-2xl border border-[#00f0ff]/10 p-6 animate-scale-in">
               <div className="mb-6">
-                <h4 className="text-2xl font-bold text-gray-900 mb-1">Recent Transactions</h4>
-                <p className="text-sm text-gray-600">View and manage your transaction history</p>
+                <h4 className="text-2xl font-bold text-white mb-1">Recent Transactions</h4>
+                <p className="text-sm text-gray-400">View and manage your transaction history</p>
               </div>
               <div className="flex flex-wrap gap-3 mb-6">
                 <button
                   onClick={() => handleTransactionFilter('all')}
                   className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     transactionFilter === 'all'
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
+                      ? 'bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] text-black shadow-lg shadow-[#00f0ff]/30 hover:shadow-xl hover:scale-105'
+                      : 'bg-white/10 hover:bg-white/20 text-gray-400 border border-white/20 hover:border-[#00f0ff] hover:text-[#00f0ff]'
                   }`}
                 >
                   All Transactions
@@ -2141,8 +2163,8 @@ function App() {
                   onClick={() => handleTransactionFilter('purchases')}
                   className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     transactionFilter === 'purchases'
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
+                      ? 'bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] text-black shadow-lg shadow-[#00f0ff]/30 hover:shadow-xl hover:scale-105'
+                      : 'bg-white/10 hover:bg-white/20 text-gray-400 border border-white/20 hover:border-[#00f0ff] hover:text-[#00f0ff]'
                   }`}
                 >
                   Purchases
@@ -2151,8 +2173,8 @@ function App() {
                   onClick={() => handleTransactionFilter('refunds')}
                   className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     transactionFilter === 'refunds'
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600'
+                      ? 'bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] text-black shadow-lg shadow-[#00f0ff]/30 hover:shadow-xl hover:scale-105'
+                      : 'bg-white/10 hover:bg-white/20 text-gray-400 border border-white/20 hover:border-[#00f0ff] hover:text-[#00f0ff]'
                   }`}
                 >
                   Refunds
@@ -2160,56 +2182,56 @@ function App() {
               </div>
 
               <div className="space-y-4">
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="glass-panel rounded-2xl border border-[#00f0ff]/10 p-5 hover:border-[#00f0ff]/25 transition-all duration-300 animate-fade-in hover:shadow-lg hover:shadow-[#00f0ff]/5">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-gray-900 font-semibold text-lg">Order #12345</p>
-                      <p className="text-gray-600 text-sm mt-0.5">Premium Cleaning Service</p>
+                      <p className="text-white font-semibold text-lg">Order #12345</p>
+                      <p className="text-gray-400 text-sm mt-0.5">Premium Cleaning Service</p>
                       <p className="text-xs text-gray-500 mt-2">Jan 25, 2026</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-green-600 font-bold text-xl">+₹2,500</p>
-                      <span className="inline-block mt-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold border border-green-200">Paid</span>
+                      <p className="text-green-400 font-bold text-xl">+₹2,500</p>
+                      <span className="inline-block mt-1 px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold border border-green-500/30">Paid</span>
                     </div>
                   </div>
                   <div className="flex gap-3 mt-4">
                     <button
                       onClick={() => handleComingSoon('View invoice')}
-                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#00b8cc] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
                     >
                       View Invoice
                     </button>
                     <button
                       onClick={() => handleComingSoon('Download PDF')}
-                      className="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold border border-slate-600 transition-all duration-300 hover:scale-105 shadow-md"
+                      className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-semibold border border-[#00f0ff]/20 transition-all duration-300 hover:scale-[1.02]"
                     >
                       Download PDF
                     </button>
                   </div>
                 </div>
 
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="glass-panel rounded-2xl border border-[#00f0ff]/10 p-5 hover:border-[#00f0ff]/25 transition-all duration-300 animate-fade-in hover:shadow-lg hover:shadow-[#00f0ff]/5">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-gray-900 font-semibold text-lg">Order #12344</p>
-                      <p className="text-gray-600 text-sm mt-0.5">Garden Tool Set</p>
+                      <p className="text-white font-semibold text-lg">Order #12344</p>
+                      <p className="text-gray-400 text-sm mt-0.5">Garden Tool Set</p>
                       <p className="text-xs text-gray-500 mt-2">Jan 22, 2026</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-red-600 font-bold text-xl">-₹1,200</p>
-                      <span className="inline-block mt-1 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold border border-red-200">Refunded</span>
+                      <p className="text-red-400 font-bold text-xl">-₹1,200</p>
+                      <span className="inline-block mt-1 px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-semibold border border-red-500/30">Refunded</span>
                     </div>
                   </div>
                   <div className="flex gap-3 mt-4">
                     <button
                       onClick={() => handleComingSoon('View invoice')}
-                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#00b8cc] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
                     >
                       View Invoice
                     </button>
                     <button
                       onClick={() => handleComingSoon('Download PDF')}
-                      className="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold border border-slate-600 transition-all duration-300 hover:scale-105 shadow-md"
+                      className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-semibold border border-[#00f0ff]/20 transition-all duration-300 hover:scale-[1.02]"
                     >
                       Download PDF
                     </button>
@@ -2219,11 +2241,11 @@ function App() {
             </div>
 
             <div>
-              <h4 className="text-2xl font-bold text-gray-900 mb-4">Overview</h4>
+              <h4 className="text-2xl font-bold text-white mb-4">Overview</h4>
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Spent</p>
-                  <p className="text-gray-900 text-4xl font-bold mt-3">₹15,750</p>
+                <div className="glass-panel rounded-2xl border border-[#00f0ff]/20 p-6 hover:border-[#00f0ff]/30 transition-all duration-300 animate-scale-in hover:shadow-lg hover:shadow-[#00f0ff]/5">
+                  <p className="text-gray-400 text-sm font-semibold uppercase tracking-wide">Total Spent</p>
+                  <p className="text-white text-4xl font-bold mt-3">₹15,750</p>
                   <div className="mt-4 flex items-center text-xs text-gray-500">
                     <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -2231,9 +2253,9 @@ function App() {
                     All time
                   </div>
                 </div>
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Refunded</p>
-                  <p className="text-red-600 text-4xl font-bold mt-3">₹1,200</p>
+                <div className="glass-panel rounded-2xl border border-[#00f0ff]/20 p-6 hover:border-[#00f0ff]/30 transition-all duration-300 animate-scale-in hover:shadow-lg hover:shadow-[#00f0ff]/5" style={{ animationDelay: '50ms' }}>
+                  <p className="text-gray-400 text-sm font-semibold uppercase tracking-wide">Total Refunded</p>
+                  <p className="text-red-400 text-4xl font-bold mt-3">₹1,200</p>
                   <div className="mt-4 flex items-center text-xs text-gray-500">
                     <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -2241,9 +2263,9 @@ function App() {
                     All time
                   </div>
                 </div>
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">This Month</p>
-                  <p className="text-green-600 text-4xl font-bold mt-3">₹5,300</p>
+                <div className="glass-panel rounded-2xl border border-[#00f0ff]/20 p-6 hover:border-[#00f0ff]/30 transition-all duration-300 animate-scale-in hover:shadow-lg hover:shadow-[#00f0ff]/5" style={{ animationDelay: '100ms' }}>
+                  <p className="text-gray-400 text-sm font-semibold uppercase tracking-wide">This Month</p>
+                  <p className="text-green-400 text-4xl font-bold mt-3">₹5,300</p>
                   <div className="mt-4 flex items-center text-xs text-gray-500">
                     <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2283,7 +2305,7 @@ function App() {
                     key={notif.id}
                     onClick={() => markNotificationRead(notif.id)}
                     className={`glass-panel rounded-2xl border p-4 cursor-pointer transition ${
-                      notif.read ? 'border-white/5 bg-white/5' : 'border-[#F7D047]/30 bg-[#F7D047]/10'
+                      notif.read ? 'border-white/5 bg-white/5' : 'border-[#00f0ff]/30 bg-[#00f0ff]/10'
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -2291,7 +2313,7 @@ function App() {
                         <div className="flex items-center gap-2">
                           <p className="text-white font-semibold">{notif.title}</p>
                           {!notif.read && (
-                            <div className="w-2 h-2 rounded-full bg-[#F7D047]"></div>
+                            <div className="w-2 h-2 rounded-full bg-[#00f0ff]"></div>
                           )}
                         </div>
                         <p className="text-gray-400 text-sm mt-1">{notif.message}</p>
@@ -2513,7 +2535,7 @@ function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {filteredGoods.map((item) => (
                       <div key={item._id} className="glass-panel rounded-2xl border border-white/5 overflow-hidden card-hover w-full relative">
-                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#F7D047] opacity-90 z-10" />
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#00f0ff] opacity-90 z-10" />
                         {item.image ? (
                           <div className="h-40 bg-gray-800/40">
                             <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
@@ -2584,36 +2606,36 @@ function App() {
                   label: 'Total Services', 
                   value: myServicesCount, 
                   Icon: ServicesIcon, 
-                  color: 'bg-[#F7D047]',
-                  bgColor: 'bg-[#F7D047]/10',
-                  borderColor: 'border-[#F7D047]/20'
+                  color: 'bg-[#00f0ff]',
+                  bgColor: 'bg-[#00f0ff]/10',
+                  borderColor: 'border-[#00f0ff]/20'
                 },
                 { 
                   label: 'Active Orders', 
                   value: '0', 
                   Icon: ClipboardIcon, 
-                  color: 'bg-black',
-                  bgColor: 'bg-[#0a0a0a]/10',
-                  borderColor: 'border-[#0a0a0a]/20'
+                  color: 'bg-[#33f3ff]',
+                  bgColor: 'bg-[#33f3ff]/10',
+                  borderColor: 'border-[#33f3ff]/20'
                 },
                 { 
                   label: 'Total Revenue', 
                   value: `₹${totalRevenue.toLocaleString()}`, 
                   Icon: RevenueIcon, 
-                  color: 'bg-purple-500',
-                  bgColor: 'bg-purple-500/10',
-                  borderColor: 'border-purple-500/20'
+                  color: 'bg-[#00f0ff]',
+                  bgColor: 'bg-[#00f0ff]/10',
+                  borderColor: 'border-[#00f0ff]/20'
                 },
                 { 
                   label: 'Avg Rating', 
                   value: `${avgRating}`, 
                   Icon: StarIcon, 
-                  color: 'bg-orange-500',
-                  bgColor: 'bg-orange-500/10',
-                  borderColor: 'border-orange-500/20'
+                  color: 'bg-[#33f3ff]',
+                  bgColor: 'bg-[#33f3ff]/10',
+                  borderColor: 'border-[#33f3ff]/20'
                 },
               ].map((stat, idx) => (
-                <div key={idx} className={`glass-panel card-premium rounded-2xl border ${stat.borderColor} p-6 ${stat.bgColor} card-hover group relative overflow-hidden`}>
+                <div key={idx} className={`glass-panel card-premium rounded-2xl border ${stat.borderColor} p-6 ${stat.bgColor} card-hover group relative overflow-hidden lg:aspect-[4/3] flex flex-col justify-center`}>
                   <div className={`absolute top-0 left-0 right-0 h-1 ${stat.color} opacity-60`} />
                   <div className="flex items-center justify-between relative z-10">
                     <div className="flex-1">
@@ -2635,18 +2657,18 @@ function App() {
                   <h3 className="text-2xl font-bold text-white">Quick Actions</h3>
                   <p className="text-gray-400 text-sm mt-1">Manage your business efficiently</p>
                 </div>
-                <ZapIcon size={24} className="text-yellow-400" />
+                <ZapIcon size={24} className="text-[#00f0ff]" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button
                   onClick={() => setShowServiceModal(true)}
-                  className="p-5 rounded-xl bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-white font-semibold border border-[#F7D047]/30 text-left transition-all card-hover group"
+                  className="p-5 rounded-xl bg-[#00f0ff]/20 hover:bg-[#00f0ff]/30 text-white font-semibold border border-[#00f0ff]/30 text-left transition-all card-hover group lg:aspect-[4/3] flex flex-col justify-center"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-[#F7D047]/20 group-hover:bg-[#F7D047]/30 transition-colors">
-                      <PlusIcon size={20} className="text-black" />
+                    <div className="p-2 rounded-lg bg-[#00f0ff]/20 group-hover:bg-[#00f0ff]/30 transition-colors">
+                      <PlusIcon size={20} className="text-white" />
                     </div>
-                    <ServicesIcon size={20} className="text-black" />
+                    <ServicesIcon size={20} className="text-[#00f0ff]" />
                   </div>
                   <div className="font-bold text-lg mb-1">Add Service</div>
                   <p className="text-sm text-gray-400">Create a new service offering</p>
@@ -2654,13 +2676,13 @@ function App() {
                 
                 <button
                   onClick={() => setShowGoodsModal(true)}
-                  className="p-5 rounded-xl bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-white font-semibold border border-[#0a0a0a]/30 text-left transition-all card-hover group"
+                  className="p-5 rounded-xl bg-[#33f3ff]/20 hover:bg-[#33f3ff]/30 text-white font-semibold border border-[#33f3ff]/30 text-left transition-all card-hover group lg:aspect-[4/3] flex flex-col justify-center"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-[#0a0a0a]/20 group-hover:bg-[#0a0a0a]/30 transition-colors">
-                      <PlusIcon size={20} className="text-[#F7D047]" />
+                    <div className="p-2 rounded-lg bg-[#33f3ff]/20 group-hover:bg-[#33f3ff]/30 transition-colors">
+                      <PlusIcon size={20} className="text-white" />
                     </div>
-                    <GoodsIcon size={20} className="text-[#F7D047]" />
+                    <GoodsIcon size={20} className="text-[#33f3ff]" />
                   </div>
                   <div className="font-bold text-lg mb-1">Add Goods</div>
                   <p className="text-sm text-gray-400">List items for sale</p>
@@ -2668,11 +2690,11 @@ function App() {
                 
                 <button
                   onClick={() => setActiveTab('providerOrders')}
-                  className="p-5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-white font-semibold border border-purple-400/30 text-left transition-all card-hover group"
+                  className="p-5 rounded-xl bg-[#00f0ff]/20 hover:bg-[#00f0ff]/30 text-white font-semibold border border-[#00f0ff]/30 text-left transition-all card-hover group lg:aspect-[4/3] flex flex-col justify-center"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
-                      <ClipboardIcon size={20} className="text-purple-300" />
+                    <div className="p-2 rounded-lg bg-[#00f0ff]/20 group-hover:bg-[#00f0ff]/30 transition-colors">
+                      <ClipboardIcon size={20} className="text-white" />
                     </div>
                   </div>
                   <div className="font-bold text-lg mb-1">View Orders</div>
@@ -2681,11 +2703,11 @@ function App() {
                 
                 <button
                   onClick={() => setActiveTab('analytics')}
-                  className="p-5 rounded-xl bg-[#F7D047]/20 hover:bg-[#F7D047]/30 text-white font-semibold border border-[#0a0a0a]/30 text-left transition-all card-hover group"
+                  className="p-5 rounded-xl bg-[#33f3ff]/20 hover:bg-[#33f3ff]/30 text-white font-semibold border border-[#33f3ff]/30 text-left transition-all card-hover group lg:aspect-[4/3] flex flex-col justify-center"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-[#F7D047]/20 group-hover:bg-[#F7D047]/30 transition-colors">
-                      <AnalyticsIcon size={20} className="text-[#F7D047]" />
+                    <div className="p-2 rounded-lg bg-[#33f3ff]/20 group-hover:bg-[#33f3ff]/30 transition-colors">
+                      <AnalyticsIcon size={20} className="text-white" />
                     </div>
                   </div>
                   <div className="font-bold text-lg mb-1">Analytics</div>
@@ -2695,10 +2717,10 @@ function App() {
             </div>
             
             {/* Provider Safety Section */}
-            <div className="glass-panel card-premium rounded-2xl border border-[#0a0a0a]/20 p-6 bg-[#0a0a0a]/5">
+            <div className="glass-panel card-premium rounded-2xl border border-[#00f0ff]/20 p-6 bg-[#00f0ff]/5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <ShieldIcon size={24} className="text-[#0a0a0a]" />
+                  <ShieldIcon size={24} className="text-[#00f0ff]" />
                   <div>
                     <h4 className="text-lg font-bold text-white">Provider Safety Settings</h4>
                     <p className="text-gray-400 text-sm">Manage your safety preferences</p>
@@ -2706,15 +2728,15 @@ function App() {
                 </div>
                 <button
                   onClick={() => setShowSafetyCenter(true)}
-                  className="px-4 py-2 rounded-xl bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-white font-semibold text-sm border border-[#0a0a0a]/30 transition-all"
+                  className="px-4 py-2 rounded-xl bg-[#00f0ff]/20 hover:bg-[#00f0ff]/30 text-white font-semibold text-sm border border-[#00f0ff]/30 transition-all"
                 >
                   Manage Safety
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                  <div className="w-10 h-10 rounded-lg bg-[#F7D047]/20 flex items-center justify-center">
-                    <UsersIcon size={20} className="text-black" />
+                  <div className="w-10 h-10 rounded-lg bg-[#00f0ff]/20 flex items-center justify-center">
+                    <UsersIcon size={20} className="text-[#00f0ff]" />
                   </div>
                   <div>
                     <p className="text-white text-sm font-semibold">Buddy System</p>
@@ -2749,12 +2771,12 @@ function App() {
               <div className="glass-panel card-premium rounded-2xl border border-white/10 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-lg font-bold text-white flex items-center gap-2">
-                    <ActivityIcon size={20} className="text-[#F7D047]" />
+                    <ActivityIcon size={20} className="text-[#00f0ff]" />
                     Recent Services
                   </h4>
                   <button
                     onClick={() => setActiveTab('myServices')}
-                    className="text-sm text-[#F7D047] hover:text-[#F7D047]/80 font-semibold"
+                    className="text-sm text-[#00f0ff] hover:text-[#33f3ff] font-semibold"
                   >
                     View All
                   </button>
@@ -2789,7 +2811,7 @@ function App() {
                       <span className="text-white font-bold">0</span>
                     </div>
                     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#F7D047] rounded-full" style={{ width: '0%' }} />
+                      <div className="h-full bg-[#00f0ff] rounded-full" style={{ width: '0%' }} />
                     </div>
                   </div>
                   <div>
@@ -2833,7 +2855,7 @@ function App() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="text-3xl font-bold text-white flex items-center gap-3">
-                  <ServicesIcon size={32} className="text-[#F7D047]" />
+                  <ServicesIcon size={32} className="text-[#00f0ff]" />
                   My Services
                 </h3>
                 <p className="text-gray-400 text-sm mt-2">Manage and optimize your service offerings</p>
@@ -2884,7 +2906,7 @@ function App() {
                 body="Start by creating your first service offering to reach customers"
                 actionLabel="Add Service"
                 onAction={() => setShowServiceModal(true)}
-                icon={<ServicesIcon size={48} className="mx-auto text-[#F7D047]" />}
+                icon={<ServicesIcon size={48} className="mx-auto text-[#00f0ff]" />}
               />
             ) : (
               <>
@@ -2907,7 +2929,7 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredMyServices.map((service) => (
                     <div key={service._id} className="glass-panel card-premium rounded-2xl border border-white/10 p-6 card-hover group relative overflow-hidden">
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-[#F7D047] opacity-60" />
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] opacity-60" />
                       
                       {service.image && (
                         <div className="w-full h-32 mb-4 rounded-lg overflow-hidden bg-black">
@@ -2928,7 +2950,7 @@ function App() {
                         
                         <div className="flex items-center justify-between pt-3 border-t border-white/10">
                           <div>
-                            <span className="text-2xl font-bold text-[#F7D047]">₹{service.price}</span>
+                            <span className="text-2xl font-bold text-[#00f0ff]">₹{service.price}</span>
                             <p className="text-xs text-gray-500 mt-0.5">per service</p>
                           </div>
                           <div className="flex items-center gap-1">
@@ -2961,7 +2983,7 @@ function App() {
                               0 orders
                             </span>
                           </div>
-                          <span className="pill text-xs bg-[#0a0a0a]/10 border-[#0a0a0a]/20 text-[#F7D047]">
+                          <span className="pill text-xs bg-[#00f0ff]/10 border-[#00f0ff]/20 text-[#00f0ff]">
                             Active
                           </span>
                         </div>
@@ -3024,7 +3046,7 @@ function App() {
                       onClick={() => setGoodsFilter(filter)}
                       className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition ${
                         goodsFilter === filter
-                          ? 'bg-emerald-500/20 text-[#F7D047] border border-[#0a0a0a]/30'
+                          ? 'bg-[#00f0ff]/20 text-[#00f0ff] border-2 border-[#00f0ff]/30'
                           : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                       }`}
                     >
@@ -3064,7 +3086,7 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredGoods.map((item) => (
                     <div key={item._id} className="glass-panel card-premium rounded-2xl border border-white/10 p-6 card-hover group relative overflow-hidden">
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-[#F7D047] opacity-60" />
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] opacity-60" />
                       
                       {item.image && (
                         <div className="w-full h-40 mb-4 rounded-lg overflow-hidden bg-black">
@@ -3075,7 +3097,7 @@ function App() {
                       <div className="space-y-3">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <span className="pill text-xs mb-2 bg-[#0a0a0a]/10 border-[#0a0a0a]/20 text-[#F7D047]">
+                            <span className="pill text-xs mb-2 bg-[#00f0ff]/10 border-[#00f0ff]/20 text-[#00f0ff]">
                               {item.condition || 'Good'}
                             </span>
                             <h4 className="text-lg font-bold text-white mt-2 line-clamp-1">{item.title}</h4>
@@ -3085,7 +3107,7 @@ function App() {
                         
                         <div className="flex items-center justify-between pt-3 border-t border-white/10">
                           <div>
-                            <span className="text-2xl font-bold text-[#F7D047]">₹{item.price}</span>
+                            <span className="text-2xl font-bold text-[#00f0ff]">₹{item.price}</span>
                             <p className="text-xs text-gray-500 mt-0.5">per item</p>
                           </div>
                           {item.location && (
@@ -3097,7 +3119,7 @@ function App() {
                         </div>
                         
                         <div className="flex gap-2 pt-2">
-                          <button className="flex-1 px-3 py-2 rounded-lg bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-[#F7D047] text-sm font-semibold border border-[#0a0a0a]/30 flex items-center justify-center gap-2 transition">
+                          <button className="flex-1 px-3 py-2 rounded-lg bg-[#00f0ff]/10 hover:bg-[#00f0ff]/20 text-[#00f0ff] text-sm font-semibold border border-[#00f0ff]/30 flex items-center justify-center gap-2 transition">
                             <EditIcon size={16} />
                             Edit
                           </button>
@@ -3120,7 +3142,7 @@ function App() {
                               0 inquiries
                             </span>
                           </div>
-                          <span className="pill text-xs bg-[#0a0a0a]/10 border-[#0a0a0a]/20 text-[#F7D047]">
+                          <span className="pill text-xs bg-[#00f0ff]/10 border-[#00f0ff]/20 text-[#00f0ff]">
                             Active
                           </span>
                         </div>
@@ -3144,7 +3166,7 @@ function App() {
             <EmptyState
               title="No Orders Yet"
               body="Customer orders will appear here when they purchase your services"
-              icon={<ClipboardIcon size={48} className="mx-auto text-[#F7D047]" />}
+              icon={<ClipboardIcon size={48} className="mx-auto text-[#00f0ff]" />}
             />
           </div>
         );
@@ -3162,13 +3184,13 @@ function App() {
           <div>
             {/* Search and Filters */}
             <div className="mb-6 space-y-4">
-              <div className="glass-panel rounded-2xl border border-[#0a0a0a] p-4">
+              <div className="glass-panel rounded-2xl border border-[#00f0ff]/20 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="pill text-sm border-[#0a0a0a] bg-white/5">{filteredServices.length} services</span>
+                  <span className="pill text-sm border-[#00f0ff] bg-[#00f0ff]/10 text-white">{filteredServices.length} services</span>
                   {currentUser?.role === 'provider' && (
                     <button
                       onClick={() => setShowServiceModal(true)}
-                      className="px-4 py-2 rounded-xl bg-[#F7D047] hover:shadow-lg hover:shadow-black/25 text-white font-semibold transition"
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black font-semibold transition shadow-lg hover:shadow-[#00f0ff]/30"
                     >
                       + Add Service
                     </button>
@@ -3182,9 +3204,9 @@ function App() {
                       placeholder="Search services or providers"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
+                      className="w-full pl-11 pr-4 py-3.5 bg-zinc-900/70 text-white rounded-xl border-2 border-[#00f0ff]/30 focus:border-[#00f0ff] focus:ring-2 focus:ring-[#00f0ff]/40 focus:outline-none transition-all shadow-md"
                     />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                       <SearchIcon size={20} />
                     </span>
                   </div>
@@ -3192,7 +3214,7 @@ function App() {
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
+                  className="w-full px-4 py-3.5 bg-zinc-900/70 text-white rounded-xl border-2 border-[#00f0ff]/30 focus:border-[#00f0ff] focus:ring-2 focus:ring-[#00f0ff]/40 focus:outline-none transition-all shadow-md"
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>{cat === 'all' ? 'All categories' : cat}</option>
@@ -3201,7 +3223,7 @@ function App() {
                 <select
                   value={safetyFilter}
                   onChange={(e) => setSafetyFilter(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
+                  className="w-full px-4 py-3.5 bg-zinc-900/70 text-white rounded-xl border-2 border-[#00f0ff]/30 focus:border-[#00f0ff] focus:ring-2 focus:ring-[#00f0ff]/40 focus:outline-none transition-all shadow-md"
                 >
                   <option value="all">All Providers</option>
                   <option value="verified">Verified Only</option>
@@ -3210,7 +3232,7 @@ function App() {
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-900/70 text-white rounded-xl border-2 border-black focus:border-black focus:ring-2 focus:ring-black/40 focus:outline-none transition-all shadow-md"
+                  className="w-full px-4 py-3.5 bg-zinc-900/70 text-white rounded-xl border-2 border-[#00f0ff]/30 focus:border-[#00f0ff] focus:ring-2 focus:ring-[#00f0ff]/40 focus:outline-none transition-all shadow-md"
                 >
                   <option value="recent">Sort: Recent</option>
                   <option value="price-asc">Price: Low to High</option>
@@ -3251,19 +3273,19 @@ function App() {
                     const isVerified = service.provider?.isVerified || service.provider?.verificationStatus === 'verified';
                     
                     return (
-                      <div key={service._id} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 flex flex-col max-w-sm">
+                      <div key={service._id} className="bg-gradient-to-br from-zinc-900 to-black rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-[#00f0ff]/20 flex flex-col max-w-sm lg:aspect-[4/3]">
                         {/* Image Section */}
-                        <div className="relative h-48 overflow-hidden bg-gray-100">
+                        <div className="relative h-48 lg:h-auto lg:flex-1 overflow-hidden bg-zinc-800">
                           {service.image ? (
                             <img src={service.image} alt={service.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
                           ) : null}
-                          <div className="w-full h-full bg-gray-200 flex items-center justify-center" style={{ display: service.image ? 'none' : 'flex' }}>
+                          <div className="w-full h-full bg-zinc-800 flex items-center justify-center" style={{ display: service.image ? 'none' : 'flex' }}>
                             <span className="text-5xl opacity-40">🔧</span>
                           </div>
                           
                           {/* Category Badge */}
                           <div className="absolute top-3 left-3">
-                            <span className="inline-block text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-black text-[#F7D047] shadow-lg">
+                            <span className="inline-block text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-[#00f0ff] text-black shadow-lg">
                               {category}
                             </span>
                           </div>
@@ -3272,7 +3294,7 @@ function App() {
                           {service.rating !== undefined && (
                             <div className="absolute top-3 right-3">
                               <span className="px-2.5 py-1.5 rounded-lg bg-black/90 backdrop-blur-sm text-white font-bold text-xs flex items-center gap-1 shadow-lg">
-                                <StarIcon size={12} filled className="text-[#F7D047]" /> {Number(service.rating).toFixed(1)}
+                                <StarIcon size={12} filled className="text-[#00f0ff]" /> {Number(service.rating).toFixed(1)}
                               </span>
                             </div>
                           )}
@@ -3281,24 +3303,24 @@ function App() {
                         {/* Content Section */}
                         <div className="flex-1 flex flex-col p-6">
                           {/* Title */}
-                          <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight">
+                          <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 leading-tight">
                             {service.title}
                           </h3>
 
                           {/* Description */}
-                          <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3 flex-1">
+                          <p className="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-3 flex-1">
                             {service.description}
                           </p>
 
                           {/* Provider Info */}
-                          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-                            <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-[#F7D047] font-bold text-lg shadow-md flex-shrink-0">
+                          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-zinc-700">
+                            <div className="w-10 h-10 rounded-full bg-[#00f0ff] flex items-center justify-center text-black font-bold text-lg shadow-md flex-shrink-0">
                               {(providerName || 'P').charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <p className="text-gray-900 font-semibold text-sm truncate">{providerName}</p>
-                                {isVerified && <CheckCircleIcon size={14} className="text-green-600 flex-shrink-0" />}
+                                <p className="text-white font-semibold text-sm truncate">{providerName}</p>
+                                {isVerified && <CheckCircleIcon size={14} className="text-[#00f0ff]" />}
                               </div>
                               {providerEmail && <p className="text-gray-500 text-xs truncate">{providerEmail}</p>}
                             </div>
@@ -3306,12 +3328,12 @@ function App() {
 
                           {/* Price */}
                           <div className="mb-4">
-                            <p className="text-3xl font-extrabold text-black">{price}</p>
+                            <p className="text-3xl font-extrabold text-[#00f0ff]">{price}</p>
                           </div>
 
                           {/* Action Buttons */}
                           {currentUser?.role === 'provider' ? (
-                            <div className="py-3 px-4 rounded-xl bg-gray-100 text-gray-500 text-sm font-semibold text-center">
+                            <div className="py-3 px-4 rounded-xl bg-zinc-800 text-gray-400 text-sm font-semibold text-center">
                               Can't buy your own services
                             </div>
                           ) : (
@@ -3319,20 +3341,20 @@ function App() {
                               <div className="flex gap-2 mb-2">
                                 <button 
                                   onClick={() => setSelectedServiceDetail(service)} 
-                                  className="flex-1 font-semibold py-3 px-4 rounded-xl bg-white hover:bg-gray-50 text-black border-2 border-black transition-all hover:shadow-lg flex items-center justify-center gap-2"
+                                  className="flex-1 font-semibold py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white border-2 border-[#00f0ff]/30 transition-all hover:shadow-lg hover:shadow-[#00f0ff]/20 flex items-center justify-center gap-2"
                                 >
                                   <InfoIcon size={16} /> Details
                                 </button>
                                 <button 
                                   onClick={() => { openCheckout(service); setCheckoutType('buy'); }} 
-                                  className="flex-1 font-semibold py-3 px-4 rounded-xl bg-black hover:bg-gray-900 text-white transition-all hover:shadow-xl flex items-center justify-center gap-2"
+                                  className="flex-1 font-semibold py-3 px-4 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black transition-all hover:shadow-xl hover:shadow-[#00f0ff]/30 flex items-center justify-center gap-2"
                                 >
                                   Buy
                                 </button>
                               </div>
                               <button 
                                 onClick={() => openServiceChat(service)} 
-                                className="w-full font-semibold py-3 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300 transition-all flex items-center justify-center gap-2"
+                                className="w-full font-semibold py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white border border-[#00f0ff]/20 transition-all flex items-center justify-center gap-2"
                               >
                                 <MessageIcon size={16} /> Chat
                               </button>
@@ -3351,27 +3373,46 @@ function App() {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col relative overflow-hidden bg-slate-950 text-slate-50 page-shell">
-      <div className="floating-blob blue" aria-hidden="true" />
-      <div className="floating-blob pink" aria-hidden="true" />
-      <div className="noisy-layer" aria-hidden="true" />
+    <div className="w-full min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-black via-zinc-900 to-black text-white page-shell">
+      {/* Enhanced SVG Background with Cyan Accents */}
+      <svg className="absolute inset-0 w-full h-full z-0" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#00f0ff" strokeWidth="0.5" opacity="0.1"/>
+          </pattern>
+          <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style={{stopColor: '#00f0ff', stopOpacity: 0.2}} />
+            <stop offset="100%" style={{stopColor: '#00f0ff', stopOpacity: 0}} />
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+        <circle cx="15%" cy="25%" r="20%" fill="url(#cyanGlow)" />
+        <circle cx="85%" cy="75%" r="25%" fill="url(#cyanGlow)" />
+        <circle cx="50%" cy="50%" r="15%" fill="#00f0ff" opacity="0.03" />
+      </svg>
+      
+      {/* Animated cyan glow orbs */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-[#00f0ff] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse-glow" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#00f0ff] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse-glow" style={{animationDelay: '2s'}} />
 
-      {/* Header - Beautiful & Responsive */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/90 border-b border-white/10 shadow-lg">
-        <div className="w-full mx-auto px-4 md:px-6 py-3 md:py-4">
-          <div className="flex justify-between items-center gap-4">
-            {/* Logo - Refined for mobile */}
-            <div className="shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="logo-box w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-theme-yellow flex items-center justify-center shadow-lg shadow-theme-yellow/50" style={{ backgroundColor: '#F7D047' }}>
-                  <span className="text-black font-bold text-xl md:text-2xl">R</span>
-                </div>
-                <div>
-                  <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
-                    RKserve
-                  </h1>
-                  <p className="text-[10px] md:text-xs uppercase tracking-wider text-slate-400 -mt-0.5">Marketplace</p>
-                </div>
+      {/* Header - Modern Tailwind glass top bar */}
+      <header className="sticky top-0 z-50 bg-black/75 backdrop-blur-2xl border-b border-[#00f0ff]/25">
+        <div className="w-full mx-auto px-4 md:px-6 py-2.5 md:py-3.5 flex justify-between items-center gap-4">
+            {/* Logo - refined with SVG accent */}
+            <div className="shrink-0 flex items-center gap-3">
+              <div className="relative w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center shadow-lg shadow-[#00f0ff]/40 overflow-hidden">
+                <SparkleAccentSvg size={44} className="absolute inset-0 text-black/10 animate-spin-slow" />
+                <span className="relative text-black font-extrabold text-xl md:text-2xl tracking-tight">
+                  R
+                </span>
+              </div>
+              <div className="leading-tight">
+                <h1 className="text-lg md:text-xl font-bold text-white tracking-tight">
+                  RKserve
+                </h1>
+                <p className="text-[10px] md:text-[11px] uppercase tracking-[0.16em] text-[#00f0ff]">
+                  smart marketplace
+                </p>
               </div>
             </div>
             
@@ -3379,14 +3420,24 @@ function App() {
             <div className="hidden md:flex items-center gap-4">
               {currentUser && (
                 <>
-                  <div className="glass-panel px-3 py-2 rounded-xl border border-white/10">
-                    <p className="text-white font-semibold text-sm">{currentUser.username}</p>
-                    <p className="text-xs text-gray-400 capitalize">{currentUser?.role}</p>
+                  <div className="glass-panel px-3 py-2 rounded-xl border border-[#00f0ff]/25 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-[#00f0ff]/15 flex items-center justify-center text-[#00f0ff] text-sm font-semibold">
+                      {(currentUser.username || currentUser.email || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="leading-tight">
+                      <p className="text-white font-semibold text-xs md:text-sm truncate max-w-[140px]">
+                        {currentUser.username}
+                      </p>
+                      <p className="text-[10px] text-[#00f0ff] capitalize flex items-center gap-1">
+                        <UsersIcon size={12} className="text-[#00f0ff]" />
+                        {currentUser?.role}
+                      </p>
+                    </div>
                   </div>
-                  {/* Safety Center Button - Prominent for all users */}
+                  {/* Safety Center Button - cyan outline pill */}
                   <button
                     onClick={() => setShowSafetyCenter(true)}
-                    className="px-4 py-2.5 rounded-xl bg-theme-black hover:bg-black text-white font-semibold transition-all text-sm shadow-lg hover:shadow-theme-black/30 flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl border border-[#00f0ff]/60 text-[#00f0ff] font-semibold transition-all text-sm flex items-center gap-2 bg-black/30 hover:bg-[#00f0ff]/10 shadow-sm hover:shadow-lg"
                     title="Safety Center"
                   >
                     <ShieldIcon size={18} />
@@ -3395,24 +3446,25 @@ function App() {
                 </>
               )}
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-theme-black shadow-lg shadow-theme-black/50 animate-pulse" />
-                <span className="text-xs text-theme-yellow font-medium">{serverStatus}</span>
+                <div className="w-2 h-2 rounded-full bg-[#00f0ff] shadow-lg shadow-[#00f0ff]/50 animate-pulse" />
+                <span className="text-xs text-[#00f0ff] font-medium">{serverStatus}</span>
               </div>
               <ThemeToggle />
               <button
                 onClick={handleLogout}
-                className="theme-keep px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold transition-all text-sm shadow-lg hover:shadow-rose-500/30"
+                className="theme-keep px-4 py-2 rounded-xl bg-transparent border border-rose-500/60 hover:bg-rose-500/10 text-rose-200 font-semibold transition-all text-sm flex items-center gap-2 shadow-sm hover:shadow-lg"
               >
-                Logout
+                <LogoutIcon size={16} className="text-rose-300" />
+                <span>Logout</span>
               </button>
             </div>
 
-            {/* Mobile Actions - Compact & Beautiful */}
+            {/* Mobile Actions - Compact */}
             <div className="md:hidden flex items-center gap-2">
               {currentUser && (
                 <button
                   onClick={() => setShowSafetyCenter(true)}
-                  className="w-9 h-9 rounded-xl bg-theme-black text-white font-bold text-sm flex items-center justify-center shadow-lg shadow-theme-black/20"
+                  className="w-9 h-9 rounded-xl border border-[#00f0ff]/60 bg-black/40 text-[#00f0ff] font-bold text-sm flex items-center justify-center shadow-md hover:bg-[#00f0ff]/10"
                   aria-label="Safety Center"
                   title="Safety Center"
                 >
@@ -3420,7 +3472,7 @@ function App() {
                 </button>
               )}
               <span
-                className="w-2 h-2 rounded-full bg-theme-black shadow-lg shadow-theme-black/50 animate-pulse"
+                className="w-2 h-2 rounded-full bg-[#00f0ff] shadow-lg shadow-[#00f0ff]/50 animate-pulse"
                 role="status"
                 aria-label={serverStatus}
               />
@@ -3433,7 +3485,6 @@ function App() {
                 <ArrowUpRightIcon size={18} />
               </button>
             </div>
-          </div>
         </div>
       </header>
 
@@ -3442,7 +3493,7 @@ function App() {
         <div className="flex-1 w-full h-full overflow-y-auto">
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full w-full">
           {/* Sidebar - Hidden on mobile, shown on desktop - Mobile Nav Style */}
-          <aside className="hidden lg:block lg:w-64 xl:w-72 glass-panel rounded-2xl p-3 h-fit sticky top-24 border border-white/10 shadow-xl lift-card shrink-0 ml-4 xl:ml-6">
+          <aside className="hidden lg:block lg:w-64 xl:w-72 glass-panel rounded-2xl p-3 h-fit sticky top-24 border-2 border-[#00f0ff]/20 shadow-2xl lift-card shrink-0 ml-4 xl:ml-6">
             <nav className="space-y-2">
               {tabs.map((tab) => (
                 <button
@@ -3450,8 +3501,8 @@ function App() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all font-bold border text-sm ${
                     activeTab === tab.id
-                      ? 'bg-theme-yellow/20 text-white border-theme-black/40 shadow-lg shadow-theme-black/20'
-                      : 'text-gray-300 border-transparent hover:bg-white/10 hover:text-white'
+                      ? 'bg-gradient-to-r from-[#00f0ff]/20 to-[#33f3ff]/20 text-white border-[#00f0ff]/40 shadow-lg shadow-[#00f0ff]/20'
+                      : 'text-gray-300 border-transparent hover:bg-white/10 hover:text-white hover:border-[#00f0ff]/20'
                   }`}
                 >
                   <span className="text-2xl">{tab.icon}</span>
@@ -3470,14 +3521,14 @@ function App() {
             onTouchEnd={handleTouchEnd}
           >
             {/* Enhanced Section Hero */}
-            <div className="mb-6 md:mb-8 section-hero">
-              <div className="glass-panel rounded-2xl border border-white/10 p-6 md:p-8">
+            <div className="mb-6 md:mb-8 section-hero relative z-10">
+              <div className="glass-panel rounded-2xl border-2 border-[#00f0ff]/20 p-6 md:p-8">
                 <div className="flex items-center gap-4 mb-3">
-                  <div className="w-14 h-14 rounded-2xl bg-theme-yellow flex items-center justify-center shadow-lg shadow-theme-black/30">
-                    <span className="text-white scale-125">{tabs.find(t => t.id === activeTab)?.icon || <SparklesIcon size={24} />}</span>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center shadow-lg shadow-[#00f0ff]/30">
+                    <span className="text-black scale-125">{tabs.find(t => t.id === activeTab)?.icon || <SparklesIcon size={24} />}</span>
                   </div>
                   <div>
-                    <h2 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-theme-yellow">
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] to-[#33f3ff]">
                       {activeTab === 'market'
                         ? 'Market'
                         : activeTab === 'rps'
@@ -3540,11 +3591,11 @@ function App() {
             setShowServiceModal(true);
           }
         }}
-        className="md:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-theme-yellow text-white shadow-lg shadow-theme-black/40 flex items-center justify-center hover:shadow-xl hover:shadow-theme-black/60 active:scale-95 transition-all animate-bounce border border-theme-black/30"
+        className="md:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] text-black shadow-lg shadow-[#00f0ff]/40 flex items-center justify-center hover:shadow-xl hover:shadow-[#00f0ff]/60 active:scale-95 transition-all animate-bounce border-2 border-[#00f0ff]/30"
         aria-label="Add new item"
         title={activeTab === 'market' ? 'Add Service' : 'Add Goods'}
       >
-        <PlusIcon size={24} className="text-white" />
+        <PlusIcon size={24} className="text-black" />
       </button>
 
       {/* Mobile Bottom Navigation - Improved Design */}
@@ -3637,10 +3688,10 @@ function App() {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs uppercase tracking-wide text-[#F7D047] font-semibold">{selectedServiceDetail.category || 'General'}</p>
+                <p className="text-xs uppercase tracking-wide text-[#00f0ff] font-semibold">{selectedServiceDetail.category || 'General'}</p>
                 <h3 id="service-detail-title" className="text-xl font-bold text-white mt-1">{selectedServiceDetail.title}</h3>
                 {selectedServiceDetail.rating !== undefined && (
-                  <span className="inline-flex items-center gap-1 mt-2 pill text-xs bg-[#F7D047]/20 border-[#0a0a0a]/30 text-[#0a0a0a]">
+                  <span className="inline-flex items-center gap-1 mt-2 pill text-xs bg-[#00f0ff]/20 border-[#00f0ff]/30 text-white">
                     <StarIcon size={12} filled /> {Number(selectedServiceDetail.rating).toFixed(1)}
                   </span>
                 )}
@@ -3648,7 +3699,7 @@ function App() {
                 {selectedServiceDetail.provider?.email && (
                   <p className="text-gray-400 text-xs">{selectedServiceDetail.provider.email}</p>
                 )}
-                <p className="text-lg font-bold text-[#F7D047] mt-2">
+                <p className="text-lg font-bold text-[#00f0ff] mt-2">
                   {Number.isFinite(selectedServiceDetail.price) ? `₹${selectedServiceDetail.price}` : '—'}
                 </p>
               </div>
@@ -3752,7 +3803,7 @@ function App() {
               <button
                 type="submit"
                 disabled={serviceSubmitting}
-                className="w-full py-4 rounded-xl bg-[#F7D047] hover:shadow-xl hover:shadow-black/25 disabled:opacity-60 text-white font-bold transition-all text-base active:scale-[0.98]"
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:shadow-xl hover:shadow-[#00f0ff]/25 disabled:opacity-60 text-black font-bold transition-all text-base active:scale-[0.98]"
               >
                 {serviceSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -3969,7 +4020,7 @@ function App() {
                     type="button"
                     onClick={submitOrder}
                     disabled={checkoutSubmitting}
-                    className="w-full py-3 rounded-xl bg-[#F7D047] hover:shadow-lg hover:shadow-black/25 disabled:opacity-60 text-white font-bold transition"
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:shadow-lg hover:shadow-[#00f0ff]/25 disabled:opacity-60 text-black font-bold transition"
                   >
                     {checkoutSubmitting ? 'Processing...' : 'Proceed to Payment'}
                   </button>
@@ -4048,7 +4099,7 @@ function App() {
                   <button
                     onClick={processPayment}
                     disabled={paymentProcessing || !razorpay.sdkReady}
-                    className="flex-1 py-4 rounded-xl bg-(--color-primary-500) hover:bg-(--color-primary-600) disabled:opacity-60 text-white font-bold transition active:scale-[0.98] flex items-center justify-center gap-2"
+                    className="flex-1 py-4 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] disabled:opacity-60 text-black font-bold transition active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg hover:shadow-[#00f0ff]/30"
                   >
                     {paymentProcessing ? (
                       <><LoaderIcon size={16} /> Processing...</>
@@ -4073,7 +4124,7 @@ function App() {
                 <div className="border-b-2 border-gray-600 pb-6 mb-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-[#F7D047]">RKserve</h1>
+                      <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] to-[#33f3ff]">RKserve</h1>
                       <p className="text-gray-500 text-sm">B2B Service Marketplace</p>
                     </div>
                     <div className="text-right">
@@ -4081,7 +4132,7 @@ function App() {
                       <p className="text-white font-bold text-xl">{orderBill.billNumber}</p>
                     </div>
                   </div>
-                  <div className="bg-green-900/20 border border-green-700/50 text-green-400 p-3 rounded-lg inline-block">
+                  <div className="bg-green-900/20 border-2 border-green-700/50 text-green-400 p-3 rounded-lg inline-block">
                     <p className="font-semibold text-sm">✓ Payment Successful</p>
                   </div>
                 </div>
@@ -4108,7 +4159,7 @@ function App() {
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Order Status</p>
-                    <p className="text-[#F7D047] font-semibold mt-1 capitalize">{orderBill.status}</p>
+                    <p className="text-[#00f0ff] font-semibold mt-1 capitalize">{orderBill.status}</p>
                   </div>
                 </div>
 
@@ -4219,7 +4270,7 @@ function App() {
                   </button>
                   <button
                     onClick={() => window.print()}
-                    className="flex-1 py-4 px-6 bg-black hover:bg-black/90 text-white font-bold rounded-lg shadow-xl hover:shadow-2xl hover:shadow-black/50 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+                    className="flex-1 py-4 px-6 bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black font-bold rounded-lg shadow-xl hover:shadow-2xl hover:shadow-[#00f0ff]/50 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -4254,7 +4305,7 @@ function App() {
             
             <div className="flex items-center justify-between px-4 py-4 border-b border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#F7D047] flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center text-black font-bold text-sm">
                   💬
                 </div>
                 <div>
@@ -4286,9 +4337,9 @@ function App() {
                 const isRead = isMine && readAt && new Date(readAt) >= new Date(m.at);
                 return (
                   <div key={idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`px-4 py-3 rounded-2xl text-sm max-w-[85%] shadow-lg ${isMine ? 'bg-black text-white rounded-br-md' : 'bg-white/10 border border-white/10 rounded-bl-md'}`}>
-                      {!isMine && <p className="text-[#0a0a0a] font-semibold text-xs mb-1">{m.from}</p>}
-                      <p className="text-white whitespace-pre-wrap wrap-break-word">{m.text}</p>
+                    <div className={`px-4 py-3 rounded-2xl text-sm max-w-[85%] shadow-lg ${isMine ? 'bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] text-black rounded-br-md' : 'bg-white/10 border border-white/10 rounded-bl-md'}`}>
+                      {!isMine && <p className="text-white font-semibold text-xs mb-1">{m.from}</p>}
+                      <p className={`${isMine ? 'text-black' : 'text-white'} whitespace-pre-wrap break-words`}>{m.text}</p>
                       <div className="flex items-center justify-end gap-2 mt-1.5">
                         <p className="text-[10px] opacity-70">{formatTime(m.at)}</p>
                         {isMine && (
@@ -4316,7 +4367,7 @@ function App() {
               <div className="p-3 border-b border-white/5">
                 <button
                   onClick={() => setShowMessageTemplates(!showMessageTemplates)}
-                  className="w-full px-4 py-2 rounded-xl bg-[#0a0a0a]/20 hover:bg-[#0a0a0a]/30 text-[#0a0a0a] text-sm font-semibold border border-[#0a0a0a]/30 flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-[#00f0ff]/20 to-[#33f3ff]/20 hover:from-[#00f0ff]/30 hover:to-[#33f3ff]/30 text-[#00f0ff] text-sm font-semibold border-2 border-[#00f0ff]/30 flex items-center justify-center gap-2"
                 >
                   {showMessageTemplates ? '▼' : '▶'} Quick Messages
                 </button>
@@ -4329,7 +4380,7 @@ function App() {
                     <button
                       key={idx}
                       onClick={() => sendChatMessage(template)}
-                      className="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-[#0a0a0a]/20 text-white text-sm border border-white/10 hover:border-[#0a0a0a]/40 transition-all"
+                      className="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-[#00f0ff]/20 text-white text-sm border border-white/10 hover:border-[#00f0ff]/40 transition-all"
                     >
                       {template}
                     </button>

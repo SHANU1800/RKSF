@@ -1,5 +1,6 @@
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
+import { PackageIllustrationSvg } from '../icons/IconTypes';
 
 export const GoodsCard = ({
   item,
@@ -7,7 +8,7 @@ export const GoodsCard = ({
   onOffer,
 }) => {
   return (
-    <div className="glass-panel card-premium rounded-2xl border border-white/10 overflow-hidden card-hover group relative">
+    <div className="glass-panel card-premium rounded-2xl border border-white/10 overflow-hidden card-hover group relative lg:aspect-[4/3] flex flex-col">
       {/* Enhanced gradient accent line */}
       <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#F7D047] opacity-80 shadow-lg z-10" />
       
@@ -34,8 +35,8 @@ export const GoodsCard = ({
           </div>
         </div>
       ) : (
-        <div className="h-44 sm:h-56 bg-slate-800 flex items-center justify-center relative">
-          <span className="text-7xl opacity-30">📦</span>
+        <div className="h-44 sm:h-56 bg-slate-800 flex items-center justify-center relative text-gray-500">
+          <PackageIllustrationSvg size={64} className="opacity-40" />
           <div className="absolute top-3 left-3">
             <Badge variant="info" size="md" className="shadow-lg backdrop-blur-sm">
               {item.condition || 'Good'}

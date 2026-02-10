@@ -97,7 +97,7 @@ export default function CustomerCare({ currentUser }) {
       <div className="glass-panel rounded-2xl border border-white/10 p-6 md:p-8 shadow-lg">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
           <div className="space-y-2">
-            <p className="text-xs uppercase tracking-[0.25em] text-[#F7D047] font-semibold">Support Center</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-[#00f0ff] font-semibold">Support Center</p>
             <h3 className="text-2xl md:text-3xl font-bold text-white">Customer Care</h3>
             <p className="text-gray-300 text-sm md:text-base">Get instant help from our AI assistant or submit a detailed grievance to our team.</p>
           </div>
@@ -121,8 +121,10 @@ export default function CustomerCare({ currentUser }) {
           
           <div className="flex items-center justify-between pb-5 border-b border-white/10 mb-6 relative z-10">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-[#F7D047] flex items-center justify-center text-2xl shadow-lg">
-                🤖
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center shadow-lg shadow-[#00f0ff]/20">
+                <svg className="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
               </div>
               <div>
                 <p className="text-white font-bold text-lg md:text-xl">RKserve Care</p>
@@ -143,12 +145,15 @@ export default function CustomerCare({ currentUser }) {
               onClick={() => setGrievanceMode(false)}
               className={`flex-1 py-3.5 px-5 rounded-xl text-base font-bold transition-all duration-200 ${
                 !grievanceMode
-                  ? 'bg-[#F7D047] text-white shadow-lg shadow-[#0a0a0a]/25 scale-105'
+                  ? 'bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] text-black shadow-lg shadow-[#00f0ff]/25 scale-105'
                   : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:border-white/20'
               }`}
             >
               <span className="flex items-center justify-center gap-2">
-                💬 <span>AI Assistant</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>AI Assistant</span>
               </span>
             </button>
             <button
@@ -160,7 +165,10 @@ export default function CustomerCare({ currentUser }) {
               }`}
             >
               <span className="flex items-center justify-center gap-2">
-                📝 <span>Submit Grievance</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Submit Grievance</span>
               </span>
             </button>
           </div>
@@ -168,8 +176,16 @@ export default function CustomerCare({ currentUser }) {
           <div ref={listRef} className="flex-1 bg-slate-900/70 rounded-2xl border border-white/10 p-5 overflow-y-auto space-y-4 shadow-inner" style={{ minHeight: '350px' }}>
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-                <div className="w-20 h-20 rounded-full bg-blue-500/20 flex items-center justify-center text-4xl border border-[#0a0a0a]/30">
-                  {grievanceMode ? '📝' : '💬'}
+                <div className="w-20 h-20 rounded-full bg-[#00f0ff]/20 flex items-center justify-center border-2 border-[#00f0ff]/30">
+                  {grievanceMode ? (
+                    <svg className="w-10 h-10 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-10 h-10 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  )}
                 </div>
                 <p className="text-gray-300 text-base md:text-lg font-medium max-w-md">
                   {grievanceMode
@@ -181,9 +197,9 @@ export default function CustomerCare({ currentUser }) {
             ) : (
               messages.map((m, idx) => (
                 <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                  <div className={`px-4 py-3 rounded-2xl text-sm md:text-base max-w-[85%] md:max-w-[75%] shadow-md ${m.role === 'user' ? 'bg-emerald-500/30 border border-emerald-400/50' : 'bg-white/10 border border-white/20'}`}>
-                    <p className="text-gray-300 font-bold text-xs mb-1.5">{m.role === 'user' ? currentUser?.username || 'You' : 'RKserve Care'}</p>
-                    <p className="text-white whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                  <div className={`px-4 py-3 rounded-2xl text-sm md:text-base max-w-[85%] md:max-w-[75%] shadow-md ${m.role === 'user' ? 'bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] text-black border border-[#00f0ff]/50' : 'bg-white/10 border border-white/20'}`}>
+                    <p className={`font-bold text-xs mb-1.5 ${m.role === 'user' ? 'text-black/70' : 'text-gray-300'}`}>{m.role === 'user' ? currentUser?.username || 'You' : 'RKserve Care'}</p>
+                    <p className={`whitespace-pre-wrap leading-relaxed ${m.role === 'user' ? 'text-black' : 'text-white'}`}>{m.content}</p>
                   </div>
                 </div>
               ))
@@ -193,7 +209,9 @@ export default function CustomerCare({ currentUser }) {
           <div className="space-y-4 mt-6">
             {grievanceMode && (
               <div className="bg-orange-500/10 border border-orange-400/40 rounded-xl p-4 flex items-start gap-3">
-                <span className="text-2xl">⚠️</span>
+                <svg className="w-6 h-6 text-orange-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
                 <div>
                   <p className="text-orange-300 font-semibold text-sm">Grievance Submission</p>
                   <p className="text-orange-200/80 text-xs mt-1">Describe your issue in detail. Our admin team will review and respond within 24-48 hours.</p>
@@ -218,7 +236,7 @@ export default function CustomerCare({ currentUser }) {
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }}}
                   placeholder="Type your message..."
                   disabled={loading}
-                  className="flex-1 px-5 py-4 bg-slate-900/80 text-white text-base rounded-xl border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none shadow-inner placeholder-gray-500"
+                  className="flex-1 px-5 py-4 bg-slate-900/80 text-white text-base rounded-xl border border-white/20 focus:border-[#00f0ff] focus:ring-2 focus:ring-[#00f0ff]/20 focus:outline-none shadow-inner placeholder-gray-500"
                 />
               )}
               <button
@@ -227,7 +245,7 @@ export default function CustomerCare({ currentUser }) {
                 className={`px-8 py-4 rounded-xl font-bold text-base transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg min-w-[160px] ${
                   grievanceMode
                     ? 'bg-orange-500 hover:shadow-orange-500/20 text-white'
-                    : 'bg-[#F7D047] hover:shadow-black/30 text-white'
+                    : 'bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:shadow-[#00f0ff]/30 text-black'
                 }`}
               >
                 {loading ? (
@@ -242,7 +260,9 @@ export default function CustomerCare({ currentUser }) {
 
           {error && (
             <div className="mt-4 bg-rose-900/40 border border-rose-500/50 text-rose-200 text-sm rounded-xl p-4 flex items-start gap-3 shadow-lg">
-              <span className="text-xl">❌</span>
+              <svg className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
               <div>
                 <p className="font-semibold">Error</p>
                 <p className="text-rose-300/90 text-sm mt-1">{error}</p>
@@ -253,30 +273,37 @@ export default function CustomerCare({ currentUser }) {
 
         <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-5 shadow-lg">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">📋</span>
+            <svg className="w-6 h-6 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
             <h4 className="text-lg font-bold text-white">Support Guidelines</h4>
           </div>
           <ul className="space-y-3 text-sm text-gray-300">
             <li className="flex items-start gap-3">
-              <span className="text-[#F7D047] font-bold mt-0.5">•</span>
+              <span className="text-[#00f0ff] font-bold mt-0.5">•</span>
               <span>Our AI assistant is empathetic and designed to help you kindly and efficiently.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-[#F7D047] font-bold mt-0.5">•</span>
+              <span className="text-[#00f0ff] font-bold mt-0.5">•</span>
               <span>For sensitive or complex issues, we may suggest contacting a human agent.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-[#F7D047] font-bold mt-0.5">•</span>
+              <span className="text-[#00f0ff] font-bold mt-0.5">•</span>
               <span>We maintain a safe environment and politely decline harmful requests.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-[#F7D047] font-bold mt-0.5">•</span>
+              <span className="text-[#00f0ff] font-bold mt-0.5">•</span>
               <span>Share details like order ID or email for faster, more accurate support.</span>
             </li>
           </ul>
-          <div className="mt-6 p-4 bg-[#0a0a0a]/10 border border-[#0a0a0a]/30 rounded-xl">
-            <p className="text-xs text-[#F7D047] font-semibold mb-1">💡 Pro Tip</p>
-            <p className="text-xs text-[#F7D047]/80/80">Be specific with your questions to get the most helpful responses!</p>
+          <div className="mt-6 p-4 bg-[#00f0ff]/10 border border-[#00f0ff]/30 rounded-xl">
+            <div className="flex items-start gap-2 mb-1">
+              <svg className="w-4 h-4 text-[#00f0ff] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <p className="text-xs text-[#00f0ff] font-semibold">Pro Tip</p>
+            </div>
+            <p className="text-xs text-[#00f0ff]/80">Be specific with your questions to get the most helpful responses!</p>
           </div>
         </div>
       </div>

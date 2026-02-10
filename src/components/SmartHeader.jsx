@@ -1,13 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import './SmartHeader.css';
 
 /**
  * SmartHeader - Header that collapses/expands based on scroll direction
- * Features:
- * - Collapse when scrolling down
- * - Expand when scrolling up
- * - Smooth animations
- * - Customizable height
  */
 const SmartHeader = ({
   children,
@@ -24,7 +18,6 @@ const SmartHeader = ({
   useEffect(() => {
     const handleScroll = () => {
       if (!scrollableRef.current) return;
-
       const scrollY = scrollableRef.current.scrollTop;
       const isScrollingDown = scrollY > lastScrollY;
 
@@ -35,24 +28,20 @@ const SmartHeader = ({
         setIsCollapsed(false);
         onExpand?.();
       }
-
       setLastScrollY(scrollY);
     };
 
     const element = scrollableRef.current;
     if (!element) return;
-
     element.addEventListener('scroll', handleScroll, { passive: true });
     return () => element.removeEventListener('scroll', handleScroll);
   }, [lastScrollY, isCollapsed, scrollThreshold, onCollapse, onExpand]);
 
   return (
-    <div className="smart-header-wrapper">
+    <div className="w-full">
       <header
-        className={`smart-header ${isCollapsed ? 'collapsed' : 'expanded'}`}
-        style={{
-          height: isCollapsed ? collapsedHeight : expandedHeight,
-        }}
+        className={`flex items-center justify-between bg-black/40 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 transition-all duration-300 ease-out md:px-4 px-3 md:py-4 py-3 ${isCollapsed ? 'opacity-95 py-2 md:py-2' : 'opacity-100'}`}
+        style={{ height: isCollapsed ? collapsedHeight : expandedHeight }}
       >
         {children}
       </header>

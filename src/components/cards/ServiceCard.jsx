@@ -1,6 +1,6 @@
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
-import { ShieldIcon, CheckCircleIcon, StarIcon, InfoIcon } from '../icons/IconTypes';
+import { ShieldIcon, CheckCircleIcon, StarIcon, InfoIcon, ServiceWrenchSvg } from '../icons/IconTypes';
 
 export const ServiceCard = ({
   service,
@@ -18,7 +18,7 @@ export const ServiceCard = ({
   const safetyScore = service.provider?.safetyScore || (isVerified ? 4.5 : 3.5);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-200 flex flex-col max-w-sm">
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-200 flex flex-col max-w-sm hover-lift lg:aspect-[4/3]">
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden bg-gray-100">
         {service.image ? (
@@ -32,8 +32,8 @@ export const ServiceCard = ({
             }}
           />
         ) : null}
-        <div className="w-full h-full bg-gray-200 flex items-center justify-center" style={{ display: service.image ? 'none' : 'flex' }}>
-          <span className="text-5xl opacity-40">🔧</span>
+        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400" style={{ display: service.image ? 'none' : 'flex' }}>
+          <ServiceWrenchSvg size={56} className="opacity-50" />
         </div>
         
         {/* Category Badge */}

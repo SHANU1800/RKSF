@@ -1,5 +1,6 @@
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
+import { FileTextIcon, DownloadIcon } from '../icons/IconTypes';
 
 export const TransactionCard = ({
   transaction,
@@ -10,7 +11,7 @@ export const TransactionCard = ({
   const bgColor = isPositive ? 'bg-[#0a0a0a]/10 border-[#0a0a0a]/20' : 'bg-red-500/10 border-red-500/20';
 
   return (
-    <div className="glass-panel card-premium rounded-2xl border border-white/10 p-5 sm:p-6 space-y-4 card-hover group relative overflow-hidden">
+    <div className="glass-panel card-premium rounded-2xl border border-white/10 p-5 sm:p-6 space-y-4 card-hover group relative overflow-hidden lg:aspect-[4/3] flex flex-col">
       {/* Gradient accent line */}
       <div className={`absolute top-0 left-0 right-0 h-1 ${
         isPositive 
@@ -65,18 +66,20 @@ export const TransactionCard = ({
           <Button
             variant="secondary"
             size="md"
-            className="flex-1 font-semibold"
+            className="flex-1 font-semibold flex items-center justify-center gap-2"
           >
-            📄 Invoice
+            <FileTextIcon size={16} />
+            Invoice
           </Button>
           {onDownload && (
             <Button
               variant="primary"
               size="md"
               onClick={onDownload}
-              className="flex-1 font-semibold"
+              className="flex-1 font-semibold flex items-center justify-center gap-2"
             >
-              ⬇️ Download
+              <DownloadIcon size={16} />
+              Download
             </Button>
           )}
         </div>

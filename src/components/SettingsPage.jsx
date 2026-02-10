@@ -69,7 +69,7 @@ const Toggle = ({ label, checked, onChange, description }) => (
     <button
       onClick={onChange}
       className={`relative inline-flex h-7 w-12 md:h-6 md:w-11 items-center rounded-full transition-all shrink-0 ${
-        checked ? 'bg-[#F7D047] shadow-lg shadow-black/30' : 'bg-gray-600'
+        checked ? 'bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] shadow-lg shadow-[#00f0ff]/30' : 'bg-gray-600'
       }`}
     >
       <span
@@ -87,7 +87,7 @@ const Select = ({ label, value, onChange, options }) => (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full md:w-auto px-4 py-3 md:py-2 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-[#0a0a0a] focus:ring-2 focus:ring-[#0a0a0a]/20 focus:outline-none text-sm appearance-none cursor-pointer"
+      className="w-full md:w-auto px-4 py-3 md:py-2 bg-slate-900/70 text-white rounded-xl border border-white/10 focus:border-[#00f0ff] focus:ring-2 focus:ring-[#00f0ff]/20 focus:outline-none text-sm appearance-none cursor-pointer"
       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
     >
       {options.map((opt) => (
@@ -103,7 +103,7 @@ const Slider = ({ label, value, onChange, min = 0, max = 100 }) => (
   <div className="space-y-3 p-3 sm:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
     <div className="flex justify-between items-center">
       <label className="text-white font-medium text-sm sm:text-base">{label}</label>
-      <span className="text-[#F7D047] font-bold text-sm bg-[#0a0a0a]/10 px-2.5 py-1 rounded-lg">{value}%</span>
+      <span className="text-[#00f0ff] font-bold text-sm bg-[#00f0ff]/10 px-2.5 py-1 rounded-lg border border-[#00f0ff]/30">{value}%</span>
     </div>
     <input
       type="range"
@@ -154,8 +154,8 @@ const SettingsPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-0 -mx-4 md:mx-0 bg-slate-900/30 md:bg-transparent animate-slide-down">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-slate-600 flex items-center justify-center shadow-lg animate-float">
-            <SettingsIcon size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center shadow-lg shadow-[#00f0ff]/20 animate-float">
+            <SettingsIcon size={28} className="text-black" />
           </div>
           <div>
             <h3 className="text-2xl font-bold text-white">Settings</h3>
@@ -187,7 +187,7 @@ const SettingsPage = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl font-semibold text-sm transition-all ${
                 activeTab === tab.id
-                  ? 'bg-[#F7D047]/20 text-[#F7D047] shadow-lg border border-[#0a0a0a]/40'
+                  ? 'bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] text-black shadow-lg shadow-[#00f0ff]/20 border-2 border-[#00f0ff]'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
               }`}
             >
@@ -230,7 +230,7 @@ const SettingsPage = () => {
             />
           </SettingSection>
 
-          <SettingSection title="Visual Effects" icon="✨">
+          <SettingSection title="Visual Effects" icon={<svg className="w-6 h-6 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>}>
             <Toggle
               label="Enable Animations"
               checked={!reducedMotion}
@@ -276,7 +276,7 @@ const SettingsPage = () => {
             />
           </SettingSection>
 
-          <SettingSection title="Sound Categories" icon="🎵">
+          <SettingSection title="Sound Categories" icon={<svg className="w-6 h-6 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>}>
             <Slider
               label="UI Sounds Volume"
               value={Math.floor(volume * 0.8)}
@@ -314,7 +314,7 @@ const SettingsPage = () => {
             />
           </SettingSection>
 
-          <SettingSection title="Notification Preferences" icon="📬">
+          <SettingSection title="Notification Preferences" icon={<svg className="w-6 h-6 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}>
             <Toggle
               label="Order Updates"
               checked={true}
@@ -361,7 +361,7 @@ const SettingsPage = () => {
             />
           </SettingSection>
 
-          <SettingSection title="Data & Privacy" icon="🔐">
+          <SettingSection title="Data & Privacy" icon={<svg className="w-6 h-6 text-[#00f0ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}>
             <Toggle
               label="Allow Analytics"
               checked={false}
@@ -375,13 +375,19 @@ const SettingsPage = () => {
               description="Show suggestions based on activity"
             />
             <div className="p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
-              <button className="text-sm text-[#F7D047] hover:text-blue-300 font-semibold">
-                📥 Download My Data
+              <button className="text-sm text-[#00f0ff] hover:text-[#33f3ff] font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download My Data
               </button>
             </div>
             <div className="p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
-              <button className="text-sm text-red-400 hover:text-red-300 font-semibold">
-                🗑️ Delete My Account
+              <button className="text-sm text-red-400 hover:text-red-300 font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete My Account
               </button>
             </div>
           </SettingSection>
@@ -456,9 +462,9 @@ const SettingsPage = () => {
             <div className="p-3 md:p-2 rounded-xl hover:bg-white/5 transition-all -mx-2 px-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-white font-medium">Cache Usage</span>
-                <span className="text-[#F7D047] font-bold">128 MB</span>
+                <span className="text-[#00f0ff] font-bold">128 MB</span>
               </div>
-              <button className="text-sm text-[#F7D047] hover:text-blue-300 font-semibold flex items-center gap-2">
+              <button className="text-sm text-[#00f0ff] hover:text-[#33f3ff] font-semibold flex items-center gap-2">
                 <TrashIcon size={16} /> Clear Cache
               </button>
             </div>
@@ -469,8 +475,8 @@ const SettingsPage = () => {
       {/* App Info */}
       <div className="glass-panel rounded-2xl border border-white/10 p-4 md:p-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#F7D047] flex items-center justify-center shadow-lg">
-            <GridIcon size={24} className="text-white" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center shadow-lg shadow-[#00f0ff]/20">
+            <GridIcon size={24} className="text-black" />
           </div>
           <div className="flex-1">
             <p className="text-white font-bold">RKserve</p>
@@ -485,7 +491,7 @@ const SettingsPage = () => {
           appearance: none;
           height: 8px;
           border-radius: 8px;
-          background: linear-gradient(to right, #3b82f6 0%, #3b82f6 var(--value, 50%), #4b5563 var(--value, 50%), #4b5563 100%);
+          background: linear-gradient(to right, #00f0ff 0%, #00f0ff var(--value, 50%), #4b5563 var(--value, 50%), #4b5563 100%);
         }
         .slider::-webkit-slider-thumb {
           -webkit-appearance: none;
@@ -493,9 +499,9 @@ const SettingsPage = () => {
           width: 24px;
           height: 24px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #3b82f6, #6366f1);
+          background: linear-gradient(135deg, #00f0ff, #33f3ff);
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+          box-shadow: 0 4px 12px rgba(0, 240, 255, 0.4);
           border: 3px solid white;
           transition: transform 0.15s ease;
         }
@@ -509,9 +515,9 @@ const SettingsPage = () => {
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #3b82f6, #6366f1);
+          background: linear-gradient(135deg, #00f0ff, #33f3ff);
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+          box-shadow: 0 4px 12px rgba(0, 240, 255, 0.4);
           border: 3px solid white;
         }
         .slider::-moz-range-track {
