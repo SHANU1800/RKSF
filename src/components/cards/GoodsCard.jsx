@@ -8,13 +8,13 @@ export const GoodsCard = ({
   onOffer,
 }) => {
   return (
-    <div className="glass-panel card-premium rounded-2xl border border-white/10 overflow-hidden card-hover group relative lg:aspect-[4/3] flex flex-col">
+    <div className="group glass-panel card-premium rounded-2xl border border-white/10 hover:border-[#F7D047]/30 overflow-hidden card-hover relative aspect-4/3 flex flex-col shadow-lg hover:shadow-xl transition-all">
       {/* Enhanced gradient accent line */}
-      <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#F7D047] opacity-80 shadow-lg z-10" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#F7D047] to-transparent opacity-60 group-hover:opacity-100 z-10 transition-opacity" />
       
-      {/* Image with enhanced overlay */}
+      {/* Image with enhanced overlay - Takes 55% */}
       {item.image ? (
-        <div className="h-44 sm:h-56 bg-black relative overflow-hidden">
+        <div className="h-[55%] bg-black relative overflow-hidden">
           <img 
             src={item.image} 
             alt={item.title} 
@@ -35,7 +35,7 @@ export const GoodsCard = ({
           </div>
         </div>
       ) : (
-        <div className="h-44 sm:h-56 bg-slate-800 flex items-center justify-center relative text-gray-500">
+        <div className="h-[55%] bg-slate-800 flex items-center justify-center relative text-gray-500">
           <PackageIllustrationSvg size={64} className="opacity-40" />
           <div className="absolute top-3 left-3">
             <Badge variant="info" size="md" className="shadow-lg backdrop-blur-sm">
@@ -48,64 +48,42 @@ export const GoodsCard = ({
         </div>
       )}
 
-      <div className="p-5 sm:p-7 space-y-4 relative">
+      {/* Content Section - Takes 45% */}
+      <div className="flex-1 p-4 flex flex-col relative">
         {/* Background glow on hover */}
         <div className="absolute inset-0 bg-[#F7D047]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
         
-        <div className="relative z-10 space-y-4">
-          {/* Title and description */}
-          <div>
-            <h4 className="text-xl sm:text-2xl font-bold text-white mb-2 leading-tight line-clamp-2">
-              {item.title}
-            </h4>
-            <p className="text-gray-300 text-sm sm:text-base leading-relaxed line-clamp-2">
-              {item.description}
-            </p>
-          </div>
+        <div className="relative z-10 flex flex-col h-full">
+          {/* Title */}
+          <h4 className="text-lg font-bold text-white mb-2 leading-tight line-clamp-2">
+            {item.title}
+          </h4>
 
-          {/* Location and date - enhanced */}
-          <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
-            <div className="flex items-center gap-2 min-w-0 flex-1 bg-white/5 rounded-lg px-3 py-2">
-              <span className="text-lg">📍</span>
-              <span className="text-sm text-gray-300 truncate font-medium">{item.location}</span>
-            </div>
-            <div className="text-xs text-gray-400 shrink-0 bg-white/5 rounded-lg px-3 py-2">
-              {new Date(item.createdAt || new Date()).toLocaleDateString('en-IN', { 
-                day: 'numeric', 
-                month: 'short' 
-              })}
-            </div>
-          </div>
-
-          {/* Seller info - enhanced */}
-          <div className="flex items-center gap-3 pt-2 border-t border-white/10">
-            <div className="w-10 h-10 rounded-xl bg-[#F7D047] flex items-center justify-center text-white text-sm font-bold shadow-lg">
+          {/* Seller & Location - Compact */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-lg bg-[#F7D047] flex items-center justify-center text-white text-xs font-bold shrink-0">
               {(item.sellerName || 'P').charAt(0).toUpperCase()}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white font-semibold text-sm truncate">{item.sellerName || 'Provider'}</p>
-              <p className="text-xs text-gray-400">Seller</p>
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <span className="text-xs">📍</span>
+              <span className="text-xs text-gray-300 truncate">{item.location}</span>
             </div>
           </div>
 
-          {/* Actions - enhanced */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={onChat}
-              className="flex-1 font-bold shadow-lg hover:shadow-xl transition-all"
+          {/* Actions - Compact */}
+          <div className="flex gap-2 mt-auto">
+            <button
+              onClick={(e) => { e.stopPropagation(); onChat(); }}
+              className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-[#F7D047] to-yellow-500 hover:from-yellow-500 hover:to-[#F7D047] text-black font-bold text-sm transition-all hover:shadow-lg active:scale-95"
             >
               💬 Chat
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={onOffer}
-              className="px-6 font-bold shadow-lg hover:shadow-xl transition-all"
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onOffer(); }}
+              className="flex-1 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold text-sm border border-white/20 transition-all active:scale-95"
             >
-              🏷️ Make Offer
-            </Button>
+              🏷️ Offer
+            </button>
           </div>
         </div>
       </div>

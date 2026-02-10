@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import LoginPage from './LoginPage';
-import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon, SearchIcon, PlusIcon, MoreIcon, ArrowUpRightIcon, UsersIcon, UserIcon, SettingsIcon, SendIcon, BuildingIcon, FileTextIcon, RevenueIcon, AnalyticsIcon, ServicesIcon, GoodsIcon, ChartIcon, TrendingUpIcon, TrendingDownIcon, BarChartIcon, PieChartIcon, ActivityIcon, DollarSignIcon, ArchiveIcon, CopyIcon, DownloadIcon, UploadIcon, FilterIcon, EditIcon, TrashIcon, ZapIcon, ShieldIcon, InfoIcon, WalletIllustrationSvg, SparkleAccentSvg, LogoutIcon } from './components/icons/IconTypes';
+import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon, SearchIcon, PlusIcon, MoreIcon, ArrowUpRightIcon, UsersIcon, UserIcon, SettingsIcon, SendIcon, BuildingIcon, FileTextIcon, RevenueIcon, AnalyticsIcon, ServicesIcon, GoodsIcon, ChartIcon, TrendingUpIcon, TrendingDownIcon, BarChartIcon, PieChartIcon, ActivityIcon, DollarSignIcon, ArchiveIcon, CopyIcon, DownloadIcon, UploadIcon, FilterIcon, EditIcon, TrashIcon, ZapIcon, ShieldIcon, InfoIcon, WalletIllustrationSvg, SparkleAccentSvg, LogoutIcon, ShoppingBagIcon } from './components/icons/IconTypes';
 import SafetyCenter from './components/safety/SafetyCenter';
 import ProviderAnalytics from './components/analytics/ProviderAnalytics';
 import ProviderCards from './ProviderCards';
+import { ServiceCard } from './components/cards';
 import ProvidersMap from './components/ProvidersMap';
 import CustomerCare from './CustomerCare';
 import SettingsPage from './components/SettingsPage';
@@ -224,11 +225,20 @@ function App() {
             setUserLocation(null);
           }
         } else if (response.status === 401) {
+          // User is not authenticated - this is expected, not an error
+          localStorage.removeItem('user');
+          setCurrentUser(null);
+        } else {
+          // Other error statuses
+          console.error('Session check failed with status:', response.status);
           localStorage.removeItem('user');
           setCurrentUser(null);
         }
       } catch (error) {
-        console.error('Session hydration failed:', error);
+        // Network error or other issues - fail silently and allow login
+        console.warn('Session check failed:', error.message);
+        localStorage.removeItem('user');
+        setCurrentUser(null);
       }
     };
 
@@ -385,7 +395,14 @@ function App() {
 
   // Socket connection for chat - only connect once per user login
   useEffect(() => {
-    if (!currentUser?._id) return;
+    if (!currentUser?._id) {
+      // Clean up any existing socket connection when user logs out
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      return;
+    }
     if (socketRef.current?.connected) return; // Prevent reconnection if already connected
 
     const socket = io(SOCKET_URL, {
@@ -393,12 +410,16 @@ function App() {
       transports: ['websocket', 'polling'],
       path: '/socket.io',
       auth: { userId: currentUser._id, name: currentUser.username },
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     });
 
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('socket connected');
+      console.log('Socket connected successfully');
       const user = currentUserRef.current;
       if (user?.role === 'provider' && user?._id) {
         socket.emit('chat:join', { room: `provider-${user._id}` });
@@ -406,8 +427,11 @@ function App() {
     });
 
     socket.on('connect_error', (err) => {
-      console.error('socket connect_error', err?.message || err);
-      toastRef.current?.error('Realtime connection failed. We will retry automatically.');
+      console.warn('Socket connection error:', err?.message || err);
+      // Only show error toast on repeated failures, not on initial attempt
+      if (socket.io.reconnecting === false) {
+        toastRef.current?.warning('Chat connection issue. Retrying...');
+      }
     });
 
     socket.on('chat:message', (payload) => {
@@ -3244,7 +3268,7 @@ function App() {
             </div>
 
             {loadingServices ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10 pointer-events-auto">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="glass-panel border border-white/5 rounded-2xl p-6 animate-pulse space-y-4">
                     <div className="h-4 bg-white/10 rounded w-1/3" />
@@ -3259,111 +3283,22 @@ function App() {
                 ))}
               </div>
             ) : (
-              <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))' }}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10 pointer-events-auto">
                 {filteredServices.length === 0 ? (
                   <div className="col-span-full text-center py-10 text-gray-400 border border-dashed border-gray-700 rounded-lg">
                     No services found
                   </div>
                 ) : (
-                  filteredServices.map((service) => {
-                    const providerName = service.provider?.name || 'Unknown Provider';
-                    const providerEmail = service.provider?.email || '';
-                    const category = service.category || 'General';
-                    const price = Number.isFinite(service.price) ? `₹${service.price}` : '—';
-                    const isVerified = service.provider?.isVerified || service.provider?.verificationStatus === 'verified';
-                    
-                    return (
-                      <div key={service._id} className="bg-gradient-to-br from-zinc-900 to-black rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-[#00f0ff]/20 flex flex-col max-w-sm lg:aspect-[4/3]">
-                        {/* Image Section */}
-                        <div className="relative h-48 lg:h-auto lg:flex-1 overflow-hidden bg-zinc-800">
-                          {service.image ? (
-                            <img src={service.image} alt={service.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
-                          ) : null}
-                          <div className="w-full h-full bg-zinc-800 flex items-center justify-center" style={{ display: service.image ? 'none' : 'flex' }}>
-                            <span className="text-5xl opacity-40">🔧</span>
-                          </div>
-                          
-                          {/* Category Badge */}
-                          <div className="absolute top-3 left-3">
-                            <span className="inline-block text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-[#00f0ff] text-black shadow-lg">
-                              {category}
-                            </span>
-                          </div>
-
-                          {/* Rating Badge */}
-                          {service.rating !== undefined && (
-                            <div className="absolute top-3 right-3">
-                              <span className="px-2.5 py-1.5 rounded-lg bg-black/90 backdrop-blur-sm text-white font-bold text-xs flex items-center gap-1 shadow-lg">
-                                <StarIcon size={12} filled className="text-[#00f0ff]" /> {Number(service.rating).toFixed(1)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Content Section */}
-                        <div className="flex-1 flex flex-col p-6">
-                          {/* Title */}
-                          <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 leading-tight">
-                            {service.title}
-                          </h3>
-
-                          {/* Description */}
-                          <p className="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-3 flex-1">
-                            {service.description}
-                          </p>
-
-                          {/* Provider Info */}
-                          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-zinc-700">
-                            <div className="w-10 h-10 rounded-full bg-[#00f0ff] flex items-center justify-center text-black font-bold text-lg shadow-md flex-shrink-0">
-                              {(providerName || 'P').charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <p className="text-white font-semibold text-sm truncate">{providerName}</p>
-                                {isVerified && <CheckCircleIcon size={14} className="text-[#00f0ff]" />}
-                              </div>
-                              {providerEmail && <p className="text-gray-500 text-xs truncate">{providerEmail}</p>}
-                            </div>
-                          </div>
-
-                          {/* Price */}
-                          <div className="mb-4">
-                            <p className="text-3xl font-extrabold text-[#00f0ff]">{price}</p>
-                          </div>
-
-                          {/* Action Buttons */}
-                          {currentUser?.role === 'provider' ? (
-                            <div className="py-3 px-4 rounded-xl bg-zinc-800 text-gray-400 text-sm font-semibold text-center">
-                              Can't buy your own services
-                            </div>
-                          ) : (
-                            <>
-                              <div className="flex gap-2 mb-2">
-                                <button 
-                                  onClick={() => setSelectedServiceDetail(service)} 
-                                  className="flex-1 font-semibold py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white border-2 border-[#00f0ff]/30 transition-all hover:shadow-lg hover:shadow-[#00f0ff]/20 flex items-center justify-center gap-2"
-                                >
-                                  <InfoIcon size={16} /> Details
-                                </button>
-                                <button 
-                                  onClick={() => { openCheckout(service); setCheckoutType('buy'); }} 
-                                  className="flex-1 font-semibold py-3 px-4 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black transition-all hover:shadow-xl hover:shadow-[#00f0ff]/30 flex items-center justify-center gap-2"
-                                >
-                                  Buy
-                                </button>
-                              </div>
-                              <button 
-                                onClick={() => openServiceChat(service)} 
-                                className="w-full font-semibold py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white border border-[#00f0ff]/20 transition-all flex items-center justify-center gap-2"
-                              >
-                                <MessageIcon size={16} /> Chat
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
+                  filteredServices.map((service) => (
+                    <ServiceCard
+                      key={service._id}
+                      service={service}
+                      onChat={() => openServiceChat(service)}
+                      onCheckout={() => { openCheckout(service); setCheckoutType('buy'); }}
+                      onDetails={() => setSelectedServiceDetail(service)}
+                      isOwnService={currentUser?.role === 'provider'}
+                    />
+                  ))
                 )}
               </div>
             )}
@@ -3666,68 +3601,99 @@ function App() {
       </nav>
 
       {selectedServiceDetail && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center z-50" role="presentation">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4" role="presentation" onClick={() => setSelectedServiceDetail(null)}>
           <div
-            className="glass-panel w-full md:max-w-xl md:mx-4 max-h-[90vh] overflow-y-auto p-6 relative border border-white/10 shadow-2xl rounded-t-3xl md:rounded-2xl animate-[slideUp_0.3s_ease-out]"
+            className="glass-panel w-full max-w-4xl max-h-[95vh] overflow-y-auto relative border border-[#00f0ff]/30 shadow-2xl rounded-2xl animate-[slideUp_0.3s_ease-out]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="service-detail-title"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 md:hidden" />
-            <button
-              onClick={() => setSelectedServiceDetail(null)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-              aria-label="Close service details"
-            >
-              ✕
-            </button>
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              {selectedServiceDetail.image && (
-                <div className="w-full sm:w-48 h-36 rounded-xl overflow-hidden flex-shrink-0 bg-gray-700/40">
-                  <img src={selectedServiceDetail.image} alt={selectedServiceDetail.title} className="w-full h-full object-cover" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs uppercase tracking-wide text-[#00f0ff] font-semibold">{selectedServiceDetail.category || 'General'}</p>
-                <h3 id="service-detail-title" className="text-xl font-bold text-white mt-1">{selectedServiceDetail.title}</h3>
-                {selectedServiceDetail.rating !== undefined && (
-                  <span className="inline-flex items-center gap-1 mt-2 pill text-xs bg-[#00f0ff]/20 border-[#00f0ff]/30 text-white">
-                    <StarIcon size={12} filled /> {Number(selectedServiceDetail.rating).toFixed(1)}
-                  </span>
-                )}
-                <p className="text-white font-semibold text-sm mt-2">{selectedServiceDetail.provider?.name || 'Unknown Provider'}</p>
-                {selectedServiceDetail.provider?.email && (
-                  <p className="text-gray-400 text-xs">{selectedServiceDetail.provider.email}</p>
-                )}
-                <p className="text-lg font-bold text-[#00f0ff] mt-2">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-br from-zinc-900 to-black border-b border-white/10 p-6 flex items-start justify-between z-10">
+              <div className="flex-1">
+                <span className="inline-block text-xs uppercase tracking-wider font-bold px-3 py-1 rounded-lg bg-[#00f0ff] text-black shadow-lg mb-2">
+                  {selectedServiceDetail.category || 'General'}
+                </span>
+                <h3 id="service-detail-title" className="text-2xl font-bold text-white">{selectedServiceDetail.title}</h3>
+                <p className="text-3xl font-extrabold text-[#00f0ff] mt-2">
                   {Number.isFinite(selectedServiceDetail.price) ? `₹${selectedServiceDetail.price}` : '—'}
                 </p>
               </div>
-            </div>
-            <p className="text-gray-300 text-sm leading-relaxed mb-6">{selectedServiceDetail.description}</p>
-            <div className="flex gap-2 flex-wrap">
-              {currentUser?.role !== 'provider' && (
-                <>
-                  <button
-                    onClick={() => { openCheckout(selectedServiceDetail); setCheckoutType('buy'); setSelectedServiceDetail(null); }}
-                    className="py-3 px-6 rounded-xl bg-black hover:bg-black/90 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-black/40 transition-all duration-200 active:scale-95 flex items-center gap-2"
-                  >
-                    <FileTextIcon size={16} /> Buy Package
-                  </button>
-                  <button
-                    onClick={() => { openServiceChat(selectedServiceDetail); setSelectedServiceDetail(null); }}
-                    className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 font-semibold flex items-center gap-2"
-                  >
-                    <MessageIcon size={16} /> Chat
-                  </button>
-                </>
-              )}
               <button
                 onClick={() => setSelectedServiceDetail(null)}
-                className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-semibold"
+                className="text-gray-400 hover:text-white w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors shrink-0"
+                aria-label="Close service details"
               >
-                Close
+                <CloseIcon size={20} />
               </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {/* Image and Provider Info */}
+              <div className="flex flex-col lg:flex-row gap-6 mb-6">
+                {selectedServiceDetail.image && (
+                  <div className="w-full lg:w-1/2 h-64 lg:h-80 rounded-xl overflow-hidden bg-zinc-800 border border-white/10">
+                    <img src={selectedServiceDetail.image} alt={selectedServiceDetail.title} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="flex-1 space-y-4">
+                  {/* Rating */}
+                  {selectedServiceDetail.rating !== undefined && (
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#00f0ff]/10 border border-[#00f0ff]/30">
+                        <StarIcon size={18} filled className="text-[#00f0ff]" /> 
+                        <span className="text-xl font-bold text-[#00f0ff]">{Number(selectedServiceDetail.rating).toFixed(1)}</span>
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Provider Info */}
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10">
+                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Provided by</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#F7D047] to-yellow-500 flex items-center justify-center text-black font-bold text-xl shadow-lg">
+                        {(selectedServiceDetail.provider?.name || 'P').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-white font-bold text-base">{selectedServiceDetail.provider?.name || 'Unknown Provider'}</p>
+                        {selectedServiceDetail.provider?.email && (
+                          <p className="text-gray-400 text-sm">{selectedServiceDetail.provider.email}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-2">Description</h4>
+                    <p className="text-gray-300 text-base leading-relaxed">
+                      {selectedServiceDetail.description || 'Professional service with quality guarantee. Contact us for more details and customized solutions.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-white/10">
+                {currentUser?.role !== 'provider' && (
+                  <>
+                    <button
+                      onClick={() => { openCheckout(selectedServiceDetail); setCheckoutType('buy'); setSelectedServiceDetail(null); }}
+                      className="flex-1 py-4 px-6 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black font-bold text-base shadow-lg hover:shadow-[#00f0ff]/50 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      <ShoppingBagIcon size={20} /> Buy Package
+                    </button>
+                    <button
+                      onClick={() => { openServiceChat(selectedServiceDetail); setSelectedServiceDetail(null); }}
+                      className="flex-1 py-4 px-6 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white border border-[#00f0ff]/40 font-bold text-base transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      <MessageIcon size={20} /> Chat with Provider
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

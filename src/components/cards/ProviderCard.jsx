@@ -10,81 +10,76 @@ export const ProviderCard = ({
   const isVerified = provider.isVerified || provider.verificationStatus === 'verified';
   const isWomenOnly = provider.preferredProviderGender === 'female_only' || provider.gender === 'female';
   const safetyScore = provider.safetyScore || (isVerified ? 4.5 : 3.5);
+  
   return (
-    <div className="glass-panel card-premium rounded-2xl border border-white/10 p-6 sm:p-8 space-y-5 card-hover group relative overflow-hidden lg:aspect-[4/3] flex flex-col">
+    <div className="group glass-panel card-premium rounded-2xl border border-white/10 hover:border-[#F7D047]/40 overflow-hidden card-hover relative flex flex-col transition-all shadow-lg hover:shadow-xl aspect-4/3">
       {/* Gradient accent line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-[#F7D047] opacity-60" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#F7D047] to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
       
       {/* Background glow effect */}
-      <div className="absolute inset-0 bg-[#F7D047]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-[#F7D047]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       
-      <div className="relative z-10">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-xl bg-[#F7D047] flex items-center justify-center text-white font-bold text-lg shadow-lg relative">
-                {(provider.name || 'P').charAt(0).toUpperCase()}
-                {isVerified && (
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#0a0a0a] border-2 border-slate-900 flex items-center justify-center">
-                    <CheckCircleIcon size={12} className="text-white" />
-                  </div>
-                )}
+      {/* Profile Photo Section - Circular */}
+      <div className="relative bg-gradient-to-br from-zinc-900 to-zinc-800 pt-8 pb-5 flex justify-center">
+        <div className="relative">
+          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#F7D047] to-yellow-500 flex items-center justify-center text-white font-bold text-4xl shadow-xl relative shrink-0">
+            {(provider.name || 'P').charAt(0).toUpperCase()}
+            {isVerified && (
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 border-2 border-zinc-800 flex items-center justify-center">
+                <CheckCircleIcon size={14} className="text-white" />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-xl sm:text-2xl font-bold text-white leading-tight truncate">
-                    {provider.name || 'Provider'}
-                  </h3>
-                  {isVerified && (
-                    <CheckCircleIcon size={16} className="text-emerald-400 shrink-0" title="Verified Provider" />
-                  )}
-                  {isWomenOnly && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-500/20 border border-pink-400/30">
-                      <ShieldIcon size={12} className="text-pink-400" />
-                      <span className="text-xs font-semibold text-pink-400">Women Only</span>
-                    </div>
-                  )}
-                </div>
-                <p className="text-gray-400 text-sm truncate mb-1">{provider.email}</p>
-                {/* Safety score */}
-                <div className="flex items-center gap-1.5">
-                  <ShieldIcon size={12} className="text-emerald-400" />
-                  <span className="text-xs text-emerald-400 font-semibold">Safety Score: {safetyScore.toFixed(1)}/5.0</span>
-                </div>
+            )}
+            {isWomenOnly && (
+              <div className="absolute -top-1 -left-1 w-7 h-7 rounded-full bg-pink-500 border-2 border-zinc-800 flex items-center justify-center">
+                <ShieldIcon size={14} className="text-white" />
               </div>
-            </div>
-            {provider.description && (
-              <p className="text-gray-300 text-sm sm:text-base mt-3 line-clamp-2 leading-relaxed">
-                {provider.description}
-              </p>
             )}
           </div>
+        </div>
+      </div>
+      
+      <div className="relative z-10 p-6 flex flex-col flex-1">
+        {/* Name & Email */}
+        <div className="text-center mb-4">
+          <h3 className="text-2xl font-bold text-white leading-tight mb-1">
+            {provider.name || 'Provider'}
+          </h3>
+          <p className="text-gray-400 text-base truncate">{provider.email}</p>
+        </div>
+
+        {/* Stats Row */}
+        <div className="flex items-center justify-center gap-3 mb-5">
           {provider.rating && (
-            <Badge variant="success" size="md" className="shrink-0">
-              ⭐ {Number(provider.rating).toFixed(1)}
-            </Badge>
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+              <span className="text-yellow-400 text-base">⭐</span>
+              <span className="text-yellow-400 font-bold text-base">{Number(provider.rating).toFixed(1)}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+            <ShieldIcon size={14} className="text-emerald-400" />
+            <span className="text-emerald-400 font-semibold text-sm">{safetyScore.toFixed(1)}</span>
+          </div>
+          {provider.serviceCount !== undefined && (
+            <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+              <span className="text-gray-300 font-semibold text-sm">{provider.serviceCount} services</span>
+            </div>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-          <div className="bg-white/5 rounded-xl p-3 backdrop-blur-sm">
-            <p className="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Services</p>
-            <p className="text-white font-bold text-lg sm:text-xl">{provider.serviceCount || 0}</p>
-          </div>
-          <div className="bg-white/5 rounded-xl p-3 backdrop-blur-sm">
-            <p className="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Response Rate</p>
-            <p className="text-white font-bold text-lg sm:text-xl">{provider.responseRate || '—'}</p>
-          </div>
-        </div>
+        {/* Description */}
+        {provider.description && (
+          <p className="text-gray-300 text-base leading-relaxed line-clamp-2 mb-5 flex-1 text-center px-2">
+            {provider.description}
+          </p>
+        )}
 
-        <Button
-          variant="primary"
-          size="lg"
+        {/* Contact Button */}
+        <button
           onClick={onContact}
-          className="w-full mt-5 font-semibold shadow-lg hover:shadow-xl transition-all"
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#F7D047] to-yellow-500 hover:from-yellow-500 hover:to-[#F7D047] text-black font-bold text-base transition-all hover:shadow-lg hover:shadow-[#F7D047]/30 active:scale-95 mt-auto"
         >
           Contact Provider
-        </Button>
+        </button>
       </div>
     </div>
   );

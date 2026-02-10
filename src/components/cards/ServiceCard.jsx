@@ -1,12 +1,13 @@
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
-import { ShieldIcon, CheckCircleIcon, StarIcon, InfoIcon, ServiceWrenchSvg } from '../icons/IconTypes';
+import { ShieldIcon, CheckCircleIcon, StarIcon, InfoIcon, ServiceWrenchSvg, MessageIcon, EyeIcon } from '../icons/IconTypes';
 
 export const ServiceCard = ({
   service,
   onChat,
   onCheckout,
   onDetails,
+  isOwnService = false,
 }) => {
   const providerName = service.provider?.name || 'Unknown Provider';
   const providerEmail = service.provider?.email || '';
@@ -18,107 +19,108 @@ export const ServiceCard = ({
   const safetyScore = service.provider?.safetyScore || (isVerified ? 4.5 : 3.5);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-200 flex flex-col max-w-sm hover-lift lg:aspect-[4/3]">
-      {/* Image Section */}
-      <div className="relative h-48 overflow-hidden bg-gray-100">
-        {service.image ? (
-          <img
-            src={service.image}
-            alt={service.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextElementSibling.style.display = 'flex';
-            }}
-          />
-        ) : null}
-        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400" style={{ display: service.image ? 'none' : 'flex' }}>
-          <ServiceWrenchSvg size={56} className="opacity-50" />
-        </div>
-        
-        {/* Category Badge */}
-        <div className="absolute top-3 left-3">
-          <span className="inline-block text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-black text-[#F7D047] shadow-lg">
-            {category}
-          </span>
+    <div
+      className={`group bg-gradient-to-br from-zinc-900 to-black rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-[#00f0ff]/30 hover:border-[#00f0ff]/50 flex aspect-[16/9] relative z-10 pointer-events-auto ${onDetails ? 'cursor-pointer' : ''}`}
+      onClick={onDetails ? () => onDetails() : undefined}
+      role={onDetails ? 'button' : undefined}
+      tabIndex={onDetails ? 0 : undefined}
+      onKeyDown={onDetails ? (e) => { if (e.key === 'Enter') onDetails(); } : undefined}
+    >
+      {/* Left Side - Profile Photo and Buttons */}
+      <div className="w-2/5 bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 flex flex-col">
+        {/* Circular Profile Photo - Top Left */}
+        <div className="relative mb-auto">
+          {service.image ? (
+            <img
+              src={service.image}
+              alt={service.title}
+              className="w-24 h-24 rounded-full object-cover border-4 border-[#00f0ff] shadow-lg shadow-[#00f0ff]/30 transition-transform duration-500 group-hover:scale-110"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#00f0ff] to-[#33f3ff] flex items-center justify-center text-black text-2xl font-bold shadow-lg" style={{ display: service.image ? 'none' : 'flex' }}>
+            <ServiceWrenchSvg size={40} />
+          </div>
+          
+          {/* Rating Badge on photo */}
+          {service.rating !== undefined && (
+            <div className="absolute -bottom-1 -right-1">
+              <span className="px-2 py-1 rounded-full bg-black/90 backdrop-blur-sm text-white font-bold text-xs flex items-center gap-1 shadow-lg border-2 border-[#00f0ff]/50">
+                <StarIcon size={12} filled className="text-[#00f0ff]" /> {Number(service.rating).toFixed(1)}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Rating Badge */}
-        {service.rating !== undefined && (
-          <div className="absolute top-3 right-3">
-            <span className="px-2.5 py-1.5 rounded-lg bg-black/90 backdrop-blur-sm text-white font-bold text-xs flex items-center gap-1 shadow-lg">
-              <StarIcon size={12} filled className="text-[#F7D047]" /> {Number(service.rating).toFixed(1)}
-            </span>
+        {/* Action Buttons - Bottom Half */}
+        {isOwnService ? (
+          <div className="py-3 px-4 rounded-xl bg-zinc-800 text-gray-400 text-sm font-semibold text-center mt-auto">
+            Your Service
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5 mt-auto">
+            {onDetails && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onDetails(); }}
+                className="w-full font-bold py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black text-base transition-all hover:shadow-lg hover:shadow-[#00f0ff]/50 active:scale-95 flex items-center justify-center gap-2"
+              >
+                <EyeIcon size={18} /> View Details
+              </button>
+            )}
+            {onChat && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onChat(); }}
+                className="w-full font-semibold py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-base border border-[#00f0ff]/40 hover:border-[#00f0ff]/60 transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <MessageIcon size={18} /> Chat
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Content Section */}
-      <div className="flex-1 flex flex-col p-6">
-        {/* Title */}
-        <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight">
-          {service.title}
-        </h3>
+      {/* Right Side - Content/Description */}
+      <div className="flex-1 p-6 flex flex-col">
+        {/* Category Badge */}
+        <div className="mb-3">
+          <span className="inline-block text-xs uppercase tracking-wider font-bold px-4 py-1.5 rounded-lg bg-[#00f0ff] text-black shadow-lg">
+            {category}
+          </span>
+        </div>
+
+        {/* Title & Price */}
+        <div className="mb-3">
+          <h3 className="text-xl font-bold text-white line-clamp-1 leading-tight mb-2">
+            {service.title}
+          </h3>
+          <p className="text-2xl font-extrabold text-[#00f0ff]">{price}</p>
+        </div>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3 flex-1">
-          {service.description}
-        </p>
+        <div className="mb-4 flex-1">
+          <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">
+            {service.description || 'Professional service with quality guarantee. Contact us for more details and customized solutions.'}
+          </p>
+        </div>
 
         {/* Provider Info */}
-        <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-[#F7D047] font-bold text-lg shadow-md flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#F7D047] to-yellow-500 flex items-center justify-center text-black font-bold text-base shrink-0 shadow-md">
             {(providerName || 'P').charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="text-gray-900 font-semibold text-sm truncate">{providerName}</p>
-              {isVerified && <CheckCircleIcon size={14} className="text-green-600 flex-shrink-0" />}
+              <p className="text-white font-semibold text-sm truncate">{providerName}</p>
+              {isVerified && <CheckCircleIcon size={14} className="text-emerald-400" />}
             </div>
-            <p className="text-gray-500 text-xs truncate">{providerEmail}</p>
+            <p className="text-gray-400 text-xs truncate">{providerEmail}</p>
           </div>
         </div>
-
-        {/* Price */}
-        <div className="mb-4">
-          <p className="text-3xl font-extrabold text-black">{price}</p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          {onDetails && (
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={onDetails}
-              className="flex-1 font-semibold py-3 px-4 rounded-xl bg-white hover:bg-gray-50 text-black border-2 border-black transition-all hover:shadow-lg"
-            >
-              <span className="flex items-center justify-center gap-2">
-                <InfoIcon size={16} /> Details
-              </span>
-            </Button>
-          )}
-          <Button
-            variant="primary"
-            size="md"
-            onClick={onCheckout}
-            className="flex-1 font-semibold py-3 px-4 rounded-xl bg-black hover:bg-gray-900 text-white transition-all hover:shadow-xl"
-          >
-            Buy
-          </Button>
-        </div>
-
-        {/* Chat Button */}
-        <Button
-          variant="secondary"
-          size="md"
-          onClick={onChat}
-          className="w-full mt-2 font-semibold py-3 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300 transition-all"
-        >
-          <span className="flex items-center justify-center gap-2">
-            💬 Chat
-          </span>
-        </Button>
       </div>
     </div>
   );
