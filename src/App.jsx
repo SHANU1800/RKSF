@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import LoginPage from './LoginPage';
 import { SparklesIcon, CheckIcon, CheckCircleIcon, CloseIcon, PackageIcon, ClipboardIcon, CreditCardIcon, BellIcon, StarIcon, MessageIcon, LoaderIcon, LockIcon, SearchIcon, PlusIcon, MoreIcon, ArrowUpRightIcon, UsersIcon, UserIcon, SettingsIcon, SendIcon, BuildingIcon, FileTextIcon, RevenueIcon, AnalyticsIcon, ServicesIcon, GoodsIcon, ChartIcon, TrendingUpIcon, TrendingDownIcon, BarChartIcon, PieChartIcon, ActivityIcon, DollarSignIcon, ArchiveIcon, CopyIcon, DownloadIcon, UploadIcon, FilterIcon, EditIcon, TrashIcon, ZapIcon, ShieldIcon, InfoIcon, WalletIllustrationSvg, SparkleAccentSvg, LogoutIcon, ShoppingBagIcon } from './components/icons/IconTypes';
 import SafetyCenter from './components/safety/SafetyCenter';
@@ -73,7 +74,14 @@ function App() {
   const { toasts, removeToast, success, error, warning, info, retry } = useToast();
   const { theme, reducedMotion } = useSettingsStore();
   const razorpay = useRazorpay();
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [providers, setProviders] = useState([]);
   const [services, setServices] = useState([]);
   const [goods, setGoods] = useState([]);
@@ -225,20 +233,16 @@ function App() {
             setUserLocation(null);
           }
         } else if (response.status === 401) {
-          // User is not authenticated - this is expected, not an error
           localStorage.removeItem('user');
           setCurrentUser(null);
         } else {
-          // Other error statuses
           console.error('Session check failed with status:', response.status);
           localStorage.removeItem('user');
           setCurrentUser(null);
         }
       } catch (error) {
-        // Network error or other issues - fail silently and allow login
         console.warn('Session check failed:', error.message);
-        localStorage.removeItem('user');
-        setCurrentUser(null);
+        // Keep cached user on network error - avoids logging out when offline
       }
     };
 
@@ -974,6 +978,9 @@ function App() {
       return;
     }
 
+    const isService = !!checkoutService?.provider && !checkoutService?.sellerId;
+    const qty = isService ? 1 : (checkoutType === 'buy' ? checkoutQuantity : 1);
+
     setCheckoutSubmitting(true);
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
@@ -983,7 +990,7 @@ function App() {
         body: JSON.stringify({
           serviceId: checkoutService._id,
           type: checkoutType,
-          quantity: checkoutType === 'buy' ? checkoutQuantity : 1,
+          quantity: qty,
           durationDays: checkoutType === 'rent' ? checkoutDays : null,
         }),
       });
@@ -2751,6 +2758,7 @@ function App() {
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowSafetyCenter(true)}
                   className="px-4 py-2 rounded-xl bg-[#00f0ff]/20 hover:bg-[#00f0ff]/30 text-white font-semibold text-sm border border-[#00f0ff]/30 transition-all"
                 >
@@ -3371,6 +3379,7 @@ function App() {
                   </div>
                   {/* Safety Center Button - cyan outline pill */}
                   <button
+                    type="button"
                     onClick={() => setShowSafetyCenter(true)}
                     className="px-4 py-2 rounded-xl border border-[#00f0ff]/60 text-[#00f0ff] font-semibold transition-all text-sm flex items-center gap-2 bg-black/30 hover:bg-[#00f0ff]/10 shadow-sm hover:shadow-lg"
                     title="Safety Center"
@@ -3398,6 +3407,7 @@ function App() {
             <div className="md:hidden flex items-center gap-2">
               {currentUser && (
                 <button
+                  type="button"
                   onClick={() => setShowSafetyCenter(true)}
                   className="w-9 h-9 rounded-xl border border-[#00f0ff]/60 bg-black/40 text-[#00f0ff] font-bold text-sm flex items-center justify-center shadow-md hover:bg-[#00f0ff]/10"
                   aria-label="Safety Center"
@@ -3506,12 +3516,13 @@ function App() {
       </div>
       </div>
 
-      {/* Safety Center Modal */}
-      {showSafetyCenter && currentUser && (
+      {/* Safety Center Modal - rendered at body level for correct z-index */}
+      {showSafetyCenter && currentUser && typeof document !== 'undefined' && document.body && createPortal(
         <SafetyCenter
           currentUser={currentUser}
           onClose={() => setShowSafetyCenter(false)}
-        />
+        />,
+        document.body
       )}
 
       {/* Floating Action Button (Mobile Only) */}
@@ -3932,6 +3943,11 @@ function App() {
               <>
                 <h3 id="checkout-modal-title" className="text-xl md:text-2xl font-bold text-white mb-6">{checkoutService.title}</h3>
 
+                {(() => {
+                  const isService = !!checkoutService?.provider && !checkoutService?.sellerId;
+                  const qty = isService ? 1 : checkoutQuantity;
+                  return (
+                <>
                 <div className="space-y-4 mb-6">
                   <div>
                     <p className="text-gray-400 text-sm">Description</p>
@@ -3942,12 +3958,13 @@ function App() {
                     <p className="text-white font-semibold">{checkoutService.provider?.name || checkoutService.sellerName || 'Seller'}</p>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm">Price per unit</p>
+                    <p className="text-gray-400 text-sm">{isService ? 'Price' : 'Price per unit'}</p>
                     <p className="text-white text-lg font-bold">₹{checkoutService.price}</p>
                   </div>
                 </div>
 
                 <div className="border-t border-gray-700 pt-4 space-y-4">
+                  {!isService && (
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Quantity (1-100)</label>
                     <input
@@ -3962,6 +3979,7 @@ function App() {
                       className="w-full px-4 py-2 bg-slate-900/70 text-white rounded-xl border border-[#0a0a0a] focus:border-[#0a0a0a]"
                     />
                   </div>
+                  )}
 
                   <div className="glass-panel border border-white/10 p-4 rounded-2xl">
                     <div className="flex justify-between mb-2">
@@ -3970,14 +3988,14 @@ function App() {
                     </div>
                     <div className="flex justify-between mb-2">
                       <p className="text-gray-400">
-                        {checkoutType === 'buy' ? `Quantity: ${checkoutQuantity}` : `Days: ${checkoutDays}`}
+                        {isService ? 'Service booking' : checkoutType === 'buy' ? `Quantity: ${qty}` : `Days: ${checkoutDays}`}
                       </p>
                       <p className="text-white">×</p>
                     </div>
                     <div className="border-t border-gray-700 mt-2 pt-2 flex justify-between">
                       <p className="text-white font-bold">Total:</p>
                       <p className="text-green-400 text-lg font-bold">
-                        ₹{(checkoutService.price * checkoutQuantity).toFixed(0)}
+                        ₹{(checkoutService.price * qty).toFixed(0)}
                       </p>
                     </div>
                   </div>
@@ -3991,9 +4009,16 @@ function App() {
                     {checkoutSubmitting ? 'Processing...' : 'Proceed to Payment'}
                   </button>
                 </div>
+                </>
+                  );
+                })()}
               </>
             ) : showPayment ? (
               // Payment Form - Razorpay Integration
+              (() => {
+                const isService = !!checkoutService?.provider && !checkoutService?.sellerId;
+                const payQty = isService ? 1 : checkoutQuantity;
+                return (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2"><CreditCardIcon size={24} /> Payment</h2>
                 
@@ -4010,7 +4035,7 @@ function App() {
                     <div className="flex-1">
                       <p className="text-white font-medium">{checkoutService?.title || checkoutService?.name}</p>
                       <p className="text-gray-400 text-xs mt-1">
-                        {checkoutType === 'buy' ? `Qty: ${checkoutQuantity}` : `${checkoutDays} day${checkoutDays > 1 ? 's' : ''} rental`}
+                        {isService ? 'Service booking' : checkoutType === 'buy' ? `Qty: ${payQty}` : `${checkoutDays} day${checkoutDays > 1 ? 's' : ''} rental`}
                       </p>
                     </div>
                   </div>
@@ -4018,15 +4043,15 @@ function App() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Subtotal</span>
-                      <span className="text-white">{formatCurrency(checkoutService.price * checkoutQuantity)}</span>
+                      <span className="text-white">{formatCurrency(checkoutService.price * payQty)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">GST (18%)</span>
-                      <span className="text-white">{formatCurrency(Math.round(checkoutService.price * checkoutQuantity * 0.18))}</span>
+                      <span className="text-white">{formatCurrency(Math.round(checkoutService.price * payQty * 0.18))}</span>
                     </div>
                     <div className="flex justify-between pt-2 border-t border-white/10 text-base font-bold">
                       <span className="text-white">Total</span>
-                      <span className="text-[#0a0a0a]">{formatCurrency(Math.round(checkoutService.price * checkoutQuantity * 1.18))}</span>
+                      <span className="text-[#0a0a0a]">{formatCurrency(Math.round(checkoutService.price * payQty * 1.18))}</span>
                     </div>
                   </div>
                 </div>
@@ -4070,7 +4095,7 @@ function App() {
                     {paymentProcessing ? (
                       <><LoaderIcon size={16} /> Processing...</>
                     ) : (
-                      <><LockIcon size={16} /> Pay {formatCurrency(Math.round(checkoutService.price * checkoutQuantity * 1.18))}</>
+                      <><LockIcon size={16} /> Pay {formatCurrency(Math.round(checkoutService.price * payQty * 1.18))}</>
                     )}
                   </button>
                 </div>
@@ -4083,6 +4108,8 @@ function App() {
                   </p>
                 </div>
               </div>
+                );
+              })()
             ) : (
               // Bill Display
               <div className="space-y-4">

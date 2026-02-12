@@ -3,13 +3,23 @@ import { API_BASE_URL } from '../utils/apiConfig';
 
 const API_BASE = API_BASE_URL;
 
+// Helper function to get auth headers with token from localStorage
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('accessToken');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 // Custom hook for safety API calls
 export function useSafetyAPI() {
   // Verification APIs
   const uploadVerification = async (data) => {
     const res = await fetch(`${API_BASE}/safety/verification/upload`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -18,7 +28,7 @@ export function useSafetyAPI() {
 
   const getVerificationStatus = async () => {
     const res = await fetch(`${API_BASE}/safety/verification/status`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();
@@ -27,7 +37,7 @@ export function useSafetyAPI() {
   // Safety Preferences APIs
   const getSafetyPreferences = async () => {
     const res = await fetch(`${API_BASE}/safety/preferences`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();
@@ -36,7 +46,7 @@ export function useSafetyAPI() {
   const updateSafetyPreferences = async (data) => {
     const res = await fetch(`${API_BASE}/safety/preferences`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -46,7 +56,7 @@ export function useSafetyAPI() {
   const addTrustedContact = async (contact) => {
     const res = await fetch(`${API_BASE}/safety/preferences/trusted-contacts`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(contact),
     });
@@ -56,7 +66,7 @@ export function useSafetyAPI() {
   const removeTrustedContact = async (contactId) => {
     const res = await fetch(`${API_BASE}/safety/preferences/trusted-contacts/${contactId}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();
@@ -65,7 +75,7 @@ export function useSafetyAPI() {
   const acceptConductAgreement = async () => {
     const res = await fetch(`${API_BASE}/safety/preferences/conduct-agreement`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();
@@ -74,7 +84,7 @@ export function useSafetyAPI() {
   const completeTraining = async (trainingType) => {
     const res = await fetch(`${API_BASE}/safety/preferences/complete-training`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify({ trainingType }),
     });
@@ -85,7 +95,7 @@ export function useSafetyAPI() {
   const createVisitSession = async (data) => {
     const res = await fetch(`${API_BASE}/safety/visit-session`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -95,7 +105,7 @@ export function useSafetyAPI() {
   const verifyCheckInCode = async (sessionId, code) => {
     const res = await fetch(`${API_BASE}/safety/visit-session/${sessionId}/verify-code`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify({ code }),
     });
@@ -105,7 +115,7 @@ export function useSafetyAPI() {
   const updateLocation = async (sessionId, location) => {
     const res = await fetch(`${API_BASE}/safety/visit-session/${sessionId}/location`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(location),
     });
@@ -115,7 +125,7 @@ export function useSafetyAPI() {
   const performCheckIn = async (sessionId) => {
     const res = await fetch(`${API_BASE}/safety/visit-session/${sessionId}/check-in`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();
@@ -124,7 +134,7 @@ export function useSafetyAPI() {
   const triggerSOS = async (sessionId, data) => {
     const res = await fetch(`${API_BASE}/safety/visit-session/${sessionId}/sos`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -134,7 +144,7 @@ export function useSafetyAPI() {
   const completeSession = async (sessionId, data) => {
     const res = await fetch(`${API_BASE}/safety/visit-session/${sessionId}/complete`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -143,7 +153,7 @@ export function useSafetyAPI() {
 
   const getETALink = async (sessionId) => {
     const res = await fetch(`${API_BASE}/safety/visit-session/${sessionId}/eta-link`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();
@@ -152,7 +162,7 @@ export function useSafetyAPI() {
   const requestScopeChange = async (sessionId, data) => {
     const res = await fetch(`${API_BASE}/safety/visit-session/${sessionId}/scope-change`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -162,7 +172,7 @@ export function useSafetyAPI() {
   const consentScopeChange = async (sessionId, changeIndex) => {
     const res = await fetch(`${API_BASE}/safety/visit-session/${sessionId}/scope-change/${changeIndex}/consent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();
@@ -172,7 +182,7 @@ export function useSafetyAPI() {
   const reportIncident = async (data) => {
     const res = await fetch(`${API_BASE}/safety/incidents`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -181,7 +191,7 @@ export function useSafetyAPI() {
 
   const getIncidents = async () => {
     const res = await fetch(`${API_BASE}/safety/incidents`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();
@@ -191,7 +201,7 @@ export function useSafetyAPI() {
   const submitSafetyRating = async (data) => {
     const res = await fetch(`${API_BASE}/safety/ratings`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -200,7 +210,7 @@ export function useSafetyAPI() {
 
   const getUserSafetyRatings = async (userId) => {
     const res = await fetch(`${API_BASE}/safety/ratings/user/${userId}`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();
@@ -209,7 +219,7 @@ export function useSafetyAPI() {
   // Matched Providers
   const getMatchedProviders = async () => {
     const res = await fetch(`${API_BASE}/safety/providers/matched`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
     return res.json();

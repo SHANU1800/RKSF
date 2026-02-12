@@ -9,10 +9,10 @@ export const NotificationCard = ({
 }) => {
   const typeStyles = {
     order: { 
-      gradient: 'bg-[#F7D047]/10',
-      accent: 'bg-[#F7D047]',
-      iconBg: 'bg-[#F7D047]/20',
-      iconColor: 'text-[#F7D047]'
+      gradient: 'bg-[#00f0ff]/10',
+      accent: 'bg-[#00f0ff]',
+      iconBg: 'bg-[#00f0ff]/20',
+      iconColor: 'text-[#00f0ff]'
     },
     message: { 
       gradient: 'bg-purple-500/10',
@@ -46,7 +46,7 @@ export const NotificationCard = ({
 
   return (
     <div
-      className={`glass-panel card-premium rounded-2xl border overflow-hidden card-hover group relative aspect-4/3 flex flex-col transition-all ${
+      className={`glass-panel card-premium rounded-2xl border overflow-hidden card-hover group relative aspect-[4/3] flex flex-col transition-all ${
         isRead ? 'border-white/10' : 'border-white/20'
       }`}
     >

@@ -12,7 +12,7 @@ export const TransactionCard = ({
   const gradientColor = isPositive ? 'bg-emerald-500/5' : 'bg-red-500/5';
 
   return (
-    <div className="glass-panel card-premium rounded-2xl border border-white/10 hover:border-white/20 overflow-hidden card-hover group relative aspect-4/3 flex flex-col transition-all">
+    <div className="glass-panel card-premium rounded-2xl border border-white/10 hover:border-[#00f0ff]/30 overflow-hidden card-hover group relative aspect-[4/3] flex flex-col transition-all">
       {/* Gradient accent line */}
       <div className={`absolute top-0 left-0 right-0 h-1 ${accentColor} opacity-60 group-hover:opacity-100 transition-opacity`} />
       
@@ -57,15 +57,15 @@ export const TransactionCard = ({
 
         {/* Action buttons - Compact */}
         <div className="flex gap-2 mt-auto">
-          <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold border border-white/20 transition-all active:scale-95">
-            📄 Invoice
+          <button className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold border border-[#00f0ff]/20 transition-all active:scale-95 flex items-center justify-center gap-1.5">
+            <FileTextIcon size={14} /> Invoice
           </button>
           {onDownload && (
             <button
               onClick={onDownload}
-              className="flex-1 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold transition-all active:scale-95"
+              className="flex-1 py-2 rounded-lg bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"
             >
-              💾 Download
+              <DownloadIcon size={14} /> Download
             </button>
           )}
         </div>

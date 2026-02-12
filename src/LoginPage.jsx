@@ -77,6 +77,11 @@ function LoginPage({ onLogin }) {
         _id: user._id,
       };
 
+      // Store token in localStorage for API requests
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
+
       onLogin(mappedUser);
     } catch {
       setErrors({ form: 'Network error. Please try again.' });
@@ -117,6 +122,11 @@ function LoginPage({ onLogin }) {
         email: user.email,
         _id: user._id,
       };
+
+      // Store token in localStorage for API requests
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
 
       onLogin(mappedUser);
     } catch (err) {
@@ -200,6 +210,11 @@ function LoginPage({ onLogin }) {
         email: user.email,
         _id: user._id,
       };
+
+      // Store token in localStorage for API requests
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
 
       console.log('Login successful via OTP!');
       onLogin(mappedUser);

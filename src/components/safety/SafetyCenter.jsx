@@ -27,6 +27,7 @@ export default function SafetyCenter({ currentUser, onClose }) {
 
   const loadSafetyData = useCallback(async () => {
     setLoading(true);
+    const timeout = setTimeout(() => setLoading(false), 3000);
     try {
       const [prefsRes, verifRes] = await Promise.all([
         getSafetyPreferences(),
@@ -37,6 +38,7 @@ export default function SafetyCenter({ currentUser, onClose }) {
     } catch (error) {
       console.error('Failed to load safety data:', error);
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   }, [getSafetyPreferences, getVerificationStatus]);
@@ -53,20 +55,9 @@ export default function SafetyCenter({ currentUser, onClose }) {
     { id: 'training', label: 'Training', icon: 'book' },
   ];
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="glass-panel rounded-2xl p-8 text-center border-2 border-[#00f0ff]/20">
-          <div className="w-12 h-12 border-4 border-[#00f0ff]/30 border-t-[#00f0ff] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white">Loading Safety Center...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
-      <div className="glass-panel w-full md:max-w-2xl md:mx-4 max-h-[90vh] overflow-hidden rounded-t-3xl md:rounded-2xl border-2 border-[#00f0ff]/20 animate-[slideUp_0.3s_ease-out] flex flex-col">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-[100]" onClick={(e) => e.target === e.currentTarget && onClose()} role="dialog" aria-modal="true" aria-labelledby="safety-center-title">
+      <div className="glass-panel w-full md:max-w-2xl md:mx-4 max-h-[90vh] overflow-hidden rounded-t-3xl md:rounded-2xl border-2 border-[#00f0ff]/20 animate-[slideUp_0.3s_ease-out] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="p-4 md:p-6 border-b border-white/10 shrink-0">
           <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
@@ -78,11 +69,12 @@ export default function SafetyCenter({ currentUser, onClose }) {
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Safety Center</h2>
+                <h2 id="safety-center-title" className="text-xl font-bold text-white">Safety Center</h2>
                 <p className="text-gray-400 text-sm">Your safety is our priority</p>
               </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white transition-all"
             >
@@ -97,6 +89,7 @@ export default function SafetyCenter({ currentUser, onClose }) {
             <div className="flex justify-around items-stretch gap-1">
               {tabs.map((tab) => (
                 <button
+                  type="button"
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl text-sm font-semibold transition-all ${
@@ -115,6 +108,13 @@ export default function SafetyCenter({ currentUser, onClose }) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="w-12 h-12 border-4 border-[#00f0ff]/30 border-t-[#00f0ff] rounded-full animate-spin mb-4" />
+              <p className="text-gray-400">Loading Safety Center...</p>
+            </div>
+          ) : (
+          <>
           {activeTab === 'overview' && (
             <SafetyOverview 
               preferences={preferences} 
@@ -146,6 +146,8 @@ export default function SafetyCenter({ currentUser, onClose }) {
               conductAgreement={preferences?.conductAgreement}
               onUpdate={loadSafetyData}
             />
+          )}
+          </>
           )}
         </div>
       </div>

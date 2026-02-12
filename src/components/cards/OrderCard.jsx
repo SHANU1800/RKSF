@@ -1,38 +1,37 @@
 import { Badge } from '../common/Badge';
-import { Button } from '../common/Button';
+import { ClockIcon, CheckIcon, PackageIcon, CheckCircleIcon, CloseIcon, MapPinIcon, InfoIcon } from '../icons/IconTypes';
 
 export const OrderCard = ({
   order,
   onViewDetails,
   onTrack,
 }) => {
-  const statusColors = {
-    pending: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-200', icon: '⏳' },
-    confirmed: { bg: 'bg-[#0a0a0a]/10', border: 'border-[#0a0a0a]/30', text: 'text-[#0a0a0a]', icon: '✓' },
-    shipped: { bg: 'bg-[#0a0a0a]/10', border: 'border-[#0a0a0a]/30', text: 'text-[#F7D047]', icon: '🚚' },
-    delivered: { bg: 'bg-[#0a0a0a]/10', border: 'border-[#0a0a0a]/30', text: 'text-[#F7D047]', icon: '✅' },
-    cancelled: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-200', icon: '❌' },
+  const statusConfig = {
+    pending: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-200', Icon: ClockIcon },
+    confirmed: { bg: 'bg-[#00f0ff]/10', border: 'border-[#00f0ff]/30', text: 'text-[#00f0ff]', Icon: CheckIcon },
+    shipped: { bg: 'bg-[#00f0ff]/10', border: 'border-[#00f0ff]/30', text: 'text-[#00f0ff]', Icon: PackageIcon },
+    delivered: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-200', Icon: CheckCircleIcon },
+    cancelled: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-200', Icon: CloseIcon },
   };
 
   const getStatusStyle = (status) => {
-    const style = statusColors[status?.toLowerCase()] || statusColors.pending;
+    const style = statusConfig[status?.toLowerCase()] || statusConfig.pending;
     return `${style.bg} ${style.border} ${style.text}`;
   };
 
   const getStatusIcon = (status) => {
-    return statusColors[status?.toLowerCase()]?.icon || '⏳';
+    const cfg = statusConfig[status?.toLowerCase()] || statusConfig.pending;
+    return cfg.Icon;
   };
 
+  const StatusIcon = getStatusIcon(order.status);
+
   return (
-    <div className="group glass-panel card-premium rounded-2xl border border-white/10 hover:border-[#F7D047]/40 overflow-hidden card-hover relative aspect-4/3 flex flex-col transition-all shadow-lg hover:shadow-xl">
-      {/* Enhanced gradient accent line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#F7D047] to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
-      
-      {/* Background glow on hover */}
-      <div className="absolute inset-0 bg-[#F7D047]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+    <div className="group glass-panel card-premium rounded-2xl border border-white/10 hover:border-[#00f0ff]/40 overflow-hidden card-hover relative aspect-[4/3] flex flex-col transition-all shadow-lg hover:shadow-xl">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#00f0ff] to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 bg-[#00f0ff]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       
       <div className="p-5 flex flex-col h-full relative z-10">
-        {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex-1 min-w-0">
             <span className="text-xs text-gray-500 mb-1 block">#{order._id?.slice(-8) || 'N/A'}</span>
@@ -40,15 +39,17 @@ export const OrderCard = ({
               {order.serviceTitle || 'Service'}
             </h4>
           </div>
-          <span className={`text-xl shrink-0`}>{getStatusIcon(order.status)}</span>
+          <span className="shrink-0 p-1.5 rounded-lg bg-white/5 border border-white/10">
+            <StatusIcon size={18} className="text-[#00f0ff]" />
+          </span>
         </div>
 
-        {/* Status & Amount */}
         <div className="flex items-center justify-between gap-3 mb-3">
-          <div className={`px-3 py-1 rounded-lg ${getStatusStyle(order.status)} border text-xs font-bold uppercase`}>
+          <div className={`px-3 py-1.5 rounded-lg ${getStatusStyle(order.status)} border text-xs font-bold uppercase flex items-center gap-2`}>
+            <StatusIcon size={14} />
             {order.status || 'Pending'}
           </div>
-          <p className="text-[#F7D047] font-bold text-xl">₹{order.totalAmount || 0}</p>
+          <p className="text-[#00f0ff] font-bold text-xl">₹{order.totalAmount || 0}</p>
         </div>
 
         {/* Quantity Info */}
@@ -63,17 +64,17 @@ export const OrderCard = ({
           {onViewDetails && (
             <button
               onClick={onViewDetails}
-              className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-[#F7D047] to-yellow-500 hover:from-yellow-500 hover:to-[#F7D047] text-black font-bold text-sm transition-all hover:shadow-lg active:scale-95"
+              className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-[#00f0ff] to-[#33f3ff] hover:from-[#33f3ff] hover:to-[#00f0ff] text-black font-bold text-sm transition-all hover:shadow-lg active:scale-95 flex items-center justify-center gap-2"
             >
-              Details
+              <InfoIcon size={16} /> Details
             </button>
           )}
           {onTrack && (
             <button
               onClick={onTrack}
-              className="flex-1 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold border border-white/20 text-sm transition-all active:scale-95"
+              className="flex-1 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold border border-[#00f0ff]/30 text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              📍 Track
+              <MapPinIcon size={16} /> Track
             </button>
           )}
         </div>
